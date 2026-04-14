@@ -1,0 +1,21 @@
+include:
+  - project: infra/gitlab-ci-templates
+    ref: HEAD
+    file:
+      - base/stages.yml
+      - base/defaults.yml
+      - base/rules.yml
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event" || $CI_COMMIT_BRANCH == "main"'
+      when: always
+    - when: never
+
+allow_pass:
+  stage: test-and-build
+  extends:
+    - .default_job
+    - .run_on_mr_and_main
+  script:
+    - echo "This CI always pass"
