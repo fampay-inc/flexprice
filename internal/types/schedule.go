@@ -16,7 +16,7 @@ const (
 	ScheduleIDCreditGrantProcessing        ScheduleID = "credit-grants-processing"
 	ScheduleIDSubscriptionAutoCancellation ScheduleID = "subscription-auto-cancellation"
 	ScheduleIDWalletCreditExpiry           ScheduleID = "wallet-credit-expiry"
-	ScheduleIDSubscriptionBillingPeriods   ScheduleID = "subscription-billing-periods"
+	ScheduleIDSubscriptionBilling          ScheduleID = "subscription-billing"
 	ScheduleIDSubscriptionRenewalAlerts    ScheduleID = "subscription-renewal-due-alerts"
 	ScheduleIDSubscriptionTrialEndDue      ScheduleID = "subscription-trial-end-due"
 	ScheduleIDOutboundWebhookStaleRetry    ScheduleID = "webhook-stale-retry"
@@ -25,14 +25,14 @@ const (
 // String returns the raw schedule id.
 func (id ScheduleID) String() string { return string(id) }
 
-// AllTemporalServerScheduleIDs returns every managed Temporal server schedule id
+// AllTemporalServerScheduleIDs returns every active managed Temporal server schedule id
 // (keep aligned with AllTemporalScheduleConfigs in internal/temporal/service/schedules.go).
 func AllTemporalServerScheduleIDs() []ScheduleID {
 	return []ScheduleID{
 		ScheduleIDCreditGrantProcessing,
 		ScheduleIDSubscriptionAutoCancellation,
 		ScheduleIDWalletCreditExpiry,
-		ScheduleIDSubscriptionBillingPeriods,
+		ScheduleIDSubscriptionBilling,
 		ScheduleIDSubscriptionRenewalAlerts,
 		ScheduleIDSubscriptionTrialEndDue,
 		ScheduleIDOutboundWebhookStaleRetry,

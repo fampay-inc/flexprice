@@ -10,6 +10,8 @@ import (
 	"github.com/flexprice/flexprice/internal/temporal/client"
 	"github.com/flexprice/flexprice/internal/temporal/models"
 	cronWorkflows "github.com/flexprice/flexprice/internal/temporal/workflows/cron"
+	subscriptionWorkflows "github.com/flexprice/flexprice/internal/temporal/workflows/subscription"
+	subscriptionModels "github.com/flexprice/flexprice/internal/temporal/models/subscription"
 	"github.com/flexprice/flexprice/internal/types"
 	enumspb "go.temporal.io/api/enums/v1"
 	"go.temporal.io/api/serviceerror"
@@ -42,11 +44,11 @@ func AllTemporalScheduleConfigs() []types.ScheduleConfig {
 			TaskQueue: types.TemporalTaskQueueCron,
 		},
 		{
-			ID:        types.ScheduleIDSubscriptionBillingPeriods,
-			Interval:  15 * time.Minute,
-			Workflow:  cronWorkflows.SubscriptionBillingPeriodsWorkflow,
-			Input:     models.SubscriptionBillingPeriodsWorkflowInput{},
-			TaskQueue: types.TemporalTaskQueueCron,
+			ID:       types.ScheduleIDSubscriptionBilling,
+			Interval: 15 * time.Minute,
+			Workflow: subscriptionWorkflows.ScheduleSubscriptionBillingWorkflow,
+			Input:    subscriptionModels.ScheduleSubscriptionBillingWorkflowInput{BatchSize: types.DEFAULT_BATCH_SIZE},
+			TaskQueue: types.TemporalTaskQueueSubscription,
 		},
 		{
 			ID:        types.ScheduleIDSubscriptionRenewalAlerts,

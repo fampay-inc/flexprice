@@ -42,7 +42,7 @@ func TestAllTemporalServerScheduleIDs_covers_all_consts(t *testing.T) {
 		ScheduleIDCreditGrantProcessing,
 		ScheduleIDSubscriptionAutoCancellation,
 		ScheduleIDWalletCreditExpiry,
-		ScheduleIDSubscriptionBillingPeriods,
+		ScheduleIDSubscriptionBilling,
 		ScheduleIDSubscriptionRenewalAlerts,
 		ScheduleIDSubscriptionTrialEndDue,
 		ScheduleIDOutboundWebhookStaleRetry,
