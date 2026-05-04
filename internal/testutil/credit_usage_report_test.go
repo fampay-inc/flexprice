@@ -166,11 +166,11 @@ func TestCreditUsageExporter_PrepareData(t *testing.T) {
 	}
 
 	tests := []struct {
-		name         string
-		setup        func(t *testing.T, env *creditUsageTestEnv)
-		wantCount    int
-		wantRows     int
-		assertRow    func(t *testing.T, headers []string, rows [][]string, env *creditUsageTestEnv)
+		name      string
+		setup     func(t *testing.T, env *creditUsageTestEnv)
+		wantCount int
+		wantRows  int
+		assertRow func(t *testing.T, headers []string, rows [][]string, env *creditUsageTestEnv)
 	}{
 		{
 			name:      "empty customers produces headers only",
@@ -259,7 +259,7 @@ func TestCreditUsageExporter_PrepareData(t *testing.T) {
 						{EntityType: types.ExportMetadataEntityTypeWallet, FieldKey: "tier", ColumnName: "Tier"},
 					},
 				}
-				if err := env.req.JobConfig.ExportMetadataFields.ValidateAndDefault(); err != nil {
+				if err := env.req.JobConfig.ExportMetadataFields.ValidateAndDefault(types.ScheduledTaskEntityTypeCreditUsage); err != nil {
 					t.Fatalf("ValidateAndDefault: %v", err)
 				}
 			},

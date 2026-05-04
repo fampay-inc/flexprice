@@ -28,15 +28,16 @@ type Exporter interface {
 
 // ExportService handles export operations for different entity types
 type ExportService struct {
-	featureUsageRepo    events.FeatureUsageRepository
-	priceRepo           price.Repository
-	invoiceRepo         invoice.Repository
-	walletRepo          wallet.Repository
-	walletBalanceGetter WalletBalanceGetter
-	customerRepo        customer.Repository
-	connectionRepo      connection.Repository
-	integrationFactory  *integration.Factory
-	logger              *logger.Logger
+	featureUsageRepo     events.FeatureUsageRepository
+	priceRepo            price.Repository
+	invoiceRepo          invoice.Repository
+	walletRepo           wallet.Repository
+	walletBalanceGetter  WalletBalanceGetter
+	customerRepo         customer.Repository
+	usageAnalyticsGetter UsageAnalyticsGetter
+	connectionRepo       connection.Repository
+	integrationFactory   *integration.Factory
+	logger               *logger.Logger
 }
 
 // NewExportService creates a new export service
@@ -70,17 +71,19 @@ func NewExportServiceWithWallet(
 	connectionRepo connection.Repository,
 	integrationFactory *integration.Factory,
 	logger *logger.Logger,
+	usageAnalyticsGetter UsageAnalyticsGetter,
 ) *ExportService {
 	return &ExportService{
-		featureUsageRepo:    featureUsageRepo,
-		priceRepo:           priceRepo,
-		invoiceRepo:         invoiceRepo,
-		walletRepo:          walletRepo,
-		walletBalanceGetter: walletBalanceGetter,
-		customerRepo:        customerRepo,
-		connectionRepo:      connectionRepo,
-		integrationFactory:  integrationFactory,
-		logger:              logger,
+		featureUsageRepo:     featureUsageRepo,
+		priceRepo:            priceRepo,
+		invoiceRepo:          invoiceRepo,
+		walletRepo:           walletRepo,
+		walletBalanceGetter:  walletBalanceGetter,
+		customerRepo:         customerRepo,
+		connectionRepo:       connectionRepo,
+		integrationFactory:   integrationFactory,
+		logger:               logger,
+		usageAnalyticsGetter: usageAnalyticsGetter,
 	}
 }
 
@@ -102,16 +105,8 @@ func (s *ExportService) Export(ctx context.Context, request *dto.ExportRequest) 
 			Mark(ierr.ErrValidation)
 	}
 
-	// Export metadata fields are only supported for credit_usage exports
 	if len(request.JobConfig.GetExportMetadataFields()) > 0 {
-		if request.EntityType != types.ScheduledTaskEntityTypeCreditUsage {
-			return nil, ierr.NewError("export metadata fields not supported for this entity type").
-				WithHintf("export_metadata_fields are only supported for '%s' exports", types.ScheduledTaskEntityTypeCreditUsage).
-				Mark(ierr.ErrValidation)
-		}
-
-		// Validate export metadata fields and normalize aliases.
-		if err := request.JobConfig.GetExportMetadataFields().ValidateAndDefault(); err != nil {
+		if err := request.JobConfig.GetExportMetadataFields().ValidateAndDefault(request.EntityType); err != nil {
 			return nil, err
 		}
 	}
@@ -238,6 +233,12 @@ func (s *ExportService) getExporter(entityType types.ScheduledTaskEntityType) Ex
 			return nil
 		}
 		return NewCreditUsageExporter(s.walletRepo, s.customerRepo, s.walletBalanceGetter, s.integrationFactory, s.logger)
+	case types.ScheduledTaskEntityTypeUsageAnalytics:
+		if s.customerRepo == nil {
+			s.logger.Errorw("customer repository not configured for usage analytics export")
+			return nil
+		}
+		return NewUsageAnalyticsExporter(s.customerRepo, s.usageAnalyticsGetter, s.logger)
 	default:
 		return nil
 	}

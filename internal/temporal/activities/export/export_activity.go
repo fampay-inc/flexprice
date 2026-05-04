@@ -19,15 +19,16 @@ import (
 
 // ExportActivity handles the actual export operations
 type ExportActivity struct {
-	featureUsageRepo    events.FeatureUsageRepository
-	priceRepo           price.Repository
-	invoiceRepo         invoice.Repository
-	walletRepo          wallet.Repository
-	walletBalanceGetter syncExport.WalletBalanceGetter
-	customerRepo        customer.Repository
-	connectionRepo      connection.Repository
-	integrationFactory  *integration.Factory
-	logger              *logger.Logger
+	featureUsageRepo     events.FeatureUsageRepository
+	priceRepo            price.Repository
+	invoiceRepo          invoice.Repository
+	walletRepo           wallet.Repository
+	walletBalanceGetter  syncExport.WalletBalanceGetter
+	customerRepo         customer.Repository
+	connectionRepo       connection.Repository
+	integrationFactory   *integration.Factory
+	logger               *logger.Logger
+	usageAnalyticsGetter syncExport.UsageAnalyticsGetter
 }
 
 // NewExportActivity creates a new export activity
@@ -41,17 +42,19 @@ func NewExportActivity(
 	connectionRepo connection.Repository,
 	integrationFactory *integration.Factory,
 	logger *logger.Logger,
+	usageAnalyticsGetter syncExport.UsageAnalyticsGetter,
 ) *ExportActivity {
 	return &ExportActivity{
-		featureUsageRepo:    featureUsageRepo,
-		priceRepo:           priceRepo,
-		invoiceRepo:         invoiceRepo,
-		walletRepo:          walletRepo,
-		walletBalanceGetter: walletBalanceGetter,
-		customerRepo:        customerRepo,
-		connectionRepo:      connectionRepo,
-		integrationFactory:  integrationFactory,
-		logger:              logger,
+		featureUsageRepo:     featureUsageRepo,
+		priceRepo:            priceRepo,
+		invoiceRepo:          invoiceRepo,
+		walletRepo:           walletRepo,
+		walletBalanceGetter:  walletBalanceGetter,
+		customerRepo:         customerRepo,
+		connectionRepo:       connectionRepo,
+		integrationFactory:   integrationFactory,
+		logger:               logger,
+		usageAnalyticsGetter: usageAnalyticsGetter,
 	}
 }
 
@@ -98,7 +101,7 @@ func (a *ExportActivity) ExportData(ctx context.Context, input ExportDataInput) 
 	}
 
 	// Use the ExportService which handles routing to the correct exporter
-	exportService := syncExport.NewExportServiceWithWallet(a.featureUsageRepo, a.priceRepo, a.invoiceRepo, a.walletRepo, a.walletBalanceGetter, a.customerRepo, a.connectionRepo, a.integrationFactory, a.logger)
+	exportService := syncExport.NewExportServiceWithWallet(a.featureUsageRepo, a.priceRepo, a.invoiceRepo, a.walletRepo, a.walletBalanceGetter, a.customerRepo, a.connectionRepo, a.integrationFactory, a.logger, a.usageAnalyticsGetter)
 	response, err := exportService.Export(ctx, request)
 	if err != nil {
 		a.logger.Errorw("export failed", "error", err, "entity_type", input.EntityType)
