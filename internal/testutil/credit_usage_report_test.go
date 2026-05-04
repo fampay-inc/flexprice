@@ -155,24 +155,7 @@ func colVal(t *testing.T, headers []string, row []string, name string) string {
 	return ""
 }
 
-// --- tests ---
-
-func TestCreditUsageExporter_EmptyCustomers(t *testing.T) {
-	env := newCreditUsageTestEnv(t)
-
-	csvBytes, count, err := env.exporter.PrepareData(env.ctx, env.req)
-	if err != nil {
-		t.Fatalf("PrepareData: %v", err)
-	}
-	if count != 0 {
-		t.Errorf("expected 0 records, got %d", count)
-	}
-
-	headers, rows := parseCSVOutput(t, csvBytes)
-	if len(rows) != 0 {
-		t.Errorf("expected no data rows, got %d", len(rows))
-	}
-
+func TestCreditUsageExporter_PrepareData(t *testing.T) {
 	staticCols := []string{
 		string(wallet.CreditUsageCSVHeadersCustomerName),
 		string(wallet.CreditUsageCSVHeadersCustomerExternalID),
@@ -181,124 +164,140 @@ func TestCreditUsageExporter_EmptyCustomers(t *testing.T) {
 		string(wallet.CreditUsageCSVHeadersRealtimeBalance),
 		string(wallet.CreditUsageCSVHeadersNumberOfWallets),
 	}
-	for _, want := range staticCols {
-		found := false
-		for _, h := range headers {
-			if h == want {
-				found = true
-				break
-			}
-		}
-		if !found {
-			t.Errorf("static header %q missing from CSV; got %v", want, headers)
-		}
-	}
-}
 
-func TestCreditUsageExporter_StaticFields(t *testing.T) {
-	env := newCreditUsageTestEnv(t)
-
-	c := env.addCustomer(t, "cust-1", "ext-1", "Acme Corp", nil)
-	w := env.addWallet(t, "wallet-1", c.ID, 200, nil)
-	env.setBalance(w.ID, w, 180)
-
-	csvBytes, count, err := env.exporter.PrepareData(env.ctx, env.req)
-	if err != nil {
-		t.Fatalf("PrepareData: %v", err)
-	}
-	if count != 1 {
-		t.Errorf("expected 1 record, got %d", count)
-	}
-
-	headers, rows := parseCSVOutput(t, csvBytes)
-	if len(rows) != 1 {
-		t.Fatalf("expected 1 data row, got %d", len(rows))
-	}
-	col := func(name string) string { return colVal(t, headers, rows[0], name) }
-
-	if got := col(string(wallet.CreditUsageCSVHeadersCustomerName)); got != c.Name {
-		t.Errorf("customer_name: want %q got %q", c.Name, got)
-	}
-	if got := col(string(wallet.CreditUsageCSVHeadersCustomerExternalID)); got != c.ExternalID {
-		t.Errorf("customer_external_id: want %q got %q", c.ExternalID, got)
-	}
-	if got := col(string(wallet.CreditUsageCSVHeadersCustomerID)); got != c.ID {
-		t.Errorf("customer_id: want %q got %q", c.ID, got)
-	}
-	if got := col(string(wallet.CreditUsageCSVHeadersCurrentBalance)); got != "200" {
-		t.Errorf("current_balance: want 200 got %q", got)
-	}
-	if got := col(string(wallet.CreditUsageCSVHeadersRealtimeBalance)); got != "180" {
-		t.Errorf("realtime_balance: want 180 got %q", got)
-	}
-	if got := col(string(wallet.CreditUsageCSVHeadersNumberOfWallets)); got != "1" {
-		t.Errorf("number_of_wallets: want 1 got %q", got)
-	}
-}
-
-func TestCreditUsageExporter_MultipleWalletsAggregateBalance(t *testing.T) {
-	env := newCreditUsageTestEnv(t)
-
-	c := env.addCustomer(t, "cust-2", "ext-2", "Multi Wallet Co", nil)
-	w1 := env.addWallet(t, "wallet-a", c.ID, 100, nil)
-	w2 := env.addWallet(t, "wallet-b", c.ID, 50, nil)
-	env.setBalance(w1.ID, w1, 90)
-	env.setBalance(w2.ID, w2, 45)
-
-	csvBytes, count, err := env.exporter.PrepareData(env.ctx, env.req)
-	if err != nil {
-		t.Fatalf("PrepareData: %v", err)
-	}
-	if count != 1 {
-		t.Errorf("expected 1 record, got %d", count)
-	}
-
-	headers, rows := parseCSVOutput(t, csvBytes)
-	col := func(name string) string { return colVal(t, headers, rows[0], name) }
-
-	if got := col(string(wallet.CreditUsageCSVHeadersCurrentBalance)); got != "150" {
-		t.Errorf("current_balance: want 150 got %q", got)
-	}
-	if got := col(string(wallet.CreditUsageCSVHeadersRealtimeBalance)); got != "135" {
-		t.Errorf("realtime_balance: want 135 got %q", got)
-	}
-	if got := col(string(wallet.CreditUsageCSVHeadersNumberOfWallets)); got != "2" {
-		t.Errorf("number_of_wallets: want 2 got %q", got)
-	}
-}
-
-func TestCreditUsageExporter_MetadataColumns(t *testing.T) {
-	env := newCreditUsageTestEnv(t)
-
-	c := env.addCustomer(t, "cust-3", "ext-3", "Meta Corp", map[string]string{"account_number": "ACC-001"})
-	w := env.addWallet(t, "wallet-meta", c.ID, 500, map[string]string{"tier": "gold"})
-	env.setBalance(w.ID, w, 490)
-
-	env.req.JobConfig = &types.S3JobConfig{
-		ExportMetadataFields: types.ExportMetadataFields{
-			{EntityType: types.ExportMetadataEntityTypeCustomer, FieldKey: "account_number", ColumnName: "Account Number"},
-			{EntityType: types.ExportMetadataEntityTypeWallet, FieldKey: "tier", ColumnName: "Tier"},
+	tests := []struct {
+		name         string
+		setup        func(t *testing.T, env *creditUsageTestEnv)
+		wantCount    int
+		wantRows     int
+		assertRow    func(t *testing.T, headers []string, rows [][]string, env *creditUsageTestEnv)
+	}{
+		{
+			name:      "empty customers produces headers only",
+			setup:     func(t *testing.T, env *creditUsageTestEnv) {},
+			wantCount: 0,
+			wantRows:  0,
+			assertRow: func(t *testing.T, headers []string, rows [][]string, _ *creditUsageTestEnv) {
+				for _, want := range staticCols {
+					found := false
+					for _, h := range headers {
+						if h == want {
+							found = true
+							break
+						}
+					}
+					if !found {
+						t.Errorf("static header %q missing; got %v", want, headers)
+					}
+				}
+			},
+		},
+		{
+			name: "single customer single wallet static fields",
+			setup: func(t *testing.T, env *creditUsageTestEnv) {
+				c := env.addCustomer(t, "cust-1", "ext-1", "Acme Corp", nil)
+				w := env.addWallet(t, "wallet-1", c.ID, 200, nil)
+				env.setBalance(w.ID, w, 180)
+			},
+			wantCount: 1,
+			wantRows:  1,
+			assertRow: func(t *testing.T, headers []string, rows [][]string, env *creditUsageTestEnv) {
+				col := func(name string) string { return colVal(t, headers, rows[0], name) }
+				if got := col(string(wallet.CreditUsageCSVHeadersCustomerName)); got != "Acme Corp" {
+					t.Errorf("customer_name: want Acme Corp got %q", got)
+				}
+				if got := col(string(wallet.CreditUsageCSVHeadersCustomerExternalID)); got != "ext-1" {
+					t.Errorf("customer_external_id: want ext-1 got %q", got)
+				}
+				if got := col(string(wallet.CreditUsageCSVHeadersCustomerID)); got != "cust-1" {
+					t.Errorf("customer_id: want cust-1 got %q", got)
+				}
+				if got := col(string(wallet.CreditUsageCSVHeadersCurrentBalance)); got != "200" {
+					t.Errorf("current_balance: want 200 got %q", got)
+				}
+				if got := col(string(wallet.CreditUsageCSVHeadersRealtimeBalance)); got != "180" {
+					t.Errorf("realtime_balance: want 180 got %q", got)
+				}
+				if got := col(string(wallet.CreditUsageCSVHeadersNumberOfWallets)); got != "1" {
+					t.Errorf("number_of_wallets: want 1 got %q", got)
+				}
+			},
+		},
+		{
+			name: "multiple wallets aggregate balances",
+			setup: func(t *testing.T, env *creditUsageTestEnv) {
+				c := env.addCustomer(t, "cust-2", "ext-2", "Multi Wallet Co", nil)
+				w1 := env.addWallet(t, "wallet-a", c.ID, 100, nil)
+				w2 := env.addWallet(t, "wallet-b", c.ID, 50, nil)
+				env.setBalance(w1.ID, w1, 90)
+				env.setBalance(w2.ID, w2, 45)
+			},
+			wantCount: 1,
+			wantRows:  1,
+			assertRow: func(t *testing.T, headers []string, rows [][]string, _ *creditUsageTestEnv) {
+				col := func(name string) string { return colVal(t, headers, rows[0], name) }
+				if got := col(string(wallet.CreditUsageCSVHeadersCurrentBalance)); got != "150" {
+					t.Errorf("current_balance: want 150 got %q", got)
+				}
+				if got := col(string(wallet.CreditUsageCSVHeadersRealtimeBalance)); got != "135" {
+					t.Errorf("realtime_balance: want 135 got %q", got)
+				}
+				if got := col(string(wallet.CreditUsageCSVHeadersNumberOfWallets)); got != "2" {
+					t.Errorf("number_of_wallets: want 2 got %q", got)
+				}
+			},
+		},
+		{
+			name: "dynamic metadata columns",
+			setup: func(t *testing.T, env *creditUsageTestEnv) {
+				c := env.addCustomer(t, "cust-3", "ext-3", "Meta Corp", map[string]string{"account_number": "ACC-001"})
+				w := env.addWallet(t, "wallet-meta", c.ID, 500, map[string]string{"tier": "gold"})
+				env.setBalance(w.ID, w, 490)
+				env.req.JobConfig = &types.S3JobConfig{
+					ExportMetadataFields: types.ExportMetadataFields{
+						{EntityType: types.ExportMetadataEntityTypeCustomer, FieldKey: "account_number", ColumnName: "Account Number"},
+						{EntityType: types.ExportMetadataEntityTypeWallet, FieldKey: "tier", ColumnName: "Tier"},
+					},
+				}
+				if err := env.req.JobConfig.ExportMetadataFields.ValidateAndDefault(); err != nil {
+					t.Fatalf("ValidateAndDefault: %v", err)
+				}
+			},
+			wantCount: 1,
+			wantRows:  1,
+			assertRow: func(t *testing.T, headers []string, rows [][]string, _ *creditUsageTestEnv) {
+				col := func(name string) string { return colVal(t, headers, rows[0], name) }
+				if got := col("Account Number"); got != "ACC-001" {
+					t.Errorf("Account Number: want ACC-001 got %q", got)
+				}
+				if got := col("Tier"); got != "gold" {
+					t.Errorf("Tier: want gold got %q", got)
+				}
+			},
 		},
 	}
-	if err := env.req.JobConfig.ExportMetadataFields.ValidateAndDefault(); err != nil {
-		t.Fatalf("ValidateAndDefault: %v", err)
-	}
 
-	csvBytes, count, err := env.exporter.PrepareData(env.ctx, env.req)
-	if err != nil {
-		t.Fatalf("PrepareData: %v", err)
-	}
-	if count != 1 {
-		t.Errorf("expected 1 record, got %d", count)
-	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			env := newCreditUsageTestEnv(t)
+			tc.setup(t, env)
 
-	headers, rows := parseCSVOutput(t, csvBytes)
-	col := func(name string) string { return colVal(t, headers, rows[0], name) }
+			csvBytes, count, err := env.exporter.PrepareData(env.ctx, env.req)
+			if err != nil {
+				t.Fatalf("PrepareData: %v", err)
+			}
+			if count != tc.wantCount {
+				t.Errorf("record count: want %d got %d", tc.wantCount, count)
+			}
 
-	if got := col("Account Number"); got != "ACC-001" {
-		t.Errorf("Account Number: want ACC-001 got %q", got)
-	}
-	if got := col("Tier"); got != "gold" {
-		t.Errorf("Tier: want gold got %q", got)
+			headers, rows := parseCSVOutput(t, csvBytes)
+			if len(rows) != tc.wantRows {
+				t.Fatalf("row count: want %d got %d", tc.wantRows, len(rows))
+			}
+
+			if tc.assertRow != nil {
+				tc.assertRow(t, headers, rows, env)
+			}
+		})
 	}
 }
