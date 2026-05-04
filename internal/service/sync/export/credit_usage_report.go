@@ -170,6 +170,7 @@ func (e *CreditUsageExporter) buildRecord(ctx context.Context, c *customer.Custo
 		if balanceResp.RealTimeCreditBalance != nil {
 			realtimeBalance = realtimeBalance.Add(*balanceResp.RealTimeCreditBalance)
 		}
+		// In case of customer with multiple wallets, the metadata will be overwritten.
 		for k, v := range w.Metadata {
 			merged[string(types.ExportMetadataEntityTypeWallet)+metadataKeyDelimiter+k] = v
 		}

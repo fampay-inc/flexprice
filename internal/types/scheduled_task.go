@@ -68,7 +68,7 @@ func (e ScheduledTaskEntityType) Validate() error {
 		}
 	}
 	return ierr.NewError("invalid entity type").
-		WithHint("Entity type must be one of: events, invoices, credit_topups, credit_usage").
+		WithHint("Entity type must be one of: events, invoice, credit_topups, credit_usage").
 		Mark(ierr.ErrValidation)
 }
 
