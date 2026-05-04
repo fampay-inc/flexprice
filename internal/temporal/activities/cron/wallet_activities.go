@@ -36,15 +36,19 @@ func NewWalletCreditExpiryActivities(
 }
 
 // ExpireCreditsActivity finds and expires credits that have passed their expiry date across all tenants.
+// Logic matches internal/api/cron.WalletCronHandler.ExpireCredits (no-limit tx filter, up to 1000 envs per tenant).
 func (a *WalletCreditExpiryActivities) ExpireCreditsActivity(ctx context.Context) (*cronModels.WalletCreditExpiryWorkflowResult, error) {
 	log := activity.GetLogger(ctx)
 	log.Info("Starting wallet credit expiry activity")
+	a.logger.Infow("starting credit expiry cron job", "time", time.Now().UTC().Format(time.RFC3339))
 
 	tenants, err := a.tenantService.GetAllTenants(ctx)
 	if err != nil {
+		a.logger.Errorw("failed to get all tenants", "error", err)
 		return nil, err
 	}
 
+	// Create filter to find expired credits (expired at least 6 hours ago - grace period after expiry).
 	filter := types.NewNoLimitWalletTransactionFilter()
 	filter.Type = lo.ToPtr(types.TransactionTypeCredit)
 	filter.TransactionStatus = lo.ToPtr(types.TransactionStatusCompleted)
@@ -57,40 +61,42 @@ func (a *WalletCreditExpiryActivities) ExpireCreditsActivity(ctx context.Context
 		tenantCtx := context.WithValue(ctx, types.CtxTenantID, tenant.ID)
 		envFilter := types.GetDefaultFilter()
 		envFilter.Limit = 1000
-
 		environments, err := a.environmentService.GetEnvironments(tenantCtx, envFilter)
 		if err != nil {
-			a.logger.Errorw("failed to get environments for tenant", "tenant_id", tenant.ID, "error", err)
-			continue
+			a.logger.Errorw("failed to get all environments", "error", err)
+			return nil, err
 		}
 
-		for _, env := range environments.Environments {
-			envCtx := context.WithValue(tenantCtx, types.CtxEnvironmentID, env.ID)
+		for _, environment := range environments.Environments {
+			envCtx := context.WithValue(tenantCtx, types.CtxEnvironmentID, environment.ID)
 
 			transactions, err := a.walletService.ListWalletTransactionsByFilter(envCtx, filter)
 			if err != nil {
-				a.logger.Errorw("failed to list expired credits",
-					"tenant_id", tenant.ID, "environment_id", env.ID, "error", err)
-				continue
+				a.logger.Errorw("failed to list expired credits", "error", err)
+				return nil, err
 			}
 
-			for _, tx := range transactions.Items {
-				result.Total++
-				txCtx := context.WithValue(envCtx, types.CtxUserID, tx.CreatedBy)
+			a.logger.Infow("found expired credits", "count", len(transactions.Items))
 
+			for i, tx := range transactions.Items {
+				if i%100 == 0 {
+					activity.RecordHeartbeat(ctx, "processed tenant "+tenant.ID+" env "+environment.ID)
+				}
+				result.Total++
+
+				txCtx := context.WithValue(envCtx, types.CtxUserID, tx.CreatedBy)
 				expireResult, err := a.walletService.ExpireCredits(txCtx, tx.ID)
 				if err != nil {
-					a.logger.Errorw("failed to expire credits",
-						"transaction_id", tx.ID, "error", err)
+					a.logger.Errorw("failed to expire credits", "transaction_id", tx.ID, "error", err)
 					result.Failed++
 					continue
 				}
-
 				if expireResult.Expired {
 					result.Succeeded++
+					a.logger.Infow("expired credits successfully",
+						"transaction_id", tx.ID, "wallet_id", tx.WalletID, "amount", tx.CreditsAvailable)
 					continue
 				}
-
 				switch expireResult.SkipReason {
 				case types.CreditExpirySkipReasonActiveSubscription:
 					result.SkippedDueToActiveSubscription++
@@ -98,12 +104,10 @@ func (a *WalletCreditExpiryActivities) ExpireCreditsActivity(ctx context.Context
 					result.SkippedDueToActiveInvoice++
 				}
 			}
-
-			// Heartbeat so Temporal knows we're still alive during long-running processing
-			activity.RecordHeartbeat(ctx, "processed tenant "+tenant.ID+" env "+env.ID)
 		}
 	}
 
+	a.logger.Infow("completed credit expiry cron job")
 	log.Info("Completed wallet credit expiry activity",
 		"total", result.Total,
 		"succeeded", result.Succeeded,

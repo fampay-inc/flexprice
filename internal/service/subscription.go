@@ -153,6 +153,11 @@ func (s *subscriptionService) CreateSubscription(ctx context.Context, req dto.Cr
 	sub.CurrentPeriodStart = sub.StartDate
 	sub.CurrentPeriodEnd = nextBillingDate
 
+	err = setCreateSubscriptionTrialWindow(&req, sub, validPrices)
+	if err != nil {
+		return nil, err
+	}
+
 	// Create line items using DTO method
 	subscriptionResponse := &dto.SubscriptionResponse{Subscription: sub}
 	planResponse := &dto.PlanResponse{Plan: plan}
@@ -171,47 +176,28 @@ func (s *subscriptionService) CreateSubscription(ctx context.Context, req dto.Cr
 			EntityType:   types.SubscriptionLineItemEntityTypePlan,
 		})
 
-		// Convert line items
-		for _, item := range lineItems {
-			price, ok := priceMap[item.PriceID]
-			if !ok {
-				return nil, ierr.NewError("failed to get price %s: price not found").
-					WithHint("Ensure all prices are valid and available").
-					WithReportableDetails(map[string]interface{}{
-						"price_id": item.PriceID,
-					}).
-					Mark(ierr.ErrDatabase)
+		if priceResponse.Price.Type == types.PRICE_TYPE_USAGE && priceResponse.Meter != nil {
+			item.MeterID = priceResponse.Meter.ID
+			item.MeterDisplayName = priceResponse.Meter.Name
+			item.DisplayName = priceResponse.Meter.Name
+			item.Quantity = decimal.Zero
+		} else {
+			item.DisplayName = plan.Name
+			if item.Quantity.IsZero() {
+				item.Quantity = decimal.NewFromInt(1)
 			}
-
-			if price.Price.Type == types.PRICE_TYPE_USAGE && price.Meter != nil {
-				item.MeterID = price.Meter.ID
-				item.MeterDisplayName = price.Meter.Name
-				item.DisplayName = price.Meter.Name
-				item.Quantity = decimal.Zero
-			} else {
-				item.DisplayName = plan.Name
-				if item.Quantity.IsZero() {
-					item.Quantity = decimal.NewFromInt(1)
-				}
-			}
-
-			if item.ID == "" {
-				item.ID = types.GenerateUUIDWithPrefix(types.UUID_PREFIX_SUBSCRIPTION_LINE_ITEM)
-			}
-
-			item.SubscriptionID = sub.ID
-			item.PriceType = price.Type
-			item.EntityID = plan.ID
-			item.EntityType = types.SubscriptionLineItemEntityTypePlan
-			item.PlanDisplayName = plan.Name
-			item.CustomerID = sub.CustomerID
-			item.Currency = sub.Currency
-			item.BillingPeriod = price.BillingPeriod
-			item.BillingPeriodCount = price.BillingPeriodCount
-			item.InvoiceCadence = price.InvoiceCadence
-			item.TrialPeriod = price.TrialPeriod
-			// Set phase ID if phases exist
 		}
+
+		item.SubscriptionID = sub.ID
+		item.PriceType = priceResponse.Type
+		item.EntityID = plan.ID
+		item.EntityType = types.SubscriptionLineItemEntityTypePlan
+		item.PlanDisplayName = plan.Name
+		item.CustomerID = sub.CustomerID
+		item.Currency = sub.Currency
+		item.BillingPeriod = priceResponse.BillingPeriod
+		item.BillingPeriodCount = priceResponse.BillingPeriodCount
+		item.InvoiceCadence = priceResponse.InvoiceCadence
 		if firstPhaseID != "" {
 			item.SubscriptionPhaseID = &firstPhaseID
 		}
@@ -269,6 +255,7 @@ func (s *subscriptionService) CreateSubscription(ctx context.Context, req dto.Cr
 	if req.SubscriptionStatus != "" {
 		sub.SubscriptionStatus = req.SubscriptionStatus
 	}
+	syncTrialingStateFromCreateRequest(&req, sub)
 
 	s.Logger.InfowCtx(ctx, "creating subscription",
 		"customer_id", sub.CustomerID, "plan_id", sub.PlanID, "start_date", sub.StartDate,
@@ -426,8 +413,8 @@ func (s *subscriptionService) CreateSubscription(ctx context.Context, req dto.Cr
 			}
 		}
 
-		// Create invoice for non-draft subscriptions
-		if req.SubscriptionStatus != types.SubscriptionStatusDraft {
+		// Create invoice for non-draft, non-trialing subscriptions (trial conversion invoice is created at trial end).
+		if sub.SubscriptionStatus != types.SubscriptionStatusDraft && sub.SubscriptionStatus != types.SubscriptionStatusTrialing {
 			paymentParams := dto.NewPaymentParametersFromSubscription(sub.CollectionMethod, sub.PaymentBehavior, sub.GatewayPaymentMethodID).NormalizePaymentParameters()
 			invoice, updatedSub, err = invoiceService.CreateSubscriptionInvoice(ctx, &dto.CreateSubscriptionInvoiceRequest{
 				SubscriptionID: sub.ID,
@@ -1185,7 +1172,7 @@ func (s *subscriptionService) ProcessSubscriptionPriceOverrides(
 			BillingPeriodCount:   originalPrice.BillingPeriodCount,
 			BillingModel:         targetBillingModel,
 			InvoiceCadence:       originalPrice.InvoiceCadence,
-			TrialPeriod:          originalPrice.TrialPeriod,
+			TrialPeriodDays:      originalPrice.TrialPeriodDays,
 			TierMode:             originalPrice.TierMode,
 			MeterID:              originalPrice.MeterID,
 			Description:          originalPrice.Description,
@@ -2196,8 +2183,7 @@ func (s *subscriptionService) GetUsageBySubscription(ctx context.Context, req *d
 		return nil, err
 	}
 
-	// Get customer
-	customer, err := s.CustomerRepo.Get(ctx, subscription.CustomerID)
+	externalCustomerIDs, err := s.ExternalCustomerIDsForSubscription(ctx, subscription)
 	if err != nil {
 		return nil, err
 	}
@@ -2272,12 +2258,12 @@ func (s *subscriptionService) GetUsageBySubscription(ctx context.Context, req *d
 	// Performance optimization: Get distinct event names for this customer
 	// to filter out meters that have no events, reducing processing from potentially
 	// 400-500 meters down to only 5-7 that have actual usage
-	distinctEventNames, err := s.EventRepo.GetDistinctEventNames(ctx, []string{customer.ExternalID}, usageStartTime, usageEndTime)
+	distinctEventNames, err := s.EventRepo.GetDistinctEventNames(ctx, externalCustomerIDs, usageStartTime, usageEndTime)
 	if err != nil {
 		s.Logger.ErrorwCtx(ctx, "failed to get distinct event names",
 			"error", err,
-			"external_customer_id", customer.ExternalID)
-		return nil, fmt.Errorf("failed to get distinct event names for customer %s: %w", customer.ExternalID, err)
+			"subscription_id", req.SubscriptionID)
+		return nil, fmt.Errorf("failed to get distinct event names for subscription %s: %w", req.SubscriptionID, err)
 	}
 
 	// Create a map for fast event name lookup
@@ -2287,7 +2273,8 @@ func (s *subscriptionService) GetUsageBySubscription(ctx context.Context, req *d
 	}
 
 	s.Logger.DebugwCtx(ctx, "distinct event names optimization",
-		"external_customer_id", customer.ExternalID,
+		"subscription_id", req.SubscriptionID,
+		"external_customer_ids", externalCustomerIDs,
 		"total_distinct_events", len(distinctEventNames),
 		"total_line_items", len(lineItems),
 		"distinct_event_names", distinctEventNames)
@@ -2315,8 +2302,8 @@ func (s *subscriptionService) GetUsageBySubscription(ctx context.Context, req *d
 			s.Logger.DebugwCtx(ctx, "skipping meter as there are no events",
 				"meter_id", lineItem.MeterID,
 				"event_name", meter.EventName,
-				"customer_id", customer.ID,
-				"external_customer_id", customer.ExternalID,
+				"subscription_customer_id", subscription.CustomerID,
+				"external_customer_ids", externalCustomerIDs,
 				"subscription_id", req.SubscriptionID)
 			continue
 		}
@@ -2329,21 +2316,21 @@ func (s *subscriptionService) GetUsageBySubscription(ctx context.Context, req *d
 			s.Logger.DebugwCtx(ctx, "skipping meter with no events",
 				"meter_id", lineItem.MeterID,
 				"event_name", meter.EventName,
-				"customer_id", customer.ID,
-				"external_customer_id", customer.ExternalID,
+				"subscription_customer_id", subscription.CustomerID,
+				"external_customer_ids", externalCustomerIDs,
 				"subscription_id", req.SubscriptionID)
 			continue
 		}
 
 		meterID := lineItem.MeterID
 		usageRequest := &dto.GetUsageByMeterRequest{
-			MeterID:            meterID,
-			PriceID:            lineItem.PriceID,
-			Meter:              meter.ToMeter(),
-			ExternalCustomerID: customer.ExternalID,
-			StartTime:          lineItem.GetPeriodStart(usageStartTime),
-			EndTime:            lineItem.GetPeriodEnd(usageEndTime),
-			Filters:            make(map[string][]string),
+			MeterID:             meterID,
+			PriceID:             lineItem.PriceID,
+			Meter:               meter.ToMeter(),
+			ExternalCustomerIDs: externalCustomerIDs,
+			StartTime:           lineItem.GetPeriodStart(usageStartTime),
+			EndTime:             lineItem.GetPeriodEnd(usageEndTime),
+			Filters:             make(map[string][]string),
 		}
 
 		for _, filter := range meter.Filters {
@@ -2354,7 +2341,7 @@ func (s *subscriptionService) GetUsageBySubscription(ctx context.Context, req *d
 
 	s.Logger.InfowCtx(ctx, "performance optimization results",
 		"subscription_id", req.SubscriptionID,
-		"external_customer_id", customer.ExternalID,
+		"external_customer_ids", externalCustomerIDs,
 		"total_line_items", len(lineItems),
 		"total_usage_line_items", len(priceIDs),
 		"meters_with_events", len(meterUsageRequests),
@@ -4601,7 +4588,6 @@ func (s *subscriptionService) createLineItemFromPrice(ctx context.Context, price
 		Currency:       sub.Currency,
 		BillingPeriod:  price.BillingPeriod,
 		InvoiceCadence: price.InvoiceCadence,
-		TrialPeriod:    0,
 		StartDate:      lineItemStart,
 		EndDate:        time.Time{},
 		Metadata: map[string]string{
@@ -4797,6 +4783,57 @@ func (s *subscriptionService) ActivateIncompleteSubscription(ctx context.Context
 	return nil
 }
 
+// HandleSubscriptionActivatingInvoicePaid completes subscription lifecycle when an activating invoice
+// (subscription create or trial-end conversion) is fully paid.
+func (s *subscriptionService) HandleSubscriptionActivatingInvoicePaid(ctx context.Context, inv *invoice.Invoice) error {
+	if inv == nil || inv.SubscriptionID == nil {
+		return nil
+	}
+	reason := types.InvoiceBillingReason(inv.BillingReason)
+	if !reason.TriggersSubscriptionActivationOnFullPayment() {
+		return nil
+	}
+	switch reason {
+	case types.InvoiceBillingReasonSubscriptionCreate:
+		return s.ActivateIncompleteSubscription(ctx, *inv.SubscriptionID)
+	case types.InvoiceBillingReasonSubscriptionTrialEnd:
+		sub, err := s.SubRepo.Get(ctx, *inv.SubscriptionID)
+		if err != nil {
+			return err
+		}
+		return s.completeTrialConversionToActive(ctx, sub)
+	default:
+		return nil
+	}
+}
+
+// completeTrialConversionToActive activates a subscription after its trial-end invoice is paid or
+// skipped (zero-amount). By the time this is called, processSubscriptionTrialEnd has already
+// advanced CurrentPeriodStart/End to the first real billing window, so only the status changes.
+func (s *subscriptionService) completeTrialConversionToActive(ctx context.Context, sub *subscription.Subscription) error {
+	if sub.SubscriptionStatus == types.SubscriptionStatusActive {
+		return nil
+	}
+	sub.SubscriptionStatus = types.SubscriptionStatusActive
+	if err := s.DB.WithTx(ctx, func(txCtx context.Context) error {
+		if err := s.SubRepo.Update(txCtx, sub); err != nil {
+			return err
+		}
+		if err := s.cascadeTrialActivationToInherited(txCtx, sub); err != nil {
+			return err
+		}
+		if err := s.processPendingCreditGrantsForSubscription(txCtx, sub); err != nil {
+			return err
+		}
+		return nil
+	}); err != nil {
+		return err
+	}
+
+	s.publishSystemEvent(ctx, types.WebhookEventSubscriptionActivated, sub.ID)
+	return nil
+}
+
 // processPendingCreditGrantsForSubscription finds and processes pending CGAs for a subscription
 // This is called when a subscription becomes active to immediately apply deferred credit grants
 func (s *subscriptionService) processPendingCreditGrantsForSubscription(ctx context.Context, sub *subscription.Subscription) error {
@@ -4815,12 +4852,7 @@ func (s *subscriptionService) processPendingCreditGrantsForSubscription(ctx cont
 
 	applications, err := s.CreditGrantApplicationRepo.List(ctx, filter)
 	if err != nil {
-		return ierr.WithError(err).
-			WithHint("Failed to get pending credit grant applications").
-			WithReportableDetails(map[string]interface{}{
-				"subscription_id": sub.ID,
-			}).
-			Mark(ierr.ErrDatabase)
+		return err
 	}
 
 	if len(applications) == 0 {
@@ -6751,9 +6783,13 @@ func (s *subscriptionService) GetUpcomingCreditGrantApplications(ctx context.Con
 		return nil, err
 	}
 
-	// Verify each subscription exists
+	// Verify each subscription exists — include trialing so in-trial subs are not 404'd
 	subFilter := types.NewNoLimitSubscriptionFilter()
 	subFilter.SubscriptionIDs = req.SubscriptionIDs
+	subFilter.SubscriptionStatus = []types.SubscriptionStatus{
+		types.SubscriptionStatusActive,
+		types.SubscriptionStatusTrialing,
+	}
 	subscriptions, err := s.SubRepo.List(ctx, subFilter)
 	if err != nil {
 		return nil, err
@@ -7390,6 +7426,28 @@ func (s *subscriptionService) usageCustomerIDsForSubscription(ctx context.Contex
 	return lo.Uniq(ids), nil
 }
 
+// ExternalCustomerIDsForSubscription returns distinct non-empty external customer IDs
+// for the subscription owner plus all active/trialing/draft inherited children.
+func (s *subscriptionService) ExternalCustomerIDsForSubscription(ctx context.Context, sub *subscription.Subscription) ([]string, error) {
+	internalIDs, err := s.usageCustomerIDsForSubscription(ctx, sub)
+	if err != nil {
+		return nil, err
+	}
+	custFilter := types.NewNoLimitCustomerFilter()
+	custFilter.CustomerIDs = internalIDs
+	customers, err := s.CustomerRepo.List(ctx, custFilter)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]string, 0, len(customers))
+	for _, c := range customers {
+		if c.ExternalID != "" {
+			out = append(out, c.ExternalID)
+		}
+	}
+	return lo.Uniq(out), nil
+}
+
 // getInheritedSubscriptions retrieves all INHERITED child subscriptions for a parent subscription.
 func (s *subscriptionService) getInheritedSubscriptions(ctx context.Context, parentSubID string) ([]*subscription.Subscription, error) {
 	filter := types.NewNoLimitSubscriptionFilter()
@@ -7399,10 +7457,36 @@ func (s *subscriptionService) getInheritedSubscriptions(ctx context.Context, par
 		types.SubscriptionStatusActive,
 		types.SubscriptionStatusTrialing,
 		types.SubscriptionStatusDraft,
-		types.SubscriptionStatusPaused,
 	}
 
 	return s.SubRepo.List(ctx, filter)
+}
+
+// syncTrialingStateFromCreateRequest lines up trialing status and the current period with the trial window.
+// Skips draft subs. If the caller already set subscription_status to something other than trialing, respect it.
+func syncTrialingStateFromCreateRequest(req *dto.CreateSubscriptionRequest, sub *subscription.Subscription) {
+	if sub.TrialStart == nil || sub.TrialEnd == nil {
+		return
+	}
+	if req.SubscriptionStatus == types.SubscriptionStatusDraft {
+		return
+	}
+	// While trialing, "current period" is the trial, not the normal billing interval.
+	promoteToTrialingAndAlignCurrentPeriod := func() {
+		sub.SubscriptionStatus = types.SubscriptionStatusTrialing
+		sub.CurrentPeriodStart = lo.FromPtr(sub.TrialStart)
+		sub.CurrentPeriodEnd = lo.FromPtr(sub.TrialEnd)
+	}
+	switch {
+	case req.SubscriptionStatus == types.SubscriptionStatusTrialing:
+		promoteToTrialingAndAlignCurrentPeriod()
+	case !lo.IsEmpty(req.SubscriptionStatus):
+		// They asked for something specific (active, etc.) — keep it.
+		return
+	default:
+		// No status on the request but we have a trial window — treat as trialing.
+		promoteToTrialingAndAlignCurrentPeriod()
+	}
 }
 
 // cascadePauseToInherited mirrors pause status on all INHERITED child subscriptions.

@@ -278,6 +278,7 @@ func NewRouter(handlers Handlers, cfg *config.Configuration, logger *logger.Logg
 			subscription.POST("/search", handlers.Subscription.QuerySubscriptions)
 			subscription.POST("", handlers.Subscription.CreateSubscription)
 			subscription.GET("", handlers.Subscription.ListSubscriptions)
+			subscription.POST("/lineitems/search", handlers.Subscription.QuerySubscriptionLineItems)
 			subscription.GET("/:id", handlers.Subscription.GetSubscription)
 			subscription.PUT("/:id", handlers.Subscription.UpdateSubscription)
 			subscription.GET("/:id/v2", handlers.Subscription.GetSubscriptionV2)
@@ -299,7 +300,7 @@ func NewRouter(handlers Handlers, cfg *config.Configuration, logger *logger.Logg
 			subscription.POST(":id/modify/execute", handlers.SubscriptionModification.Execute)
 			subscription.POST(":id/modify/preview", handlers.SubscriptionModification.Preview)
 
-			// Subscription line item management
+			// Subscription line item management (POST /lineitems/search registered above)
 			subscription.POST("/:id/lineitems", handlers.Subscription.AddSubscriptionLineItem)
 			subscription.PUT("/lineitems/:id", handlers.Subscription.UpdateSubscriptionLineItem)
 			subscription.DELETE("/lineitems/:id", handlers.Subscription.DeleteSubscriptionLineItem)
@@ -618,6 +619,8 @@ func NewRouter(handlers Handlers, cfg *config.Configuration, logger *logger.Logg
 	subscriptionGroup := cron.Group("/subscriptions")
 	{
 		subscriptionGroup.POST("/update-periods", handlers.CronSubscription.UpdateBillingPeriods)
+		// Deprecated: automation uses Temporal schedule subscription-trial-end-due.
+		subscriptionGroup.POST("/process-trial-end-due", handlers.CronSubscription.ProcessTrialEndDue)
 		subscriptionGroup.POST("/process-auto-cancellation", handlers.CronSubscription.ProcessAutoCancellationSubscriptions)
 		subscriptionGroup.POST("/renewal-due-alerts", handlers.CronSubscription.ProcessSubscriptionRenewalDueAlerts)
 	}

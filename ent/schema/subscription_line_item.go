@@ -122,8 +122,6 @@ func (SubscriptionLineItem) Fields() []ent.Field {
 			Immutable().
 			Optional().
 			GoType(types.InvoiceCadence("")), // TODO: Remove this once we have migrated all the data
-		field.Int("trial_period").
-			Default(0),
 		field.Time("start_date").
 			Optional().
 			Nillable(),
@@ -214,6 +212,5 @@ func (SubscriptionLineItem) Indexes() []ent.Index {
 		index.Fields("tenant_id", "environment_id", "meter_id", "status"),
 		index.Fields("start_date", "end_date"),
 		index.Fields("subscription_id", "status"),
-		index.Fields("tenant_id", "environment_id", "addon_association_id", "status"),
 	}
 }

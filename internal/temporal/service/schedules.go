@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -9,8 +10,11 @@ import (
 	"github.com/flexprice/flexprice/internal/temporal/client"
 	"github.com/flexprice/flexprice/internal/temporal/models"
 	cronWorkflows "github.com/flexprice/flexprice/internal/temporal/workflows/cron"
+	subscriptionWorkflows "github.com/flexprice/flexprice/internal/temporal/workflows/subscription"
+	subscriptionModels "github.com/flexprice/flexprice/internal/temporal/models/subscription"
 	"github.com/flexprice/flexprice/internal/types"
 	enumspb "go.temporal.io/api/enums/v1"
+	"go.temporal.io/api/serviceerror"
 	sdkclient "go.temporal.io/sdk/client"
 )
 
@@ -40,17 +44,31 @@ func AllTemporalScheduleConfigs() []types.ScheduleConfig {
 			TaskQueue: types.TemporalTaskQueueCron,
 		},
 		{
-			ID:        types.ScheduleIDSubscriptionBillingPeriods,
-			Interval:  15 * time.Minute,
-			Workflow:  cronWorkflows.SubscriptionBillingPeriodsWorkflow,
-			Input:     models.SubscriptionBillingPeriodsWorkflowInput{},
-			TaskQueue: types.TemporalTaskQueueCron,
+			ID:       types.ScheduleIDSubscriptionBilling,
+			Interval: 15 * time.Minute,
+			Workflow: subscriptionWorkflows.ScheduleSubscriptionBillingWorkflow,
+			Input:    subscriptionModels.ScheduleSubscriptionBillingWorkflowInput{BatchSize: types.DEFAULT_BATCH_SIZE},
+			TaskQueue: types.TemporalTaskQueueSubscription,
 		},
 		{
 			ID:        types.ScheduleIDSubscriptionRenewalAlerts,
 			Interval:  15 * time.Minute,
 			Workflow:  cronWorkflows.SubscriptionRenewalDueAlertsWorkflow,
 			Input:     models.SubscriptionRenewalDueAlertsWorkflowInput{},
+			TaskQueue: types.TemporalTaskQueueCron,
+		},
+		{
+			ID:        types.ScheduleIDSubscriptionTrialEndDue,
+			Interval:  15 * time.Minute,
+			Workflow:  cronWorkflows.SubscriptionTrialEndDueWorkflow,
+			Input:     models.SubscriptionTrialEndDueWorkflowInput{},
+			TaskQueue: types.TemporalTaskQueueCron,
+		},
+		{
+			ID:        types.ScheduleIDOutboundWebhookStaleRetry,
+			Interval:  15 * time.Minute,
+			Workflow:  cronWorkflows.OutboundWebhookStaleRetryWorkflow,
+			Input:     models.OutboundWebhookStaleRetryWorkflowInput{},
 			TaskQueue: types.TemporalTaskQueueCron,
 		},
 	}
@@ -83,6 +101,14 @@ func ensureOneSchedule(ctx context.Context, tc client.TemporalClient, cfg types.
 		updateErr := handle.Update(ctx, sdkclient.ScheduleUpdateOptions{
 			DoUpdate: func(in sdkclient.ScheduleUpdateInput) (*sdkclient.ScheduleUpdate, error) {
 				in.Description.Schedule.Spec = &spec
+				in.Description.Schedule.Action = &sdkclient.ScheduleWorkflowAction{
+					Workflow:  cfg.Workflow,
+					TaskQueue: cfg.TaskQueue.String(),
+					Args:      []interface{}{cfg.Input},
+				}
+				in.Description.Schedule.Policy = &sdkclient.SchedulePolicies{
+					Overlap: enumspb.SCHEDULE_OVERLAP_POLICY_SKIP,
+				}
 				return &sdkclient.ScheduleUpdate{Schedule: &in.Description.Schedule}, nil
 			},
 		})
@@ -90,6 +116,11 @@ func ensureOneSchedule(ctx context.Context, tc client.TemporalClient, cfg types.
 			return fmt.Errorf("update temporal schedule %q: %w", id, updateErr)
 		}
 		return nil
+	}
+
+	var notFound *serviceerror.NotFound
+	if !errors.As(err, &notFound) {
+		return fmt.Errorf("describe temporal schedule %q: %w", id, err)
 	}
 
 	_, createErr := tc.CreateSchedule(ctx, models.CreateScheduleOptions{

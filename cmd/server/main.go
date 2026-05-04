@@ -176,6 +176,7 @@ func main() {
 			repository.NewSettingsRepository,
 			repository.NewAlertLogsRepository,
 			repository.NewSystemEventRepository,
+			repository.NewSystemEventDomainRepository,
 			repository.NewGroupRepository,
 			repository.NewScheduledTaskRepository,
 			repository.NewPriceUnitRepository,
@@ -518,7 +519,7 @@ func startServer(
 		// Register all handlers and start router once
 		registerRouterHandlers(router, webhookService, integrationEventService, onboardingService, eventPostProcessingSvc, eventConsumptionSvc, featureUsageSvc, costSheetUsageSvc, walletBalanceAlertSvc, rawEventConsumptionSvc, meterUsageTrackingSvc, usageBenchmarkSvc, cfg, true)
 		startRouter(lc, router, log)
-		startTemporalWorker(lc, log, temporalClient, temporalService, params)
+		startTemporalWorker(lc, log, temporalClient, temporalService, params, webhookService)
 	case types.ModeAPI:
 		startAPIServer(lc, r, cfg, log)
 
@@ -532,7 +533,7 @@ func startServer(
 		// consumed and delivered via Svix/native in the same process.
 		registerRouterHandlers(router, webhookService, integrationEventService, onboardingService, eventPostProcessingSvc, eventConsumptionSvc, featureUsageSvc, costSheetUsageSvc, walletBalanceAlertSvc, rawEventConsumptionSvc, meterUsageTrackingSvc, usageBenchmarkSvc, cfg, false)
 		startRouter(lc, router, log)
-		startTemporalWorker(lc, log, temporalClient, temporalService, params)
+		startTemporalWorker(lc, log, temporalClient, temporalService, params, webhookService)
 	case types.ModeConsumer:
 		if consumer == nil {
 			log.Fatal("Kafka consumer required for consumer mode")
@@ -552,6 +553,7 @@ func startTemporalWorker(
 	temporalClient client.TemporalClient,
 	temporalService temporalservice.TemporalService,
 	params service.ServiceParams,
+	webhookService *webhook.WebhookService,
 ) {
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {
@@ -560,7 +562,7 @@ func startTemporalWorker(
 			}
 
 			// Register workflows and activities first (this creates the workers)
-			if err := temporal.RegisterWorkflowsAndActivities(temporalService, params); err != nil {
+			if err := temporal.RegisterWorkflowsAndActivities(temporalService, params, webhookService); err != nil {
 				return fmt.Errorf("failed to register workflows and activities: %w", err)
 			}
 
