@@ -9,6 +9,7 @@ import (
 
 	"github.com/flexprice/flexprice/internal/api/dto"
 	"github.com/flexprice/flexprice/internal/domain/customer"
+	"github.com/flexprice/flexprice/internal/domain/events"
 	ierr "github.com/flexprice/flexprice/internal/errors"
 	"github.com/flexprice/flexprice/internal/logger"
 	"github.com/flexprice/flexprice/internal/types"
@@ -23,6 +24,7 @@ type UsageAnalyticsGetter interface {
 // UsageAnalyticsExporter handles customer usage analytics export
 type UsageAnalyticsExporter struct {
 	customerRepo         customer.Repository
+	eventRepo            events.Repository
 	usageAnalyticsGetter UsageAnalyticsGetter
 	logger               *logger.Logger
 }
@@ -30,11 +32,13 @@ type UsageAnalyticsExporter struct {
 // NewUsageAnalyticsExporter creates a new usage analytics exporter
 func NewUsageAnalyticsExporter(
 	customerRepo customer.Repository,
+	eventRepo events.Repository,
 	usageAnalyticsGetter UsageAnalyticsGetter,
 	logger *logger.Logger,
 ) *UsageAnalyticsExporter {
 	return &UsageAnalyticsExporter{
 		customerRepo:         customerRepo,
+		eventRepo:            eventRepo,
 		usageAnalyticsGetter: usageAnalyticsGetter,
 		logger:               logger,
 	}
@@ -102,9 +106,17 @@ func (e *UsageAnalyticsExporter) PrepareData(ctx context.Context, request *dto.E
 	ctx = types.SetTenantID(ctx, request.TenantID)
 	ctx = types.SetEnvironmentID(ctx, request.EnvID)
 
-	customers, err := e.customerRepo.ListAll(ctx, &types.CustomerFilter{
-		QueryFilter: types.NewNoLimitQueryFilter(),
-	})
+	externalCustomerIDs, err := e.eventRepo.GetDistinctExternalCustomerIDs(ctx, request.StartTime, request.EndTime)
+	if err != nil {
+		return nil, 0, ierr.WithError(err).
+			WithHint("Failed to get distinct external customer ids").
+			Mark(ierr.ErrDatabase)
+	}
+
+	filter := types.NewCustomerFilter()
+	filter.ExternalIDs = externalCustomerIDs
+
+	customers, err := e.customerRepo.ListAll(ctx, filter)
 	if err != nil {
 		return nil, 0, ierr.WithError(err).
 			WithHint("Failed to list customers").

@@ -38,6 +38,7 @@ type ExportService struct {
 	connectionRepo       connection.Repository
 	integrationFactory   *integration.Factory
 	logger               *logger.Logger
+	eventRepo            events.Repository
 }
 
 // NewExportService creates a new export service
@@ -48,6 +49,7 @@ func NewExportService(
 	connectionRepo connection.Repository,
 	integrationFactory *integration.Factory,
 	logger *logger.Logger,
+	eventRepo events.Repository,
 ) *ExportService {
 	return &ExportService{
 		featureUsageRepo:   featureUsageRepo,
@@ -57,6 +59,7 @@ func NewExportService(
 		connectionRepo:     connectionRepo,
 		integrationFactory: integrationFactory,
 		logger:             logger,
+		eventRepo:          eventRepo,
 	}
 }
 
@@ -72,6 +75,7 @@ func NewExportServiceWithWallet(
 	integrationFactory *integration.Factory,
 	logger *logger.Logger,
 	usageAnalyticsGetter UsageAnalyticsGetter,
+	eventRepo events.Repository,
 ) *ExportService {
 	return &ExportService{
 		featureUsageRepo:     featureUsageRepo,
@@ -84,6 +88,7 @@ func NewExportServiceWithWallet(
 		integrationFactory:   integrationFactory,
 		logger:               logger,
 		usageAnalyticsGetter: usageAnalyticsGetter,
+		eventRepo:            eventRepo,
 	}
 }
 
@@ -238,7 +243,7 @@ func (s *ExportService) getExporter(entityType types.ScheduledTaskEntityType) Ex
 			s.logger.Errorw("customer repository not configured for usage analytics export")
 			return nil
 		}
-		return NewUsageAnalyticsExporter(s.customerRepo, s.usageAnalyticsGetter, s.logger)
+		return NewUsageAnalyticsExporter(s.customerRepo, s.eventRepo, s.usageAnalyticsGetter, s.logger)
 	default:
 		return nil
 	}

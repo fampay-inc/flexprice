@@ -352,7 +352,7 @@ func (fields ExportMetadataFields) ValidateAndDefault(exportEntity ScheduledTask
 		}
 		if !supported {
 			return ierr.NewError("unsupported metadata entity_type for this export").
-				WithHintf("'%s' exports support only %v metadata entity types (export_metadata_fields[%d])", exportEntity, allowed, i).
+				WithHintf("unsupported metadata entity_type for this export").
 				WithReportableDetails(map[string]interface{}{
 					"index":         i,
 					"entity_type":   f.EntityType,

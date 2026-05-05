@@ -29,6 +29,7 @@ type ExportActivity struct {
 	integrationFactory   *integration.Factory
 	logger               *logger.Logger
 	usageAnalyticsGetter syncExport.UsageAnalyticsGetter
+	eventRepo            events.Repository
 }
 
 // NewExportActivity creates a new export activity
@@ -43,6 +44,7 @@ func NewExportActivity(
 	integrationFactory *integration.Factory,
 	logger *logger.Logger,
 	usageAnalyticsGetter syncExport.UsageAnalyticsGetter,
+	eventRepo events.Repository,
 ) *ExportActivity {
 	return &ExportActivity{
 		featureUsageRepo:     featureUsageRepo,
@@ -55,6 +57,7 @@ func NewExportActivity(
 		integrationFactory:   integrationFactory,
 		logger:               logger,
 		usageAnalyticsGetter: usageAnalyticsGetter,
+		eventRepo:            eventRepo,
 	}
 }
 
@@ -101,7 +104,7 @@ func (a *ExportActivity) ExportData(ctx context.Context, input ExportDataInput) 
 	}
 
 	// Use the ExportService which handles routing to the correct exporter
-	exportService := syncExport.NewExportServiceWithWallet(a.featureUsageRepo, a.priceRepo, a.invoiceRepo, a.walletRepo, a.walletBalanceGetter, a.customerRepo, a.connectionRepo, a.integrationFactory, a.logger, a.usageAnalyticsGetter)
+	exportService := syncExport.NewExportServiceWithWallet(a.featureUsageRepo, a.priceRepo, a.invoiceRepo, a.walletRepo, a.walletBalanceGetter, a.customerRepo, a.connectionRepo, a.integrationFactory, a.logger, a.usageAnalyticsGetter, a.eventRepo)
 	response, err := exportService.Export(ctx, request)
 	if err != nil {
 		a.logger.Errorw("export failed", "error", err, "entity_type", input.EntityType)
