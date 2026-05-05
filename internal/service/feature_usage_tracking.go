@@ -3270,6 +3270,13 @@ func (s *featureUsageTrackingService) mergeAnalyticsData(aggregated *AnalyticsDa
 			aggregated.Groups[id] = grp
 		}
 	}
+
+	// Merge price responses (used for expand=["price"] in response building)
+	for id, pr := range additional.PriceResponses {
+		if _, exists := aggregated.PriceResponses[id]; !exists {
+			aggregated.PriceResponses[id] = pr
+		}
+	}
 }
 
 func (s *featureUsageTrackingService) GetHuggingFaceBillingData(ctx context.Context, params *dto.GetHuggingFaceBillingDataRequest) (*dto.GetHuggingFaceBillingDataResponse, error) {
