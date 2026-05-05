@@ -2,11 +2,13 @@ package export
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/flexprice/flexprice/internal/api/dto"
 	"github.com/flexprice/flexprice/internal/domain/customer"
+	"github.com/flexprice/flexprice/internal/domain/events"
 	"github.com/flexprice/flexprice/internal/logger"
 	"github.com/flexprice/flexprice/internal/testutil"
 	"github.com/flexprice/flexprice/internal/types"
@@ -35,14 +37,16 @@ func (m *inMemoryUsageAnalyticsGetter) GetDetailedUsageAnalytics(_ context.Conte
 
 // usageAnalyticsTestEnv bundles everything needed for a usage analytics export test.
 type usageAnalyticsTestEnv struct {
-	exporter      *UsageAnalyticsExporter
-	customerStore *testutil.InMemoryCustomerStore
+	exporter        *UsageAnalyticsExporter
+	customerStore   *testutil.InMemoryCustomerStore
+	eventRepo       *testutil.InMemoryEventStore
 	analyticsGetter *inMemoryUsageAnalyticsGetter
-	req           *dto.ExportRequest
-	ctx           context.Context
-	tenantID      string
-	envID         string
-	now           time.Time
+	req             *dto.ExportRequest
+	ctx             context.Context
+	tenantID        string
+	envID           string
+	now             time.Time
+	eventSeq        int
 }
 
 func newUsageAnalyticsTestEnv(t *testing.T) *usageAnalyticsTestEnv {
@@ -57,8 +61,9 @@ func newUsageAnalyticsTestEnv(t *testing.T) *usageAnalyticsTestEnv {
 	customerStore := testutil.NewInMemoryCustomerStore()
 	analyticsGetter := newInMemoryUsageAnalyticsGetter()
 	log := logger.GetLogger()
+	eventRepo := testutil.NewInMemoryEventStore()
 
-	exporter := NewUsageAnalyticsExporter(customerStore, analyticsGetter, log)
+	exporter := NewUsageAnalyticsExporter(customerStore, eventRepo, analyticsGetter, log)
 
 	now := time.Now().UTC()
 	req := &dto.ExportRequest{
@@ -73,6 +78,7 @@ func newUsageAnalyticsTestEnv(t *testing.T) *usageAnalyticsTestEnv {
 	return &usageAnalyticsTestEnv{
 		exporter:        exporter,
 		customerStore:   customerStore,
+		eventRepo:       eventRepo,
 		analyticsGetter: analyticsGetter,
 		req:             req,
 		ctx:             ctx,
@@ -100,6 +106,23 @@ func (e *usageAnalyticsTestEnv) addCustomer(t *testing.T, id, externalID, name s
 
 func (e *usageAnalyticsTestEnv) setAnalytics(externalID string, items []dto.UsageAnalyticItem) {
 	e.analyticsGetter.set(externalID, &dto.GetUsageAnalyticsResponse{Items: items})
+}
+
+func (e *usageAnalyticsTestEnv) addEvent(t *testing.T, externalCustomerID string, ts time.Time) {
+	t.Helper()
+	e.eventSeq++
+	event := &events.Event{
+		ID:                 fmt.Sprintf("evt-%s-%d", externalCustomerID, e.eventSeq),
+		TenantID:           e.tenantID,
+		EnvironmentID:      e.envID,
+		ExternalCustomerID: externalCustomerID,
+		EventName:          "usage_analytics_seed",
+		Timestamp:          ts.UTC(),
+		Properties:         map[string]any{},
+	}
+	if err := e.eventRepo.InsertEvent(e.ctx, event); err != nil {
+		t.Fatalf("insert event for external customer %s: %v", externalCustomerID, err)
+	}
 }
 
 func TestUsageAnalyticsExporter_PrepareData(t *testing.T) {
@@ -156,6 +179,7 @@ func TestUsageAnalyticsExporter_PrepareData(t *testing.T) {
 			name: "single customer single feature row",
 			setup: func(t *testing.T, env *usageAnalyticsTestEnv) {
 				c := env.addCustomer(t, "cust-2", "ext-2", "Acme Corp", nil)
+				env.addEvent(t, c.ExternalID, env.req.StartTime.Add(1*time.Minute))
 				env.setAnalytics(c.ExternalID, []dto.UsageAnalyticItem{
 					{
 						FeatureID:   "feat-1",
@@ -206,6 +230,8 @@ func TestUsageAnalyticsExporter_PrepareData(t *testing.T) {
 			setup: func(t *testing.T, env *usageAnalyticsTestEnv) {
 				c1 := env.addCustomer(t, "cust-3", "ext-3", "Alpha Inc", nil)
 				c2 := env.addCustomer(t, "cust-4", "ext-4", "Beta Ltd", nil)
+				env.addEvent(t, c1.ExternalID, env.req.StartTime.Add(1*time.Minute))
+				env.addEvent(t, c2.ExternalID, env.req.StartTime.Add(2*time.Minute))
 				env.setAnalytics(c1.ExternalID, []dto.UsageAnalyticItem{
 					{FeatureID: "feat-a", FeatureName: "Storage", EventName: "storage_write", EventCount: 10, TotalUsage: decimal.NewFromInt(10), TotalCost: decimal.NewFromInt(1), Currency: "USD"},
 					{FeatureID: "feat-b", FeatureName: "Compute", EventName: "compute_run", EventCount: 5, TotalUsage: decimal.NewFromInt(5), TotalCost: decimal.NewFromFloat(0.5), Currency: "USD"},
@@ -221,6 +247,7 @@ func TestUsageAnalyticsExporter_PrepareData(t *testing.T) {
 			name: "customer metadata dynamic columns",
 			setup: func(t *testing.T, env *usageAnalyticsTestEnv) {
 				c := env.addCustomer(t, "cust-5", "ext-5", "Meta Corp", map[string]string{"plan_tier": "enterprise", "region": "us-east"})
+				env.addEvent(t, c.ExternalID, env.req.StartTime.Add(1*time.Minute))
 				env.setAnalytics(c.ExternalID, []dto.UsageAnalyticItem{
 					{FeatureID: "feat-1", FeatureName: "API Calls", EventName: "api_call", EventCount: 100, TotalUsage: decimal.NewFromInt(100), TotalCost: decimal.NewFromInt(10), Currency: "USD"},
 				})
@@ -268,6 +295,7 @@ func TestUsageAnalyticsExporter_PrepareData(t *testing.T) {
 			name: "missing metadata key produces empty cell",
 			setup: func(t *testing.T, env *usageAnalyticsTestEnv) {
 				c := env.addCustomer(t, "cust-6", "ext-6", "Sparse Corp", map[string]string{"plan_tier": "starter"})
+				env.addEvent(t, c.ExternalID, env.req.StartTime.Add(1*time.Minute))
 				env.setAnalytics(c.ExternalID, []dto.UsageAnalyticItem{
 					{FeatureID: "feat-1", FeatureName: "API Calls", EventName: "api_call", EventCount: 1, TotalUsage: decimal.NewFromInt(1), TotalCost: decimal.NewFromFloat(0.1), Currency: "USD"},
 				})

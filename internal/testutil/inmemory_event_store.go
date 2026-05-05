@@ -632,6 +632,39 @@ func (s *InMemoryEventStore) GetDistinctEventNames(ctx context.Context, external
 	return eventNames, nil
 }
 
+func (s *InMemoryEventStore) GetDistinctExternalCustomerIDs(ctx context.Context, startTime, endTime time.Time) ([]string, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	tenantID := types.GetTenantID(ctx)
+	environmentID := types.GetEnvironmentID(ctx)
+
+	var externalIDs []string
+	for _, event := range s.events {
+		if tenantID != "" && event.TenantID != tenantID {
+			continue
+		}
+		if environmentID != "" && event.EnvironmentID != environmentID {
+			continue
+		}
+
+		// Inclusive start, exclusive end: event.Timestamp >= startTime && event.Timestamp < endTime
+		if (event.Timestamp.Equal(startTime) || event.Timestamp.After(startTime)) &&
+			event.Timestamp.Before(endTime) {
+			if event.ExternalCustomerID != "" {
+				externalIDs = append(externalIDs, event.ExternalCustomerID)
+			}
+		}
+	}
+
+	externalIDs = lo.Uniq(externalIDs)
+	sort.Strings(externalIDs)
+	if externalIDs == nil {
+		return []string{}, nil
+	}
+	return externalIDs, nil
+}
+
 func (s *InMemoryEventStore) matchesBaseFilters(ctx context.Context, event *events.Event, params *events.UsageParams) bool {
 	// check tenant ID
 	tenantID := types.GetTenantID(ctx)
