@@ -1869,9 +1869,10 @@ func (s *subscriptionService) CancelSubscription(
 		if req.CancellationType == types.CancellationTypeEndOfPeriod ||
 			req.CancellationType == types.CancellationTypeScheduledDate {
 			originalState = &subscriptionOriginalState{
-				CancelAtPeriodEnd: subscription.CancelAtPeriodEnd,
-				CancelAt:          subscription.CancelAt,
-				EndDate:           subscription.EndDate,
+				CancelAtPeriodEnd:        subscription.CancelAtPeriodEnd,
+				CancelAt:                 subscription.CancelAt,
+				EndDate:                  subscription.EndDate,
+				OriginalCurrentPeriodEnd: subscription.CurrentPeriodEnd,
 			}
 		}
 
@@ -5276,11 +5277,23 @@ func (s *subscriptionService) updateSubscriptionForCancellation(
 		subscription.CancelAtPeriodEnd = false
 		subscription.EndDate = &effectiveDate
 
-	case types.CancellationTypeEndOfPeriod, types.CancellationTypeScheduledDate:
+	case types.CancellationTypeEndOfPeriod:
 		// Don't change status immediately — actual cancellation runs when the schedule fires.
 		// EndDate is NOT set here; it will be set by the cancellation schedule processor.
 		subscription.CancelAtPeriodEnd = true
 		subscription.CancelAt = &effectiveDate
+
+	case types.CancellationTypeScheduledDate:
+		// Set EndDate immediately so the subscription reflects the true end date.
+		// If the scheduled date falls before the current period end, shorten CurrentPeriodEnd
+		// so the cron's period loop (for currentEnd.Before(now)) fires correctly at effectiveDate
+		// instead of silently no-oping until the original period end.
+		subscription.CancelAtPeriodEnd = true
+		subscription.CancelAt = &effectiveDate
+		subscription.EndDate = &effectiveDate
+		if effectiveDate.Before(subscription.CurrentPeriodEnd) {
+			subscription.CurrentPeriodEnd = effectiveDate
+		}
 
 	default:
 		return ierr.NewError("invalid cancellation type").
@@ -6948,9 +6961,10 @@ func (s *subscriptionService) CreateDraftInvoiceForSubscription(ctx context.Cont
 
 // subscriptionOriginalState holds the original subscription state before cancellation
 type subscriptionOriginalState struct {
-	CancelAtPeriodEnd bool
-	CancelAt          *time.Time
-	EndDate           *time.Time
+	CancelAtPeriodEnd        bool
+	CancelAt                 *time.Time
+	EndDate                  *time.Time
+	OriginalCurrentPeriodEnd time.Time
 	// Note: CancelledAt is not tracked because it should never be set for end_of_period cancellations
 }
 
@@ -6970,6 +6984,7 @@ func (s *subscriptionService) createCancellationSchedule(
 		OriginalCancelAtPeriodEnd: originalState.CancelAtPeriodEnd,
 		OriginalCancelAt:          originalState.CancelAt,
 		OriginalEndDate:           originalState.EndDate,
+		OriginalCurrentPeriodEnd:  &originalState.OriginalCurrentPeriodEnd,
 	}
 
 	// Create the schedule entry
