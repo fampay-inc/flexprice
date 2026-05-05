@@ -109,6 +109,10 @@ func (p *PrepareSubscriptionInvoiceRequestParams) Validate() error {
 	if err := p.ReferencePoint.Validate(); err != nil {
 		return err
 	}
+	if p.OpeningInvoiceAdjustmentAmount != nil && p.OpeningInvoiceAdjustmentAmount.IsNegative() {
+		return ierr.NewError("OpeningInvoiceAdjustmentAmount must be non-negative").
+			Mark(ierr.ErrValidation)
+	}
 	return nil
 }
 
