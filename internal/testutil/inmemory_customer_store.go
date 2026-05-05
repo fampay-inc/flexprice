@@ -151,6 +151,18 @@ func customerFilterFn(ctx context.Context, c *customer.Customer, filter interfac
 		return false
 	}
 
+	// Apply external IDs filter.
+	// When ExternalIDs is provided (even empty), treat it as an allowlist. This matches typical
+	// DB semantics for "WHERE external_id IN (...)" where an empty list returns no rows.
+	if f.ExternalIDs != nil {
+		if len(f.ExternalIDs) == 0 {
+			return false
+		}
+		if !lo.Contains(f.ExternalIDs, c.ExternalID) {
+			return false
+		}
+	}
+
 	// Apply email filter
 	if f.Email != "" && !strings.EqualFold(c.Email, f.Email) {
 		return false

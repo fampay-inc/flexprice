@@ -141,10 +141,16 @@ func (s *scheduledTaskService) CreateScheduledTask(ctx context.Context, req dto.
 			s.logger.Errorw("invalid populated job config for flexprice-managed S3", "error", err)
 			return nil, err
 		}
+		if err := jobConfig.ExportMetadataFields.ValidateAndDefault(req.EntityType); err != nil {
+			return nil, err
+		}
 	} else {
 		// For non-managed connections: full validation required
 		if err := req.JobConfig.Validate(); err != nil {
 			s.logger.Errorw("invalid job config for custom S3 connection", "error", err)
+			return nil, err
+		}
+		if err := req.JobConfig.ExportMetadataFields.ValidateAndDefault(req.EntityType); err != nil {
 			return nil, err
 		}
 		jobConfig = req.JobConfig
