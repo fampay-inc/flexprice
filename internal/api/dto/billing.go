@@ -42,6 +42,7 @@ type CalculateFixedChargesParams struct {
 
 // Validate enforces struct tags and a non-negative optional adjustment.
 func (p *CalculateFixedChargesParams) Validate() error {
+
 	if err := validator.ValidateRequest(p); err != nil {
 		return err
 	}
