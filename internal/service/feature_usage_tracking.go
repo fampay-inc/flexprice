@@ -1358,7 +1358,7 @@ func (s *featureUsageTrackingService) GetDetailedUsageAnalyticsV2(ctx context.Co
 	var currency string
 
 	// Process each customer and aggregate their analytics data
-	for i, customer := range customers {
+	for _, customer := range customers {
 		// Create a customer-specific request
 		customerReq := *req
 		customerReq.ExternalCustomerID = customer.ExternalID
@@ -1377,8 +1377,8 @@ func (s *featureUsageTrackingService) GetDetailedUsageAnalyticsV2(ctx context.Co
 		// Append this customer's analytics to the aggregated list
 		allAnalytics = append(allAnalytics, data.Analytics...)
 
-		// Use the first customer's data structure as the base for aggregation
-		if i == 0 {
+		// Use the first successfully-fetched customer's data as the base for aggregation
+		if aggregatedData == nil {
 			aggregatedData = data
 			currency = data.Currency
 		} else {
@@ -3268,6 +3268,13 @@ func (s *featureUsageTrackingService) mergeAnalyticsData(aggregated *AnalyticsDa
 	for id, grp := range additional.Groups {
 		if _, exists := aggregated.Groups[id]; !exists {
 			aggregated.Groups[id] = grp
+		}
+	}
+
+	// Merge price responses (used for expand=["price"] in response building)
+	for id, pr := range additional.PriceResponses {
+		if _, exists := aggregated.PriceResponses[id]; !exists {
+			aggregated.PriceResponses[id] = pr
 		}
 	}
 }
