@@ -648,9 +648,14 @@ func (s *InMemoryEventStore) GetDistinctExternalCustomerIDs(ctx context.Context,
 			continue
 		}
 
-		// Inclusive start, exclusive end: event.Timestamp >= startTime && event.Timestamp < endTime
-		if (event.Timestamp.Equal(startTime) || event.Timestamp.After(startTime)) &&
-			event.Timestamp.Before(endTime) {
+		// Mirror ClickHouse repo semantics: startTime is >=, endTime is <= when provided.
+		if !startTime.IsZero() && event.Timestamp.Before(startTime) {
+			continue
+		}
+		if !endTime.IsZero() && event.Timestamp.After(endTime) {
+			continue
+		}
+		if !event.Timestamp.IsZero() {
 			if event.ExternalCustomerID != "" {
 				externalIDs = append(externalIDs, event.ExternalCustomerID)
 			}
