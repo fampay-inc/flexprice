@@ -589,7 +589,7 @@ func (a *SumWithMultiAggregator) GetQuery(ctx context.Context, params *events.Us
 
 	return fmt.Sprintf(`
         SELECT 
-            %s (sum(value) * %f) as total
+            %s (sum(value) * %s) as total
         FROM (
             SELECT
                 %s anyLast(JSONExtractFloat(assumeNotNull(properties), '%s')) as value
@@ -606,7 +606,7 @@ func (a *SumWithMultiAggregator) GetQuery(ctx context.Context, params *events.Us
         %s
     `,
 		selectClause,
-		multiplier.InexactFloat64(),
+		multiplier.String(),
 		windowClause,
 		params.PropertyName,
 		types.GetTenantID(ctx),
