@@ -168,9 +168,19 @@ func TestUsageAnalyticsExporter_PrepareData(t *testing.T) {
 			},
 		},
 		{
-			name: "customer with no analytics produces no rows",
+			name: "customer with no events in window produces no rows",
 			setup: func(t *testing.T, env *usageAnalyticsTestEnv) {
 				env.addCustomer(t, "cust-1", "ext-1", "Idle Corp", nil)
+			},
+			wantCount: 0,
+			wantRows:  0,
+		},
+		{
+			name: "customer with events but empty analytics produces no rows",
+			setup: func(t *testing.T, env *usageAnalyticsTestEnv) {
+				c := env.addCustomer(t, "cust-ghost", "ext-ghost", "Ghost Corp", nil)
+				env.addEvent(t, c.ExternalID, env.req.StartTime.Add(1*time.Minute))
+				// No explicit setAnalytics call: getter returns empty Items by default.
 			},
 			wantCount: 0,
 			wantRows:  0,
