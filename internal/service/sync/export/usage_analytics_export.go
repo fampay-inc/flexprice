@@ -106,11 +106,38 @@ func (e *UsageAnalyticsExporter) PrepareData(ctx context.Context, request *dto.E
 	ctx = types.SetTenantID(ctx, request.TenantID)
 	ctx = types.SetEnvironmentID(ctx, request.EnvID)
 
+	metadataFields := request.JobConfig.GetExportMetadataFields()
+
+	var buf bytes.Buffer
+	csvWriter := csv.NewWriter(&buf)
+
+	if err := csvWriter.Write(e.resolveHeaders(metadataFields)); err != nil {
+		return nil, 0, ierr.WithError(err).
+			WithHint("Failed to write CSV headers").
+			Mark(ierr.ErrInternal)
+	}
+
 	externalCustomerIDs, err := e.eventRepo.GetDistinctExternalCustomerIDs(ctx, request.StartTime, request.EndTime)
 	if err != nil {
 		return nil, 0, ierr.WithError(err).
 			WithHint("Failed to get distinct external customer ids").
 			Mark(ierr.ErrDatabase)
+	}
+
+	// if no external customer ids found, return empty CSV with headers only
+	if len(externalCustomerIDs) == 0 {
+		e.logger.Infow("no external customer ids found, uploading empty CSV with headers only",
+			"tenant_id", request.TenantID,
+			"env_id", request.EnvID,
+			"start_time", request.StartTime,
+			"end_time", request.EndTime)
+		csvWriter.Flush()
+		if err := csvWriter.Error(); err != nil {
+			return nil, 0, ierr.WithError(err).
+				WithHint("Failed to flush CSV writer").
+				Mark(ierr.ErrInternal)
+		}
+		return buf.Bytes(), 0, nil
 	}
 
 	filter := types.NewCustomerFilter()
@@ -127,17 +154,6 @@ func (e *UsageAnalyticsExporter) PrepareData(ctx context.Context, request *dto.E
 		"customer_count", len(customers),
 		"tenant_id", request.TenantID,
 		"env_id", request.EnvID)
-
-	metadataFields := request.JobConfig.GetExportMetadataFields()
-
-	var buf bytes.Buffer
-	csvWriter := csv.NewWriter(&buf)
-
-	if err := csvWriter.Write(e.resolveHeaders(metadataFields)); err != nil {
-		return nil, 0, ierr.WithError(err).
-			WithHint("Failed to write CSV headers").
-			Mark(ierr.ErrInternal)
-	}
 
 	recordCount := 0
 	for _, c := range customers {
