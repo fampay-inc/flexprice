@@ -1,4 +1,4 @@
-package testutil
+package export
 
 import (
 	"context"
@@ -11,12 +11,12 @@ import (
 	"github.com/flexprice/flexprice/internal/domain/customer"
 	"github.com/flexprice/flexprice/internal/domain/wallet"
 	"github.com/flexprice/flexprice/internal/logger"
-	exportSvc "github.com/flexprice/flexprice/internal/service/sync/export"
+	"github.com/flexprice/flexprice/internal/testutil"
 	"github.com/flexprice/flexprice/internal/types"
 	"github.com/shopspring/decimal"
 )
 
-// inMemoryWalletBalanceGetter is a local test double for export.WalletBalanceGetter.
+// inMemoryWalletBalanceGetter is a test double for WalletBalanceGetter.
 type inMemoryWalletBalanceGetter struct {
 	responses map[string]*dto.WalletBalanceResponse
 }
@@ -38,9 +38,9 @@ func (m *inMemoryWalletBalanceGetter) GetWalletBalanceV2(_ context.Context, wall
 
 // creditUsageTestEnv bundles everything needed for a credit usage export test.
 type creditUsageTestEnv struct {
-	exporter      *exportSvc.CreditUsageExporter
-	walletStore   *InMemoryWalletStore
-	customerStore *InMemoryCustomerStore
+	exporter      *CreditUsageExporter
+	walletStore   *testutil.InMemoryWalletStore
+	customerStore *testutil.InMemoryCustomerStore
 	balanceGetter *inMemoryWalletBalanceGetter
 	req           *dto.ExportRequest
 	ctx           context.Context
@@ -58,12 +58,12 @@ func newCreditUsageTestEnv(t *testing.T) *creditUsageTestEnv {
 	ctx = types.SetTenantID(ctx, tenantID)
 	ctx = types.SetEnvironmentID(ctx, envID)
 
-	walletStore := NewInMemoryWalletStore()
-	customerStore := NewInMemoryCustomerStore()
+	walletStore := testutil.NewInMemoryWalletStore()
+	customerStore := testutil.NewInMemoryCustomerStore()
 	balanceGetter := newInMemoryWalletBalanceGetter()
 	log := logger.GetLogger()
 
-	exporter := exportSvc.NewCreditUsageExporter(walletStore, customerStore, balanceGetter, nil, log)
+	exporter := NewCreditUsageExporter(walletStore, customerStore, balanceGetter, nil, log)
 
 	now := time.Now().UTC()
 	req := &dto.ExportRequest{
@@ -166,11 +166,11 @@ func TestCreditUsageExporter_PrepareData(t *testing.T) {
 	}
 
 	tests := []struct {
-		name         string
-		setup        func(t *testing.T, env *creditUsageTestEnv)
-		wantCount    int
-		wantRows     int
-		assertRow    func(t *testing.T, headers []string, rows [][]string, env *creditUsageTestEnv)
+		name      string
+		setup     func(t *testing.T, env *creditUsageTestEnv)
+		wantCount int
+		wantRows  int
+		assertRow func(t *testing.T, headers []string, rows [][]string, env *creditUsageTestEnv)
 	}{
 		{
 			name:      "empty customers produces headers only",
@@ -259,7 +259,7 @@ func TestCreditUsageExporter_PrepareData(t *testing.T) {
 						{EntityType: types.ExportMetadataEntityTypeWallet, FieldKey: "tier", ColumnName: "Tier"},
 					},
 				}
-				if err := env.req.JobConfig.ExportMetadataFields.ValidateAndDefault(); err != nil {
+				if err := env.req.JobConfig.ExportMetadataFields.ValidateAndDefault(types.ScheduledTaskEntityTypeCreditUsage); err != nil {
 					t.Fatalf("ValidateAndDefault: %v", err)
 				}
 			},

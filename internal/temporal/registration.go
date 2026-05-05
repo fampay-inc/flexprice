@@ -95,9 +95,29 @@ func RegisterWorkflowsAndActivities(temporalService temporalService.TemporalServ
 		params.Logger,
 		scheduledTaskService,
 	)
+
+	// Feature usage tracking (export needs GetDetailedUsageAnalytics for usage_analytics entity type)
+	featureUsageTrackingService := service.NewFeatureUsageTrackingService(
+		params,
+		params.EventRepo,
+		params.FeatureUsageRepo,
+	)
+
 	// Create wallet service for credit usage export
 	walletService := service.NewWalletService(params)
-	exportActivity := exportActivities.NewExportActivity(params.FeatureUsageRepo, params.PriceRepo, params.InvoiceRepo, params.WalletRepo, walletService, params.CustomerRepo, params.ConnectionRepo, params.IntegrationFactory, params.Logger)
+	exportActivity := exportActivities.NewExportActivity(
+		params.FeatureUsageRepo,
+		params.PriceRepo,
+		params.InvoiceRepo,
+		params.WalletRepo,
+		walletService,
+		params.CustomerRepo,
+		params.ConnectionRepo,
+		params.IntegrationFactory,
+		params.Logger,
+		featureUsageTrackingService,
+		params.EventRepo,
+	)
 
 	// HubSpot activities - clean and simple, delegates to existing services
 	hubspotDealSyncActivities := hubspotActivities.NewDealSyncActivities(
@@ -213,11 +233,6 @@ func RegisterWorkflowsAndActivities(temporalService temporalService.TemporalServ
 	envActivities := environmentActivities.NewEnvironmentActivities(params)
 
 	// Reprocess events activities
-	featureUsageTrackingService := service.NewFeatureUsageTrackingService(
-		params,
-		params.EventRepo,
-		params.FeatureUsageRepo,
-	)
 	reprocessEventsActivities := eventsActivities.NewReprocessEventsActivities(featureUsageTrackingService)
 
 	// Reprocess raw events activities

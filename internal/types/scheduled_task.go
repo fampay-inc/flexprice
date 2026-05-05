@@ -43,10 +43,11 @@ func (s ScheduledTaskInterval) Validate() error {
 type ScheduledTaskEntityType string
 
 const (
-	ScheduledTaskEntityTypeEvents       ScheduledTaskEntityType = "events"
-	ScheduledTaskEntityTypeInvoice      ScheduledTaskEntityType = "invoice"
-	ScheduledTaskEntityTypeCreditTopups ScheduledTaskEntityType = "credit_topups"
-	ScheduledTaskEntityTypeCreditUsage  ScheduledTaskEntityType = "credit_usage"
+	ScheduledTaskEntityTypeEvents         ScheduledTaskEntityType = "events"
+	ScheduledTaskEntityTypeInvoice        ScheduledTaskEntityType = "invoice"
+	ScheduledTaskEntityTypeCreditTopups   ScheduledTaskEntityType = "credit_topups"
+	ScheduledTaskEntityTypeCreditUsage    ScheduledTaskEntityType = "credit_usage"
+	ScheduledTaskEntityTypeUsageAnalytics ScheduledTaskEntityType = "usage_analytics"
 )
 
 // Validate validates the entity type
@@ -56,6 +57,7 @@ func (e ScheduledTaskEntityType) Validate() error {
 		ScheduledTaskEntityTypeInvoice,
 		ScheduledTaskEntityTypeCreditTopups,
 		ScheduledTaskEntityTypeCreditUsage,
+		ScheduledTaskEntityTypeUsageAnalytics,
 	}
 	if e == "" {
 		return ierr.NewError("entity type is required").
@@ -68,7 +70,7 @@ func (e ScheduledTaskEntityType) Validate() error {
 		}
 	}
 	return ierr.NewError("invalid entity type").
-		WithHint("Entity type must be one of: events, invoice, credit_topups, credit_usage").
+		WithHint("Entity type must be one of: events, invoice, credit_topups, credit_usage, usage_analytics").
 		Mark(ierr.ErrValidation)
 }
 
@@ -219,12 +221,6 @@ func (s *S3JobConfig) Validate() error {
 		return err
 	}
 
-	// ValidateAndDefault checks that every export metadata field has entity_type + field_key
-	// and normalizes aliases.
-	if err := s.ExportMetadataFields.ValidateAndDefault(); err != nil {
-		return err
-	}
-
 	// Set defaults
 	if s.Compression == "" {
 		s.Compression = S3CompressionTypeNone
@@ -292,6 +288,12 @@ const (
 	ExportMetadataEntityTypeWallet   ExportMetadataEntityType = "wallet"
 )
 
+// allowedMetadataEntityTypes maps each export entity type to the metadata entity types it supports.
+var allowedMetadataEntityTypes = map[ScheduledTaskEntityType][]ExportMetadataEntityType{
+	ScheduledTaskEntityTypeCreditUsage:    {ExportMetadataEntityTypeCustomer, ExportMetadataEntityTypeWallet},
+	ScheduledTaskEntityTypeUsageAnalytics: {ExportMetadataEntityTypeCustomer},
+}
+
 func (e ExportMetadataEntityType) Validate() error {
 	allowedTypes := []ExportMetadataEntityType{
 		ExportMetadataEntityTypeCustomer,
@@ -324,28 +326,46 @@ type ExportMetadataField struct {
 // ExportMetadataFields is a named slice type so validation methods can be attached.
 type ExportMetadataFields []ExportMetadataField
 
-// ValidateAndDefault checks that every field has entity_type + field_key set, and normalizes aliases.
-func (fields ExportMetadataFields) ValidateAndDefault() error {
+// ValidateAndDefault validates each field against the allowed metadata entity types for the given
+// export entity type, then normalises defaults. The entity-type check runs first so the error
+// message is meaningful before any defaulting happens.
+func (fields ExportMetadataFields) ValidateAndDefault(exportEntity ScheduledTaskEntityType) error {
+	allowed, ok := allowedMetadataEntityTypes[exportEntity]
+	if !ok {
+		return ierr.NewError("export_metadata_fields are not supported for this export type").
+			Mark(ierr.ErrValidation)
+	}
+
 	for i := range fields {
 		f := &fields[i]
 		if f.EntityType == "" {
 			return ierr.NewError("export metadata field entity_type is required").
-				WithHintf("field at index %d is missing entity_type (customer or wallet)", i).
+				WithHintf("export_metadata_fields[%d] is missing entity_type", i).
 				Mark(ierr.ErrValidation)
 		}
-		if err := f.EntityType.Validate(); err != nil {
-			// Add field index context without replacing the original validation details.
-			return ierr.WithError(err).
-				WithHintf("export_metadata_fields[%d].entity_type is invalid", i).
+		supported := false
+		for _, a := range allowed {
+			if f.EntityType == a {
+				supported = true
+				break
+			}
+		}
+		if !supported {
+			return ierr.NewError("unsupported metadata entity_type for this export").
+				WithHintf("unsupported metadata entity_type for this export").
+				WithReportableDetails(map[string]interface{}{
+					"index":         i,
+					"entity_type":   f.EntityType,
+					"allowed_types": allowed,
+					"export_entity": exportEntity,
+				}).
 				Mark(ierr.ErrValidation)
 		}
 		if f.FieldKey == "" {
 			return ierr.NewError("export metadata field field_key is required").
-				WithHintf("field at index %d is missing field_key", i).
+				WithHintf("export_metadata_fields[%d] is missing field_key", i).
 				Mark(ierr.ErrValidation)
 		}
-
-		// Set defaults
 		if f.ColumnName == "" {
 			f.ColumnName = f.FieldKey
 		}
