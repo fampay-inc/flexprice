@@ -524,6 +524,7 @@ func (r *CancelSubscriptionRequest) Validate() error {
 	if err := r.CancellationType.Validate(); err != nil {
 		return err
 	}
+
 	// Set default proration behavior if not provided
 	if r.ProrationBehavior == "" {
 		r.ProrationBehavior = types.ProrationBehaviorNone
@@ -533,6 +534,24 @@ func (r *CancelSubscriptionRequest) Validate() error {
 		r.CancelImmediatelyInvoicePolicy = types.CancelImmediatelyInvoicePolicySkip
 	} else if err := r.CancelImmediatelyInvoicePolicy.Validate(); err != nil {
 		return err
+	}
+
+	// CancellationType-specific validation
+	if r.CancellationType == types.CancellationTypeScheduledDate {
+		if r.CancelAt == nil {
+			return ierr.NewError("cancel_at is required for scheduled_date").
+				WithHint("Provide a future date in cancel_at").
+				Mark(ierr.ErrValidation)
+		}
+		now := time.Now().UTC()
+		if !r.CancelAt.After(now) {
+			return ierr.NewError("cancel_at must be a future date for scheduled_date cancellation").
+				WithHint("Provide a date strictly in the future for cancel_at").
+				WithReportableDetails(map[string]interface{}{
+					"cancel_at": r.CancelAt.UTC().Format(time.RFC3339),
+				}).
+				Mark(ierr.ErrValidation)
+		}
 	}
 
 	return nil

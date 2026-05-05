@@ -3784,13 +3784,16 @@ func (s *SubscriptionServiceSuite) TestCancelSubscriptionScheduledDate() {
 		// Effective date is pinned to the custom cancel_at
 		s.NotNil(updated.CancelAt, "cancel_at must be set to the requested date")
 		s.WithinDuration(futureDate, *updated.CancelAt, time.Second)
-		// Mirrors end_of_period: subscription stays active, cancel_at_period_end flagged
+		// Subscription stays active until the scheduled date fires
 		s.Equal(types.SubscriptionStatusActive, updated.SubscriptionStatus, "status must stay active")
 		s.True(updated.CancelAtPeriodEnd, "cancel_at_period_end must be true")
 		s.NotNil(updated.CancelledAt, "cancelled_at must be set (time the cancellation was scheduled)")
-		// end_date is NOT set here — the schedule processor sets it when it fires
-		s.Nil(updated.EndDate, "end_date must NOT be set at scheduling time")
-		s.T().Logf("✅ scheduled_date: same fields as end_of_period, effective date = custom cancel_at")
+		// EndDate is set immediately so APIs reflect the true end date and the cron loop fires correctly
+		s.NotNil(updated.EndDate, "end_date must be set at scheduling time")
+		s.WithinDuration(futureDate, *updated.EndDate, time.Second, "end_date must equal cancel_at")
+		// futureDate (+15d) < currentPeriodEnd (+25d), so CurrentPeriodEnd is shortened to effectiveDate
+		s.WithinDuration(futureDate, updated.CurrentPeriodEnd, time.Second, "current_period_end must be shortened to cancel_at")
+		s.T().Logf("✅ scheduled_date: end_date and current_period_end set eagerly, effective date = custom cancel_at")
 	})
 
 	s.Run("metadata records cancellation details and cancel_at is set", func() {
@@ -3854,7 +3857,7 @@ func (s *SubscriptionServiceSuite) TestCancelSubscriptionScheduledDate() {
 		})
 		s.Error(err)
 		s.True(ierr.IsValidation(err), "expected validation error")
-		s.Contains(err.Error(), "at or after the current time")
+		s.Contains(err.Error(), "future date")
 		s.T().Logf("✅ scheduled_date: past cancel_at rejected")
 	})
 
