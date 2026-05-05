@@ -173,8 +173,10 @@ func (s *environmentService) UpdateEnvironment(ctx context.Context, id string, r
 	if req.Name != "" {
 		env.Name = req.Name
 	}
-	if req.Type != "" {
-		env.Type = types.EnvironmentType(req.Type)
+	if req.Type != "" && types.EnvironmentType(req.Type) != env.Type {
+		return nil, ierr.NewError("environment type cannot be changed").
+			WithHintf("type is immutable; current type is %q", env.Type).
+			Mark(ierr.ErrValidation)
 	}
 	env.UpdatedAt = time.Now()
 

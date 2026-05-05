@@ -105,14 +105,26 @@ func (s *EnvironmentServiceSuite) TestUpdateEnvironment() {
 	}
 	_ = s.environmentRepo.Create(s.ctx, env)
 
-	updateReq := dto.UpdateEnvironmentRequest{
+	// Name updates and an unchanged type should succeed; type stays as it was.
+	resp, err := s.environmentService.UpdateEnvironment(s.ctx, "env-1", dto.UpdateEnvironmentRequest{
 		Name: "Updated Development",
-		Type: "updated-type",
-	}
-
-	resp, err := s.environmentService.UpdateEnvironment(s.ctx, "env-1", updateReq)
+		Type: string(types.EnvironmentDevelopment),
+	})
 	s.NoError(err)
 	s.NotNil(resp)
-	s.Equal(updateReq.Name, resp.Name)
-	s.Equal(updateReq.Type, resp.Type)
+	s.Equal("Updated Development", resp.Name)
+	s.Equal(string(types.EnvironmentDevelopment), resp.Type)
+
+	// Omitting type should also work and leave the type intact.
+	resp, err = s.environmentService.UpdateEnvironment(s.ctx, "env-1", dto.UpdateEnvironmentRequest{
+		Name: "Renamed Again",
+	})
+	s.NoError(err)
+	s.Equal(string(types.EnvironmentDevelopment), resp.Type)
+
+	// Attempting to change the type must be rejected.
+	_, err = s.environmentService.UpdateEnvironment(s.ctx, "env-1", dto.UpdateEnvironmentRequest{
+		Type: string(types.EnvironmentProduction),
+	})
+	s.Error(err)
 }
