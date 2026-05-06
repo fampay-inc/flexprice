@@ -215,25 +215,8 @@ func (s *CustomerService) SyncCustomerToPaddle(ctx context.Context, flexpriceCus
 	// Create address if we have address data (country_code is required for Paddle address)
 	var paddleAddressID string
 	if flexpriceCustomer.AddressCountry != "" {
-		createAddressReq := &paddle.CreateAddressRequest{
-			CustomerID:  paddleCustomerID,
-			CountryCode: toCountryCode(flexpriceCustomer.AddressCountry),
-		}
-		if flexpriceCustomer.AddressLine1 != "" {
-			createAddressReq.FirstLine = paddle.PtrTo(flexpriceCustomer.AddressLine1)
-		}
-		if flexpriceCustomer.AddressLine2 != "" {
-			createAddressReq.SecondLine = paddle.PtrTo(flexpriceCustomer.AddressLine2)
-		}
-		if flexpriceCustomer.AddressCity != "" {
-			createAddressReq.City = paddle.PtrTo(flexpriceCustomer.AddressCity)
-		}
-		if flexpriceCustomer.AddressPostalCode != "" {
-			createAddressReq.PostalCode = paddle.PtrTo(flexpriceCustomer.AddressPostalCode)
-		}
-		if flexpriceCustomer.AddressState != "" {
-			createAddressReq.Region = paddle.PtrTo(flexpriceCustomer.AddressState)
-		}
+		createAddressReq := buildCreateAddressRequest(flexpriceCustomer)
+		createAddressReq.CustomerID = paddleCustomerID
 
 		address, err := s.client.CreateAddress(ctx, paddleCustomerID, createAddressReq)
 		if err != nil {
@@ -396,24 +379,7 @@ func (s *CustomerService) syncPaddleAddress(ctx context.Context, flexpriceCustom
 	}
 
 	// Case: no paddle_address_id → CreateAddress
-	createReq := &paddle.CreateAddressRequest{
-		CountryCode: addressCountry,
-	}
-	if flexpriceCustomer.AddressLine1 != "" {
-		createReq.FirstLine = paddle.PtrTo(flexpriceCustomer.AddressLine1)
-	}
-	if flexpriceCustomer.AddressLine2 != "" {
-		createReq.SecondLine = paddle.PtrTo(flexpriceCustomer.AddressLine2)
-	}
-	if flexpriceCustomer.AddressCity != "" {
-		createReq.City = paddle.PtrTo(flexpriceCustomer.AddressCity)
-	}
-	if flexpriceCustomer.AddressPostalCode != "" {
-		createReq.PostalCode = paddle.PtrTo(flexpriceCustomer.AddressPostalCode)
-	}
-	if flexpriceCustomer.AddressState != "" {
-		createReq.Region = paddle.PtrTo(flexpriceCustomer.AddressState)
-	}
+	createReq := buildCreateAddressRequest(flexpriceCustomer)
 
 	address, err := s.client.CreateAddress(ctx, paddleCustomerID, createReq)
 	if err != nil {
@@ -617,6 +583,30 @@ func (s *CustomerService) CreateCustomerFromPaddle(ctx context.Context, paddleCu
 	}
 
 	return nil
+}
+
+// buildCreateAddressRequest builds a Paddle CreateAddressRequest from a FlexPrice customer.
+// Caller must ensure AddressCountry is non-empty before calling.
+func buildCreateAddressRequest(c *customer.Customer) *paddle.CreateAddressRequest {
+	req := &paddle.CreateAddressRequest{
+		CountryCode: toCountryCode(c.AddressCountry),
+	}
+	if c.AddressLine1 != "" {
+		req.FirstLine = paddle.PtrTo(c.AddressLine1)
+	}
+	if c.AddressLine2 != "" {
+		req.SecondLine = paddle.PtrTo(c.AddressLine2)
+	}
+	if c.AddressCity != "" {
+		req.City = paddle.PtrTo(c.AddressCity)
+	}
+	if c.AddressPostalCode != "" {
+		req.PostalCode = paddle.PtrTo(c.AddressPostalCode)
+	}
+	if c.AddressState != "" {
+		req.Region = paddle.PtrTo(c.AddressState)
+	}
+	return req
 }
 
 // mergeCustomerMetadata merges new metadata with existing customer metadata
