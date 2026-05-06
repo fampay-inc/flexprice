@@ -143,18 +143,18 @@ func TransformBentoToEvent(payload string, tenantID, environmentID string) (*eve
 		properties["endedAt"] = input.EndedAt
 	}
 
-	// Compute billablePromptTokens = promptTokens - cachedPromptTokens (both stored as strings)
-	if promptStr, ok := properties["promptTokens"].(string); ok && promptStr != "" {
-		promptTokens, err1 := strconv.ParseInt(promptStr, 10, 64)
-		if err1 == nil {
-			cachedTokens := int64(0)
-			if cachedStr, ok := properties["cachedPromptTokens"].(string); ok && cachedStr != "" {
-				if v, err := strconv.ParseInt(cachedStr, 10, 64); err == nil {
-					cachedTokens = v
-				}
+	// Compute billablePromptTokens = promptTokens - cachedPromptTokens (both stored as strings).
+	// Matches backfill SQL semantics: toInt64OrZero — always emit the field when promptTokens is
+	// present, defaulting unparseable values to 0 so live-ingested and backfilled events are consistent.
+	if promptStr, ok := properties["promptTokens"].(string); ok {
+		promptTokens, _ := strconv.ParseInt(promptStr, 10, 64) // 0 on parse failure (toInt64OrZero semantics)
+		cachedTokens := int64(0)
+		if cachedStr, ok := properties["cachedPromptTokens"].(string); ok && cachedStr != "" {
+			if v, err := strconv.ParseInt(cachedStr, 10, 64); err == nil {
+				cachedTokens = v
 			}
-			properties["billablePromptTokens"] = strconv.FormatInt(promptTokens-cachedTokens, 10)
 		}
+		properties["billablePromptTokens"] = strconv.FormatInt(promptTokens-cachedTokens, 10)
 	}
 
 	// Compute billable_value and billable_unit

@@ -144,12 +144,23 @@ func TestTransformBentoToEvent_BillablePromptTokens(t *testing.T) {
 			wantBillablePresent: true,
 		},
 		{
-			name: "non-numeric promptTokens — field omitted gracefully",
+			name: "non-numeric promptTokens — defaults to 0 (toInt64OrZero semantics)",
 			dataOverride: map[string]interface{}{
 				"promptTokens": "not-a-number",
 				"modelName":    "gpt-4.1",
 			},
-			wantBillablePresent: false,
+			wantBillable:        "0",
+			wantBillablePresent: true,
+		},
+		{
+			name: "nested {value: X} form for tokens",
+			dataOverride: map[string]interface{}{
+				"promptTokens":       map[string]interface{}{"value": 2961},
+				"cachedPromptTokens": map[string]interface{}{"value": 2816},
+				"modelName":          "gpt-4.1",
+			},
+			wantBillable:        "145",
+			wantBillablePresent: true,
 		},
 	}
 
