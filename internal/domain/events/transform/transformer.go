@@ -143,6 +143,20 @@ func TransformBentoToEvent(payload string, tenantID, environmentID string) (*eve
 		properties["endedAt"] = input.EndedAt
 	}
 
+	// Compute billablePromptTokens = promptTokens - cachedPromptTokens (both stored as strings)
+	if promptStr, ok := properties["promptTokens"].(string); ok && promptStr != "" {
+		promptTokens, err1 := strconv.ParseInt(promptStr, 10, 64)
+		if err1 == nil {
+			cachedTokens := int64(0)
+			if cachedStr, ok := properties["cachedPromptTokens"].(string); ok && cachedStr != "" {
+				if v, err := strconv.ParseInt(cachedStr, 10, 64); err == nil {
+					cachedTokens = v
+				}
+			}
+			properties["billablePromptTokens"] = strconv.FormatInt(promptTokens-cachedTokens, 10)
+		}
+	}
+
 	// Compute billable_value and billable_unit
 	billableValue := ""
 	billableUnit := ""
