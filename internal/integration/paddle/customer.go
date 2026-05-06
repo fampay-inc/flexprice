@@ -120,6 +120,13 @@ func (s *CustomerService) EnsureCustomerSyncedToPaddle(ctx context.Context, cust
 		return nil, err
 	}
 
+	paddleID := updatedCustomerResp.Customer.Metadata["paddle_customer_id"]
+	if paddleID != "" {
+		if err := s.syncPaddleAddress(ctx, updatedCustomerResp.Customer, paddleID); err != nil {
+			return nil, err
+		}
+	}
+
 	return updatedCustomerResp.Customer, nil
 }
 
