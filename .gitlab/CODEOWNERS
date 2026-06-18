@@ -1,0 +1,8 @@
+[Platform Owners] @aditya-raj @jenish.togadiya @yogesh-nachnani @semal-sherathia @srinivas-vangipuram
+deploy/
+.gitlab-ci.yml
+.fam/
+.gitlab/
+
+[Application Code] ## Add your codeowners here
+*
