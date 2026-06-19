@@ -1,4 +1,4 @@
-speakeasyVersion: 1.789.0
+speakeasyVersion: 1.784.0
 sources:
     swagger-json:
         sourceNamespace: swagger-json
@@ -49,7 +49,7 @@ workflow:
         flexprice-go:
             target: go
             source: swagger-json
-            output: ./api/go
+            output: ../flexprice-go
             codeSamples:
                 registry:
                     location: registry.speakeasyapi.dev/flexprice/prod/swagger-json-go-code-samples

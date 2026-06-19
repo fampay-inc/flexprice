@@ -2089,8 +2089,11 @@ definitions:
         $ref: '#/definitions/types.Metadata'
       name:
         type: string
+      sku:
+        type: string
     required:
     - name
+    - sku
     type: object
   CreatePriceRequest:
     properties:
@@ -4745,6 +4748,8 @@ definitions:
         items:
           $ref: '#/definitions/PriceResponse'
         type: array
+      sku:
+        type: string
       status:
         $ref: '#/definitions/types.Status'
       tenant_id:
@@ -6803,6 +6808,8 @@ definitions:
         $ref: '#/definitions/types.Metadata'
       name:
         type: string
+      sku:
+        type: string
     type: object
   UpdatePriceRequest:
     properties:
@@ -7721,6 +7728,8 @@ definitions:
       metadata:
         $ref: '#/definitions/types.Metadata'
       name:
+        type: string
+      sku:
         type: string
       status:
         $ref: '#/definitions/types.Status'
@@ -9060,6 +9069,8 @@ definitions:
         items:
           type: string
         type: array
+      sku:
+        type: string
       sort:
         items:
           $ref: '#/definitions/types.SortCondition'
@@ -10812,6 +10823,77 @@ definitions:
   types.Metadata:
     additionalProperties:
       type: string
+    type: object
+  types.SubscriptionLineItemFilter:
+    properties:
+      active_filter:
+        default: true
+        type: boolean
+      addon_association_ids:
+        items:
+          type: string
+        type: array
+      billing_periods:
+        items:
+          type: string
+        type: array
+      currencies:
+        items:
+          type: string
+        type: array
+      current_period_start:
+        type: string
+      customer_ids:
+        items:
+          type: string
+        type: array
+      end_time:
+        type: string
+      entity_ids:
+        items:
+          type: string
+        type: array
+      entity_type:
+        $ref: '#/definitions/types.SubscriptionLineItemEntityType'
+      expand:
+        type: string
+      filters:
+        items:
+          $ref: '#/definitions/types.FilterCondition'
+        type: array
+      limit:
+        maximum: 1000
+        minimum: 1
+        type: integer
+      meter_ids:
+        items:
+          type: string
+        type: array
+      offset:
+        minimum: 0
+        type: integer
+      order:
+        enum:
+        - asc
+        - desc
+        type: string
+      price_ids:
+        items:
+          type: string
+        type: array
+      sort:
+        items:
+          $ref: '#/definitions/types.SortCondition'
+        type: array
+      start_time:
+        type: string
+      status:
+        $ref: '#/definitions/types.Status'
+      subscription_ids:
+        description: Specific filters
+        items:
+          type: string
+        type: array
     type: object
   webhookDto.AlertWebhookPayload:
     properties:

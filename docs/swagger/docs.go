@@ -14840,7 +14840,8 @@ const docTemplate = `{
         "CreatePlanRequest": {
             "type": "object",
             "required": [
-                "name"
+                "name",
+                "sku"
             ],
             "properties": {
                 "description": {
@@ -14856,6 +14857,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/types.Metadata"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "sku": {
                     "type": "string"
                 }
             }
@@ -18413,6 +18417,9 @@ const docTemplate = `{
                         "$ref": "#/definitions/PriceResponse"
                     }
                 },
+                "sku": {
+                    "type": "string"
+                },
                 "status": {
                     "$ref": "#/definitions/types.Status"
                 },
@@ -21245,6 +21252,9 @@ const docTemplate = `{
                 },
                 "name": {
                     "type": "string"
+                },
+                "sku": {
+                    "type": "string"
                 }
             }
         },
@@ -22535,6 +22545,9 @@ const docTemplate = `{
                     "$ref": "#/definitions/types.Metadata"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "sku": {
                     "type": "string"
                 },
                 "status": {
@@ -24328,6 +24341,9 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "sku": {
+                    "type": "string"
                 },
                 "sort": {
                     "type": "array",
@@ -26682,6 +26698,110 @@ const docTemplate = `{
             "type": "object",
             "additionalProperties": {
                 "type": "string"
+            }
+        },
+        "types.SubscriptionLineItemFilter": {
+            "type": "object",
+            "properties": {
+                "active_filter": {
+                    "type": "boolean",
+                    "default": true
+                },
+                "addon_association_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "billing_periods": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "currencies": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "current_period_start": {
+                    "type": "string"
+                },
+                "customer_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "entity_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "entity_type": {
+                    "$ref": "#/definitions/types.SubscriptionLineItemEntityType"
+                },
+                "expand": {
+                    "type": "string"
+                },
+                "filters": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.FilterCondition"
+                    }
+                },
+                "limit": {
+                    "type": "integer",
+                    "maximum": 1000,
+                    "minimum": 1
+                },
+                "meter_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "offset": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "order": {
+                    "type": "string",
+                    "enum": [
+                        "asc",
+                        "desc"
+                    ]
+                },
+                "price_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "sort": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/types.SortCondition"
+                    }
+                },
+                "start_time": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/types.Status"
+                },
+                "subscription_ids": {
+                    "description": "Specific filters",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
             }
         },
         "webhookDto.AlertWebhookPayload": {
