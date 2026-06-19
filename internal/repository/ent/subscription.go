@@ -98,6 +98,7 @@ func (r *subscriptionRepository) Create(ctx context.Context, sub *domainSub.Subs
 		SetNillableParentSubscriptionID(sub.ParentSubscriptionID).
 		SetNillablePaymentTerms(sub.PaymentTerms).
 		SetSyncedPriceSequence(sub.SyncedPriceSequence).
+		SetNillableSku(sub.Sku).
 		Save(ctx)
 
 	if err != nil {
@@ -671,6 +672,10 @@ func (o *SubscriptionQueryOptions) applyEntityQueryOptions(_ context.Context, f 
 				subscription.TrialEndLTE(lo.FromPtr(f.TrialEndDueLTE)),
 			),
 		)
+	}
+
+	if f.Sku != nil {
+		query = query.Where(subscription.Sku(*f.Sku))
 	}
 
 	if f.Filters != nil {

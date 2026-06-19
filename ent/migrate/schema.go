@@ -1901,6 +1901,7 @@ var (
 		{Name: "subscription_type", Type: field.TypeString, Default: "standalone", SchemaType: map[string]string{"postgres": "varchar(20)"}},
 		{Name: "auto_invoice_threshold", Type: field.TypeOther, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(20,6)"}},
 		{Name: "synced_price_sequence", Type: field.TypeInt64, Default: "0"},
+		{Name: "sku", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "varchar(255)"}},
 		{Name: "invoicing_customer_id", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "varchar(50)"}},
 	}
 	// SubscriptionsTable holds the schema information for the "subscriptions" table.
@@ -1911,7 +1912,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "subscriptions_customers_invoicing_customer",
-				Columns:    []*schema.Column{SubscriptionsColumns[45]},
+				Columns:    []*schema.Column{SubscriptionsColumns[46]},
 				RefColumns: []*schema.Column{CustomersColumns[0]},
 				OnDelete:   schema.SetNull,
 			},
@@ -1946,6 +1947,14 @@ var (
 				Columns: []*schema.Column{SubscriptionsColumns[1], SubscriptionsColumns[7], SubscriptionsColumns[10], SubscriptionsColumns[44]},
 				Annotation: &entsql.IndexAnnotation{
 					Where: "(((status)::text = 'published'::text) AND ((subscription_type)::text = ANY (ARRAY[('standalone'::character varying)::text, ('delegated_invoicing'::character varying)::text, ('parent'::character varying)::text, ('grouped_invoicing'::character varying)::text])))",
+				},
+			},
+			{
+				Name:    "subscription_tenant_id_environment_id_customer_id_sku",
+				Unique:  true,
+				Columns: []*schema.Column{SubscriptionsColumns[1], SubscriptionsColumns[7], SubscriptionsColumns[9], SubscriptionsColumns[45]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "subscription_status = 'active' AND status = 'published' AND sku IS NOT NULL",
 				},
 			},
 		},

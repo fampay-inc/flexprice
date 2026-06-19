@@ -53730,6 +53730,7 @@ type SubscriptionMutation struct {
 	auto_invoice_threshold     *decimal.Decimal
 	synced_price_sequence      *int64
 	addsynced_price_sequence   *int64
+	sku                        *string
 	clearedFields              map[string]struct{}
 	line_items                 map[string]struct{}
 	removedline_items          map[string]struct{}
@@ -55790,6 +55791,55 @@ func (m *SubscriptionMutation) ResetSyncedPriceSequence() {
 	m.addsynced_price_sequence = nil
 }
 
+// SetSku sets the "sku" field.
+func (m *SubscriptionMutation) SetSku(s string) {
+	m.sku = &s
+}
+
+// Sku returns the value of the "sku" field in the mutation.
+func (m *SubscriptionMutation) Sku() (r string, exists bool) {
+	v := m.sku
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSku returns the old "sku" field's value of the Subscription entity.
+// If the Subscription object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *SubscriptionMutation) OldSku(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSku is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSku requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSku: %w", err)
+	}
+	return oldValue.Sku, nil
+}
+
+// ClearSku clears the value of the "sku" field.
+func (m *SubscriptionMutation) ClearSku() {
+	m.sku = nil
+	m.clearedFields[subscription.FieldSku] = struct{}{}
+}
+
+// SkuCleared returns if the "sku" field was cleared in this mutation.
+func (m *SubscriptionMutation) SkuCleared() bool {
+	_, ok := m.clearedFields[subscription.FieldSku]
+	return ok
+}
+
+// ResetSku resets all changes to the "sku" field.
+func (m *SubscriptionMutation) ResetSku() {
+	m.sku = nil
+	delete(m.clearedFields, subscription.FieldSku)
+}
+
 // AddLineItemIDs adds the "line_items" edge to the SubscriptionLineItem entity by ids.
 func (m *SubscriptionMutation) AddLineItemIDs(ids ...string) {
 	if m.line_items == nil {
@@ -56229,7 +56279,7 @@ func (m *SubscriptionMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *SubscriptionMutation) Fields() []string {
-	fields := make([]string, 0, 45)
+	fields := make([]string, 0, 46)
 	if m.tenant_id != nil {
 		fields = append(fields, subscription.FieldTenantID)
 	}
@@ -56365,6 +56415,9 @@ func (m *SubscriptionMutation) Fields() []string {
 	if m.synced_price_sequence != nil {
 		fields = append(fields, subscription.FieldSyncedPriceSequence)
 	}
+	if m.sku != nil {
+		fields = append(fields, subscription.FieldSku)
+	}
 	return fields
 }
 
@@ -56463,6 +56516,8 @@ func (m *SubscriptionMutation) Field(name string) (ent.Value, bool) {
 		return m.AutoInvoiceThreshold()
 	case subscription.FieldSyncedPriceSequence:
 		return m.SyncedPriceSequence()
+	case subscription.FieldSku:
+		return m.Sku()
 	}
 	return nil, false
 }
@@ -56562,6 +56617,8 @@ func (m *SubscriptionMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldAutoInvoiceThreshold(ctx)
 	case subscription.FieldSyncedPriceSequence:
 		return m.OldSyncedPriceSequence(ctx)
+	case subscription.FieldSku:
+		return m.OldSku(ctx)
 	}
 	return nil, fmt.Errorf("unknown Subscription field %s", name)
 }
@@ -56886,6 +56943,13 @@ func (m *SubscriptionMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetSyncedPriceSequence(v)
 		return nil
+	case subscription.FieldSku:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSku(v)
+		return nil
 	}
 	return fmt.Errorf("unknown Subscription field %s", name)
 }
@@ -57012,6 +57076,9 @@ func (m *SubscriptionMutation) ClearedFields() []string {
 	if m.FieldCleared(subscription.FieldAutoInvoiceThreshold) {
 		fields = append(fields, subscription.FieldAutoInvoiceThreshold)
 	}
+	if m.FieldCleared(subscription.FieldSku) {
+		fields = append(fields, subscription.FieldSku)
+	}
 	return fields
 }
 
@@ -57082,6 +57149,9 @@ func (m *SubscriptionMutation) ClearField(name string) error {
 		return nil
 	case subscription.FieldAutoInvoiceThreshold:
 		m.ClearAutoInvoiceThreshold()
+		return nil
+	case subscription.FieldSku:
+		m.ClearSku()
 		return nil
 	}
 	return fmt.Errorf("unknown Subscription nullable field %s", name)
@@ -57225,6 +57295,9 @@ func (m *SubscriptionMutation) ResetField(name string) error {
 		return nil
 	case subscription.FieldSyncedPriceSequence:
 		m.ResetSyncedPriceSequence()
+		return nil
+	case subscription.FieldSku:
+		m.ResetSku()
 		return nil
 	}
 	return fmt.Errorf("unknown Subscription field %s", name)

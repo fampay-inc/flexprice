@@ -146,6 +146,9 @@ type Subscription struct {
 	// plan-price sync after a successful pass.
 	SyncedPriceSequence int64 `db:"synced_price_sequence" json:"synced_price_sequence,omitempty"`
 
+	// Sku is denormalized from plan.sku at subscription creation time
+	Sku *string `db:"sku" json:"sku,omitempty"`
+
 	types.BaseModel
 }
 
@@ -269,6 +272,7 @@ func GetSubscriptionFromEnt(sub *ent.Subscription) *Subscription {
 		SubscriptionType:     types.SubscriptionType(sub.SubscriptionType),
 		AutoInvoiceThreshold: sub.AutoInvoiceThreshold,
 		SyncedPriceSequence:  sub.SyncedPriceSequence,
+		Sku:                  sub.Sku,
 		BaseModel: types.BaseModel{
 			TenantID:  sub.TenantID,
 			Status:    types.Status(sub.Status),

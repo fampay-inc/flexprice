@@ -600,6 +600,26 @@ func (su *SubscriptionUpdate) AddSyncedPriceSequence(i int64) *SubscriptionUpdat
 	return su
 }
 
+// SetSku sets the "sku" field.
+func (su *SubscriptionUpdate) SetSku(s string) *SubscriptionUpdate {
+	su.mutation.SetSku(s)
+	return su
+}
+
+// SetNillableSku sets the "sku" field if the given value is not nil.
+func (su *SubscriptionUpdate) SetNillableSku(s *string) *SubscriptionUpdate {
+	if s != nil {
+		su.SetSku(*s)
+	}
+	return su
+}
+
+// ClearSku clears the value of the "sku" field.
+func (su *SubscriptionUpdate) ClearSku() *SubscriptionUpdate {
+	su.mutation.ClearSku()
+	return su
+}
+
 // AddLineItemIDs adds the "line_items" edge to the SubscriptionLineItem entity by IDs.
 func (su *SubscriptionUpdate) AddLineItemIDs(ids ...string) *SubscriptionUpdate {
 	su.mutation.AddLineItemIDs(ids...)
@@ -1068,6 +1088,12 @@ func (su *SubscriptionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := su.mutation.AddedSyncedPriceSequence(); ok {
 		_spec.AddField(subscription.FieldSyncedPriceSequence, field.TypeInt64, value)
+	}
+	if value, ok := su.mutation.Sku(); ok {
+		_spec.SetField(subscription.FieldSku, field.TypeString, value)
+	}
+	if su.mutation.SkuCleared() {
+		_spec.ClearField(subscription.FieldSku, field.TypeString)
 	}
 	if su.mutation.LineItemsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1995,6 +2021,26 @@ func (suo *SubscriptionUpdateOne) AddSyncedPriceSequence(i int64) *SubscriptionU
 	return suo
 }
 
+// SetSku sets the "sku" field.
+func (suo *SubscriptionUpdateOne) SetSku(s string) *SubscriptionUpdateOne {
+	suo.mutation.SetSku(s)
+	return suo
+}
+
+// SetNillableSku sets the "sku" field if the given value is not nil.
+func (suo *SubscriptionUpdateOne) SetNillableSku(s *string) *SubscriptionUpdateOne {
+	if s != nil {
+		suo.SetSku(*s)
+	}
+	return suo
+}
+
+// ClearSku clears the value of the "sku" field.
+func (suo *SubscriptionUpdateOne) ClearSku() *SubscriptionUpdateOne {
+	suo.mutation.ClearSku()
+	return suo
+}
+
 // AddLineItemIDs adds the "line_items" edge to the SubscriptionLineItem entity by IDs.
 func (suo *SubscriptionUpdateOne) AddLineItemIDs(ids ...string) *SubscriptionUpdateOne {
 	suo.mutation.AddLineItemIDs(ids...)
@@ -2493,6 +2539,12 @@ func (suo *SubscriptionUpdateOne) sqlSave(ctx context.Context) (_node *Subscript
 	}
 	if value, ok := suo.mutation.AddedSyncedPriceSequence(); ok {
 		_spec.AddField(subscription.FieldSyncedPriceSequence, field.TypeInt64, value)
+	}
+	if value, ok := suo.mutation.Sku(); ok {
+		_spec.SetField(subscription.FieldSku, field.TypeString, value)
+	}
+	if suo.mutation.SkuCleared() {
+		_spec.ClearField(subscription.FieldSku, field.TypeString)
 	}
 	if suo.mutation.LineItemsCleared() {
 		edge := &sqlgraph.EdgeSpec{

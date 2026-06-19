@@ -216,6 +216,14 @@ func (Subscription) Fields() []ent.Field {
 		field.Int64("synced_price_sequence").
 			Default(0).
 			Annotations(entsql.Default("0")),
+
+		field.String("sku").
+			SchemaType(map[string]string{
+				"postgres": "varchar(255)",
+			}).
+			Optional().
+			Nillable().
+			Comment("SKU denormalized from plan.sku at subscription creation time"),
 	}
 }
 
@@ -253,5 +261,9 @@ func (Subscription) Indexes() []ent.Index {
 		index.Fields("tenant_id", "environment_id", "plan_id", "synced_price_sequence").
 			Annotations(entsql.IndexWhere(
 				"(((status)::text = 'published'::text) AND ((subscription_type)::text = ANY (ARRAY[('standalone'::character varying)::text, ('delegated_invoicing'::character varying)::text, ('parent'::character varying)::text, ('grouped_invoicing'::character varying)::text])))")),
+		// Enforce at most one active subscription per customer per sku
+		index.Fields("tenant_id", "environment_id", "customer_id", "sku").
+			Unique().
+			Annotations(entsql.IndexWhere("subscription_status = 'active' AND status = 'published' AND sku IS NOT NULL")),
 	}
 }

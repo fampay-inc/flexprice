@@ -106,6 +106,8 @@ const (
 	FieldAutoInvoiceThreshold = "auto_invoice_threshold"
 	// FieldSyncedPriceSequence holds the string denoting the synced_price_sequence field in the database.
 	FieldSyncedPriceSequence = "synced_price_sequence"
+	// FieldSku holds the string denoting the sku field in the database.
+	FieldSku = "sku"
 	// EdgeLineItems holds the string denoting the line_items edge name in mutations.
 	EdgeLineItems = "line_items"
 	// EdgePauses holds the string denoting the pauses edge name in mutations.
@@ -230,6 +232,7 @@ var Columns = []string{
 	FieldSubscriptionType,
 	FieldAutoInvoiceThreshold,
 	FieldSyncedPriceSequence,
+	FieldSku,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -533,6 +536,11 @@ func ByAutoInvoiceThreshold(opts ...sql.OrderTermOption) OrderOption {
 // BySyncedPriceSequence orders the results by the synced_price_sequence field.
 func BySyncedPriceSequence(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSyncedPriceSequence, opts...).ToFunc()
+}
+
+// BySku orders the results by the sku field.
+func BySku(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldSku, opts...).ToFunc()
 }
 
 // ByLineItemsCount orders the results by line_items count.

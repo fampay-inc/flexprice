@@ -101,6 +101,7 @@ func (s *subscriptionService) CreateSubscription(ctx context.Context, req dto.Cr
 			Mark(ierr.ErrValidation)
 	}
 	sub := req.ToSubscription(ctx)
+
 	// Always inherit timezone from the customer record.
 	// The timezone field in the API request is intentionally ignored.
 	sub.Timezone = customer.Timezone
@@ -108,6 +109,10 @@ func (s *subscriptionService) CreateSubscription(ctx context.Context, req dto.Cr
 		sub.Timezone = types.DefaultTimezone
 	}
 	s.overRideSubscriptionBasedOnIntegration(ctx, sub, &req)
+
+	if plan.SKU != "" {
+		sub.Sku = &plan.SKU
+	}
 
 	// Validate and filter prices
 	validPrices, err := s.ValidateAndFilterPricesForSubscription(ctx, plan.ID, types.PRICE_ENTITY_TYPE_PLAN, sub, req.Workflow)
