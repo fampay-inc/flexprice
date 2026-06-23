@@ -20,6 +20,9 @@ type LineItemRepository interface {
 	// Update updates an existing subscription line item
 	Update(ctx context.Context, lineItem *SubscriptionLineItem) error
 
+	// BulkRestoreLineItemEndDates restores each line item's end_date to the value captured in the snapshot at cancel time.
+	BulkRestoreLineItemEndDates(ctx context.Context, snapshots []TerminatedLineItemSnapshot) (int, error)
+
 	// Delete deletes a subscription line item by ID
 	Delete(ctx context.Context, id string) error
 

@@ -1889,6 +1889,304 @@ func (s *SubscriptionServiceSuite) TestCancelSubscription() {
 		s.NotNil(sub.CancelledAt, "Should have cancelled_at timestamp")
 	})
 
+	s.Run("TestCancelAtPeriodEnd_RestoresLineItemsAndMetadata", func() {
+		// Active subscription with one plan line item.
+		restoreSub := &subscription.Subscription{
+			ID:                 "sub_cancel_period_end_restore",
+			CustomerID:         s.testData.customer.ID,
+			PlanID:             s.testData.plan.ID,
+			SubscriptionStatus: types.SubscriptionStatusActive,
+			StartDate:          s.testData.now.Add(-30 * 24 * time.Hour),
+			CurrentPeriodStart: s.testData.now.Add(-24 * time.Hour),
+			CurrentPeriodEnd:   s.testData.now.Add(6 * 24 * time.Hour),
+			BillingPeriod:      types.BILLING_PERIOD_MONTHLY,
+			BillingPeriodCount: 1,
+			Currency:           "usd",
+			BaseModel:          types.GetDefaultBaseModel(s.GetContext()),
+		}
+		restoreLineItem := &subscription.SubscriptionLineItem{
+			ID:              types.GenerateUUIDWithPrefix(types.UUID_PREFIX_SUBSCRIPTION_LINE_ITEM),
+			SubscriptionID:  restoreSub.ID,
+			CustomerID:      restoreSub.CustomerID,
+			EntityID:        s.testData.plan.ID,
+			EntityType:      types.SubscriptionLineItemEntityTypePlan,
+			PlanDisplayName: s.testData.plan.Name,
+			PriceID:         s.testData.prices.apiCalls.ID,
+			PriceType:       s.testData.prices.apiCalls.Type,
+			DisplayName:     "test line item",
+			Quantity:        decimal.NewFromInt(1),
+			Currency:        restoreSub.Currency,
+			BillingPeriod:   restoreSub.BillingPeriod,
+			BaseModel:       types.GetDefaultBaseModel(s.GetContext()),
+		}
+		s.NoError(s.GetStores().SubscriptionRepo.CreateWithLineItems(s.GetContext(), restoreSub, []*subscription.SubscriptionLineItem{restoreLineItem}))
+
+		_, err := s.service.CancelSubscription(s.GetContext(), restoreSub.ID, &dto.CancelSubscriptionRequest{
+			CancellationType:  types.CancellationTypeEndOfPeriod,
+			ProrationBehavior: types.ProrationBehaviorNone,
+			Reason:            "test_restore",
+		})
+		s.NoError(err)
+
+		// Line item should be terminated at period end.
+		afterCancelItems, err := s.GetStores().SubscriptionLineItemRepo.ListBySubscription(s.GetContext(), restoreSub)
+		s.NoError(err)
+		s.Len(afterCancelItems, 1)
+		s.False(afterCancelItems[0].EndDate.IsZero(), "line item should be terminated")
+
+		// Find the pending cancellation schedule.
+		schedule, err := s.GetStores().SubscriptionScheduleRepo.GetPendingBySubscriptionAndType(
+			s.GetContext(), restoreSub.ID, types.SubscriptionScheduleChangeTypeCancellation,
+		)
+		s.NoError(err)
+		s.NotNil(schedule)
+
+		// Cancel the schedule → triggers restoreCancellationState.
+		scheduleService := NewSubscriptionScheduleService(ServiceParams{
+			Logger:                   s.GetLogger(),
+			Config:                   s.GetConfig(),
+			DB:                       s.GetDB(),
+			SubRepo:                  s.GetStores().SubscriptionRepo,
+			SubScheduleRepo:          s.GetStores().SubscriptionScheduleRepo,
+			SubscriptionLineItemRepo: s.GetStores().SubscriptionLineItemRepo,
+			AddonAssociationRepo:     s.GetStores().AddonAssociationRepo,
+		}, nil)
+		s.NoError(scheduleService.Cancel(s.GetContext(), schedule.ID))
+
+		// Subscription state restored.
+		restored, err := s.GetStores().SubscriptionRepo.Get(s.GetContext(), restoreSub.ID)
+		s.NoError(err)
+		s.False(restored.CancelAtPeriodEnd, "cancel_at_period_end should be cleared")
+		s.Nil(restored.CancelAt, "cancel_at should be nil")
+		s.Nil(restored.CancelledAt, "cancelled_at should be nil")
+		_, hasType := restored.Metadata["cancellation_type"]
+		_, hasReason := restored.Metadata["cancellation_reason"]
+		_, hasEffective := restored.Metadata["effective_date"]
+		s.False(hasType, "cancellation_type metadata should be stripped")
+		s.False(hasReason, "cancellation_reason metadata should be stripped")
+		s.False(hasEffective, "effective_date metadata should be stripped")
+
+		// Line item end_date restored.
+		afterRestoreItems, err := s.GetStores().SubscriptionLineItemRepo.ListBySubscription(s.GetContext(), restoreSub)
+		s.NoError(err)
+		s.Len(afterRestoreItems, 1)
+		s.True(afterRestoreItems[0].EndDate.IsZero(), "line item end_date should be cleared after restore")
+	})
+
+	s.Run("TestCancelAtPeriodEnd_PreservesPreExistingFutureEndDate", func() {
+		// Line item with a legitimately-future end_date (longer than the cancel effective date)
+		// must be restored to that exact future value — not cleared to NULL. This guards against
+		// the bug where BulkTerminate's "shorten end_date" branch silently overwrites it.
+		ctx := s.GetContext()
+		sub := &subscription.Subscription{
+			ID:                 "sub_future_end_date_restore",
+			CustomerID:         s.testData.customer.ID,
+			PlanID:             s.testData.plan.ID,
+			SubscriptionStatus: types.SubscriptionStatusActive,
+			StartDate:          s.testData.now.Add(-30 * 24 * time.Hour),
+			CurrentPeriodStart: s.testData.now.Add(-24 * time.Hour),
+			CurrentPeriodEnd:   s.testData.now.Add(6 * 24 * time.Hour),
+			BillingPeriod:      types.BILLING_PERIOD_MONTHLY,
+			BillingPeriodCount: 1,
+			Currency:           "usd",
+			BaseModel:          types.GetDefaultBaseModel(ctx),
+		}
+		// Pre-set the line item's end_date to a date AFTER the cancel's effective_date
+		// (period_end). BulkTerminate's filter (EndDateGT) will shorten it; restore must put
+		// the original value back.
+		futureEnd := sub.CurrentPeriodEnd.Add(60 * 24 * time.Hour)
+		lineItem := &subscription.SubscriptionLineItem{
+			ID:              types.GenerateUUIDWithPrefix(types.UUID_PREFIX_SUBSCRIPTION_LINE_ITEM),
+			SubscriptionID:  sub.ID,
+			CustomerID:      sub.CustomerID,
+			EntityID:        s.testData.plan.ID,
+			EntityType:      types.SubscriptionLineItemEntityTypePlan,
+			PlanDisplayName: s.testData.plan.Name,
+			PriceID:         s.testData.prices.apiCalls.ID,
+			PriceType:       s.testData.prices.apiCalls.Type,
+			DisplayName:     "future end line item",
+			Quantity:        decimal.NewFromInt(1),
+			Currency:        sub.Currency,
+			BillingPeriod:   sub.BillingPeriod,
+			EndDate:         futureEnd,
+			BaseModel:       types.GetDefaultBaseModel(ctx),
+		}
+		s.NoError(s.GetStores().SubscriptionRepo.CreateWithLineItems(ctx, sub, []*subscription.SubscriptionLineItem{lineItem}))
+
+		_, err := s.service.CancelSubscription(ctx, sub.ID, &dto.CancelSubscriptionRequest{
+			CancellationType:  types.CancellationTypeEndOfPeriod,
+			ProrationBehavior: types.ProrationBehaviorNone,
+			Reason:            "test_future_end_restore",
+		})
+		s.NoError(err)
+
+		// Cancel was effective at period_end, which is BEFORE futureEnd, so the line item
+		// should have been shortened.
+		after, err := s.GetStores().SubscriptionLineItemRepo.ListBySubscription(ctx, sub)
+		s.NoError(err)
+		s.Len(after, 1)
+		s.True(after[0].EndDate.Equal(sub.CurrentPeriodEnd), "line item end_date should have been shortened to period_end")
+
+		schedule, err := s.GetStores().SubscriptionScheduleRepo.GetPendingBySubscriptionAndType(
+			ctx, sub.ID, types.SubscriptionScheduleChangeTypeCancellation,
+		)
+		s.NoError(err)
+		s.NotNil(schedule)
+
+		scheduleService := NewSubscriptionScheduleService(ServiceParams{
+			Logger:                   s.GetLogger(),
+			Config:                   s.GetConfig(),
+			DB:                       s.GetDB(),
+			SubRepo:                  s.GetStores().SubscriptionRepo,
+			SubScheduleRepo:          s.GetStores().SubscriptionScheduleRepo,
+			SubscriptionLineItemRepo: s.GetStores().SubscriptionLineItemRepo,
+			AddonAssociationRepo:     s.GetStores().AddonAssociationRepo,
+		}, nil)
+		s.NoError(scheduleService.Cancel(ctx, schedule.ID))
+
+		// Line item end_date must be restored to the ORIGINAL future timestamp, not cleared.
+		afterRestore, err := s.GetStores().SubscriptionLineItemRepo.ListBySubscription(ctx, sub)
+		s.NoError(err)
+		s.Len(afterRestore, 1)
+		s.False(afterRestore[0].EndDate.IsZero(), "line item end_date must not be cleared — original was non-null")
+		s.True(afterRestore[0].EndDate.Equal(futureEnd), "line item end_date must be restored to the original future timestamp")
+	})
+
+	s.Run("TestCancelAtPeriodEnd_RestoresAddonAssociationAndLineItems", func() {
+		// Subscription with an addon attached. Cancel marks the association cancelled and
+		// terminates the addon line items; cancelling the schedule restores both sides.
+		ctx := s.GetContext()
+		subService := s.service.(*subscriptionService)
+
+		addonID := "addon_restore_flow"
+		priceID := "price_addon_restore_flow"
+		a := &addon.Addon{
+			ID:          addonID,
+			LookupKey:   addonID,
+			Name:        "Restore-flow addon",
+			Description: "Used by cancel→restore tests",
+			BaseModel:   types.GetDefaultBaseModel(ctx),
+		}
+		s.NoError(subService.AddonRepo.Create(ctx, a))
+		s.NoError(s.GetStores().PriceRepo.Create(ctx, &price.Price{
+			ID:                 priceID,
+			Amount:             decimal.NewFromInt(5),
+			Currency:           "usd",
+			EntityType:         types.PRICE_ENTITY_TYPE_ADDON,
+			EntityID:           addonID,
+			Type:               types.PRICE_TYPE_FIXED,
+			BillingPeriod:      types.BILLING_PERIOD_MONTHLY,
+			BillingPeriodCount: 1,
+			BillingModel:       types.BILLING_MODEL_FLAT_FEE,
+			InvoiceCadence:     types.InvoiceCadenceAdvance,
+			BaseModel:          types.GetDefaultBaseModel(ctx),
+		}))
+
+		sub := &subscription.Subscription{
+			ID:                 "sub_addon_restore",
+			CustomerID:         s.testData.customer.ID,
+			PlanID:             s.testData.plan.ID,
+			SubscriptionStatus: types.SubscriptionStatusActive,
+			StartDate:          s.testData.now.Add(-30 * 24 * time.Hour),
+			CurrentPeriodStart: s.testData.now.Add(-24 * time.Hour),
+			CurrentPeriodEnd:   s.testData.now.Add(6 * 24 * time.Hour),
+			BillingPeriod:      types.BILLING_PERIOD_MONTHLY,
+			BillingPeriodCount: 1,
+			Currency:           "usd",
+			BaseModel:          types.GetDefaultBaseModel(ctx),
+		}
+		s.NoError(s.GetStores().SubscriptionRepo.CreateWithLineItems(ctx, sub, []*subscription.SubscriptionLineItem{}))
+
+		now := time.Now().UTC()
+		_, err := s.service.AddAddonToSubscription(ctx, sub.ID, &dto.AddAddonToSubscriptionRequest{
+			AddonID:   addonID,
+			StartDate: &now,
+		})
+		s.NoError(err)
+
+		// Sanity: association is active.
+		aaFilter := types.NewNoLimitAddonAssociationFilter()
+		aaFilter.EntityIDs = []string{sub.ID}
+		aaFilter.EntityType = lo.ToPtr(types.AddonAssociationEntityTypeSubscription)
+		beforeAssocs, err := s.GetStores().AddonAssociationRepo.List(ctx, aaFilter)
+		s.NoError(err)
+		s.NotEmpty(beforeAssocs)
+		for _, aa := range beforeAssocs {
+			s.Equal(types.AddonStatusActive, aa.AddonStatus)
+		}
+
+		_, err = s.service.CancelSubscription(ctx, sub.ID, &dto.CancelSubscriptionRequest{
+			CancellationType:  types.CancellationTypeEndOfPeriod,
+			ProrationBehavior: types.ProrationBehaviorNone,
+			Reason:            "test_addon_restore",
+		})
+		s.NoError(err)
+
+		// After cancel: association cancelled, line item terminated.
+		midAssocs, err := s.GetStores().AddonAssociationRepo.List(ctx, aaFilter)
+		s.NoError(err)
+		s.NotEmpty(midAssocs)
+		for _, aa := range midAssocs {
+			s.Equal(types.AddonStatusCancelled, aa.AddonStatus, "association should be cancelled")
+			s.NotNil(aa.EndDate, "association should have end_date set")
+			s.NotNil(aa.CancelledAt, "association should have cancelled_at set")
+			s.NotEmpty(aa.CancellationReason, "association should have cancellation reason")
+		}
+
+		midItems, err := s.GetStores().SubscriptionLineItemRepo.ListBySubscription(ctx, sub)
+		s.NoError(err)
+		var midAddonItem *subscription.SubscriptionLineItem
+		for _, it := range midItems {
+			if it.EntityType == types.SubscriptionLineItemEntityTypeAddon {
+				midAddonItem = it
+				break
+			}
+		}
+		s.NotNil(midAddonItem, "addon line item should exist")
+		s.False(midAddonItem.EndDate.IsZero(), "addon line item should be terminated")
+
+		schedule, err := s.GetStores().SubscriptionScheduleRepo.GetPendingBySubscriptionAndType(
+			ctx, sub.ID, types.SubscriptionScheduleChangeTypeCancellation,
+		)
+		s.NoError(err)
+		s.NotNil(schedule)
+
+		scheduleService := NewSubscriptionScheduleService(ServiceParams{
+			Logger:                   s.GetLogger(),
+			Config:                   s.GetConfig(),
+			DB:                       s.GetDB(),
+			SubRepo:                  s.GetStores().SubscriptionRepo,
+			SubScheduleRepo:          s.GetStores().SubscriptionScheduleRepo,
+			SubscriptionLineItemRepo: s.GetStores().SubscriptionLineItemRepo,
+			AddonAssociationRepo:     s.GetStores().AddonAssociationRepo,
+		}, nil)
+		s.NoError(scheduleService.Cancel(ctx, schedule.ID))
+
+		// After restore: association reverted to active with cancel fields cleared.
+		afterAssocs, err := s.GetStores().AddonAssociationRepo.List(ctx, aaFilter)
+		s.NoError(err)
+		s.NotEmpty(afterAssocs)
+		for _, aa := range afterAssocs {
+			s.Equal(types.AddonStatusActive, aa.AddonStatus, "association should be active after restore")
+			s.Nil(aa.EndDate, "association end_date should be cleared")
+			s.Nil(aa.CancelledAt, "association cancelled_at should be cleared")
+			s.Empty(aa.CancellationReason, "association cancellation_reason should be cleared")
+		}
+
+		// Addon line item end_date cleared.
+		afterItems, err := s.GetStores().SubscriptionLineItemRepo.ListBySubscription(ctx, sub)
+		s.NoError(err)
+		var afterAddonItem *subscription.SubscriptionLineItem
+		for _, it := range afterItems {
+			if it.EntityType == types.SubscriptionLineItemEntityTypeAddon {
+				afterAddonItem = it
+				break
+			}
+		}
+		s.NotNil(afterAddonItem)
+		s.True(afterAddonItem.EndDate.IsZero(), "addon line item end_date should be cleared after restore")
+	})
+
 	s.Run("TestImmediateCancellationWithArrearUsageCharges", func() {
 		// Create subscription with arrear usage charges
 		usageSub := &subscription.Subscription{

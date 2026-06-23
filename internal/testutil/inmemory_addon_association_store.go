@@ -112,6 +112,31 @@ func (s *InMemoryAddonAssociationStore) Count(ctx context.Context, filter *types
 	return s.InMemoryStore.Count(ctx, filter, addonAssociationFilterFn)
 }
 
+func (s *InMemoryAddonAssociationStore) BulkRestoreAssociations(ctx context.Context, ids []string) (int, error) {
+	if len(ids) == 0 {
+		return 0, nil
+	}
+	affected := 0
+	for _, id := range ids {
+		aa, err := s.GetByID(ctx, id)
+		if err != nil {
+			if ierr.IsNotFound(err) {
+				continue
+			}
+			return affected, err
+		}
+		aa.AddonStatus = types.AddonStatusActive
+		aa.CancelledAt = nil
+		aa.EndDate = nil
+		aa.CancellationReason = ""
+		if err := s.Update(ctx, aa); err != nil {
+			return affected, err
+		}
+		affected++
+	}
+	return affected, nil
+}
+
 func addonAssociationFilterFn(ctx context.Context, aa *addonassociation.AddonAssociation, filter interface{}) bool {
 	f, ok := filter.(*types.AddonAssociationFilter)
 	if !ok {
