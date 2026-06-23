@@ -78,6 +78,12 @@ func (s *SubscriptionSchedule) SetPlanChangeResult(result *PlanChangeResult) err
 	return nil
 }
 
+// TerminatedLineItemSnapshot captures a line item's end_date immediately before a cancellation shortened or set it.
+type TerminatedLineItemSnapshot struct {
+	ID      string     `json:"id"`
+	EndDate *time.Time `json:"end_date,omitempty"` // nil = pre-cancel end_date was NULL
+}
+
 // CancellationConfiguration represents the configuration for a subscription cancellation schedule
 type CancellationConfiguration struct {
 	CancellationType  types.CancellationType  `json:"cancellation_type"`
@@ -87,6 +93,12 @@ type CancellationConfiguration struct {
 	OriginalCancelAtPeriodEnd bool       `json:"original_cancel_at_period_end"`
 	OriginalCancelAt          *time.Time `json:"original_cancel_at"` // No omitempty - need to store null
 	OriginalEndDate           *time.Time `json:"original_end_date"`  // No omitempty - need to store null
+
+	// OriginalTerminatedLineItems captures each line item whose end_date was set/shortened by this cancellation along with its pre-cancel end_date value.
+	OriginalTerminatedLineItems []TerminatedLineItemSnapshot `json:"original_terminated_line_items,omitempty"`
+
+	// OriginalAddonAssociationIDs lists the addon association IDs this cancellation transitioned from active to cancelled.
+	OriginalAddonAssociationIDs []string `json:"original_addon_association_ids,omitempty"`
 }
 
 // CancellationResult represents the result of a cancellation execution

@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"context"
+	"time"
 
 	"github.com/flexprice/flexprice/internal/domain/subscription"
 	ierr "github.com/flexprice/flexprice/internal/errors"
@@ -193,6 +194,40 @@ func (s *InMemorySubscriptionLineItemStore) Update(ctx context.Context, item *su
 			Mark(ierr.ErrDatabase)
 	}
 	return nil
+}
+
+// BulkRestoreLineItemEndDates restores each line item's end_date to the snapshot value.
+// Snapshot EndDate=nil → cleared (zero time); snapshot EndDate non-nil → written verbatim.
+func (s *InMemorySubscriptionLineItemStore) BulkRestoreLineItemEndDates(ctx context.Context, snapshots []subscription.TerminatedLineItemSnapshot) (int, error) {
+	if len(snapshots) == 0 {
+		return 0, nil
+	}
+
+	affected := 0
+	for _, snap := range snapshots {
+		item, err := s.Get(ctx, snap.ID)
+		if err != nil {
+			if ierr.IsNotFound(err) {
+				continue
+			}
+			return affected, err
+		}
+		if snap.EndDate == nil {
+			item.EndDate = time.Time{}
+		} else {
+			item.EndDate = *snap.EndDate
+		}
+		if err := s.Update(ctx, item); err != nil {
+			return affected, ierr.WithError(err).
+				WithHint("Failed to restore subscription line item end_date").
+				WithReportableDetails(map[string]interface{}{
+					"line_item_id": snap.ID,
+				}).
+				Mark(ierr.ErrDatabase)
+		}
+		affected++
+	}
+	return affected, nil
 }
 
 // Delete deletes a subscription line item

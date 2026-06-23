@@ -15,4 +15,5 @@ type Repository interface {
 	Delete(ctx context.Context, id string) error
 	List(ctx context.Context, filter *types.AddonAssociationFilter) ([]*AddonAssociation, error)
 	Count(ctx context.Context, filter *types.AddonAssociationFilter) (int, error)
+	BulkRestoreAssociations(ctx context.Context, ids []string) (int, error)
 }

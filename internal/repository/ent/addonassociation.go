@@ -321,6 +321,46 @@ func (r *addonAssociationRepository) Update(ctx context.Context, a *domainAddonA
 	return nil
 }
 
+// BulkRestoreAssociations reverts the given addon associations from cancelled back to active:
+// addon_status=active, cancelled_at cleared, end_date cleared, cancellation_reason cleared.
+func (r *addonAssociationRepository) BulkRestoreAssociations(ctx context.Context, ids []string) (int, error) {
+	if len(ids) == 0 {
+		return 0, nil
+	}
+
+	span := StartRepositorySpan(ctx, "addon_association", "bulk_restore", map[string]interface{}{
+		"association_count": len(ids),
+	})
+	defer FinishSpan(span)
+
+	client := r.client.Writer(ctx)
+	affected, err := client.AddonAssociation.Update().
+		Where(
+			addonassociation.IDIn(ids...),
+			addonassociation.TenantID(types.GetTenantID(ctx)),
+			addonassociation.EnvironmentID(types.GetEnvironmentID(ctx)),
+		).
+		SetAddonStatus(string(types.AddonStatusActive)).
+		ClearCancelledAt().
+		ClearEndDate().
+		SetCancellationReason("").
+		SetUpdatedAt(time.Now().UTC()).
+		SetUpdatedBy(types.GetUserID(ctx)).
+		Save(ctx)
+	if err != nil {
+		SetSpanError(span, err)
+		return 0, ierr.WithError(err).
+			WithHint("Failed to restore addon associations").
+			Mark(ierr.ErrDatabase)
+	}
+
+	SetSpanSuccess(span)
+	for _, id := range ids {
+		r.DeleteCache(ctx, id)
+	}
+	return affected, nil
+}
+
 func (r *addonAssociationRepository) Delete(ctx context.Context, id string) error {
 	client := r.client.Writer(ctx)
 

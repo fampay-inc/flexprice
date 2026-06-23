@@ -283,6 +283,140 @@ func (r *subscriptionLineItemRepository) Update(ctx context.Context, item *subsc
 	return nil
 }
 
+// BulkTerminate terminates all subscription line items for a subscription up to a given date
+func (r *subscriptionLineItemRepository) BulkTerminate(ctx context.Context, subscriptionID string, effectiveDate time.Time) ([]subscription.TerminatedLineItemSnapshot, error) {
+	span := StartRepositorySpan(ctx, "subscription_line_item", "bulk_terminate", map[string]interface{}{
+		"subscription_id": subscriptionID,
+		"effective_date":  effectiveDate,
+	})
+	defer FinishSpan(span)
+
+	client := r.client.Writer(ctx)
+
+	items, err := client.SubscriptionLineItem.Query().
+		Where(
+			subscriptionlineitem.TenantID(types.GetTenantID(ctx)),
+			subscriptionlineitem.EnvironmentID(types.GetEnvironmentID(ctx)),
+			subscriptionlineitem.SubscriptionID(subscriptionID),
+			subscriptionlineitem.Or(
+				subscriptionlineitem.EndDateIsNil(),
+				subscriptionlineitem.EndDateGT(effectiveDate),
+			),
+		).
+		Select(subscriptionlineitem.FieldID, subscriptionlineitem.FieldEndDate).
+		All(ctx)
+	if err != nil {
+		SetSpanError(span, err)
+		return nil, ierr.WithError(err).
+			WithHint("Failed to read subscription line items for termination").
+			Mark(ierr.ErrDatabase)
+	}
+
+	if len(items) == 0 {
+		SetSpanSuccess(span)
+		return nil, nil
+	}
+
+	snapshots := make([]subscription.TerminatedLineItemSnapshot, 0, len(items))
+	ids := make([]string, 0, len(items))
+	for _, it := range items {
+		snap := subscription.TerminatedLineItemSnapshot{ID: it.ID}
+		if it.EndDate != nil {
+			endCopy := *it.EndDate
+			snap.EndDate = &endCopy
+		}
+		snapshots = append(snapshots, snap)
+		ids = append(ids, it.ID)
+	}
+
+	if _, err := client.SubscriptionLineItem.Update().
+		SetNillableEndDate(types.ToNillableTime(effectiveDate)).
+		SetStatus(string(types.StatusPublished)).
+		Where(
+			subscriptionlineitem.TenantID(types.GetTenantID(ctx)),
+			subscriptionlineitem.EnvironmentID(types.GetEnvironmentID(ctx)),
+			subscriptionlineitem.IDIn(ids...),
+		).
+		Save(ctx); err != nil {
+		SetSpanError(span, err)
+		return nil, ierr.WithError(err).
+			WithHint("Failed to terminate subscription line items").
+			Mark(ierr.ErrDatabase)
+	}
+
+	SetSpanSuccess(span)
+	return snapshots, nil
+}
+
+// BulkRestoreLineItemEndDates restores each line item's end_date to its pre-cancel value captured in the snapshot.
+func (r *subscriptionLineItemRepository) BulkRestoreLineItemEndDates(ctx context.Context, snapshots []subscription.TerminatedLineItemSnapshot) (int, error) {
+	if len(snapshots) == 0 {
+		return 0, nil
+	}
+
+	span := StartRepositorySpan(ctx, "subscription_line_item", "bulk_restore_end_dates", map[string]interface{}{
+		"snapshot_count": len(snapshots),
+	})
+	defer FinishSpan(span)
+
+	client := r.client.Writer(ctx)
+
+	nilIDs := make([]string, 0, len(snapshots))
+
+	nonNil := make([]subscription.TerminatedLineItemSnapshot, 0)
+	for _, s := range snapshots {
+		if s.EndDate == nil {
+			nilIDs = append(nilIDs, s.ID)
+		} else {
+			nonNil = append(nonNil, s)
+		}
+	}
+
+	tenantID := types.GetTenantID(ctx)
+	envID := types.GetEnvironmentID(ctx)
+
+	restored := 0
+	if len(nilIDs) > 0 {
+		n, err := client.SubscriptionLineItem.Update().
+			ClearEndDate().
+			Where(
+				subscriptionlineitem.TenantID(tenantID),
+				subscriptionlineitem.EnvironmentID(envID),
+				subscriptionlineitem.IDIn(nilIDs...),
+			).
+			Save(ctx)
+		if err != nil {
+			SetSpanError(span, err)
+			return 0, ierr.WithError(err).
+				WithHint("Failed to restore subscription line item end_dates").
+				Mark(ierr.ErrDatabase)
+		}
+		restored += n
+	}
+
+	for _, s := range nonNil {
+		endCopy := *s.EndDate
+		n, err := client.SubscriptionLineItem.Update().
+			SetEndDate(endCopy).
+			Where(
+				subscriptionlineitem.TenantID(tenantID),
+				subscriptionlineitem.EnvironmentID(envID),
+				subscriptionlineitem.ID(s.ID),
+			).
+			Save(ctx)
+		if err != nil {
+			SetSpanError(span, err)
+			return restored, ierr.WithError(err).
+				WithHintf("Failed to restore end_date on subscription line item %s", s.ID).
+				Mark(ierr.ErrDatabase)
+		}
+		restored += n
+	}
+
+	SetSpanSuccess(span)
+	return restored, nil
+}
+
 // Delete deletes a subscription line item
 func (r *subscriptionLineItemRepository) Delete(ctx context.Context, id string) error {
 	// Start a span for this repository operation

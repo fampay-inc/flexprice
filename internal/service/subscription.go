@@ -1889,13 +1889,22 @@ func (s *subscriptionService) CancelSubscription(
 		}
 
 		// Step 7a: Cancel all addons on the subscription (mark associations cancelled, terminate addon line items)
-		if err := s.cancelAddonsForSubscription(ctx, subscription.ID, effectiveDate, req.Reason); err != nil {
+		cancelledAddonAssocIDs, addonLineItemSnaps, err := s.cancelAddonsForSubscription(ctx, subscription.ID, effectiveDate, req.Reason)
+		if err != nil {
 			return err
 		}
 
-		// Step 7b: Terminate plan line items (set EndDate = effectiveDate)
-		if err := s.cancelPlanLineItemsForSubscription(ctx, subscription.ID, effectiveDate); err != nil {
+		// Step 7b: Terminate plan and subscription-scoped line items (set EndDate = effectiveDate).
+		// Addon line items are already terminated by cancelAddonsForSubscription above.
+		planLineItemSnaps, err := s.cancelPlanLineItemsForSubscription(ctx, subscription.ID, effectiveDate)
+		if err != nil {
 			return err
+		}
+
+		// Aggregate snapshots so the cancellation schedule can later restore exactly what was touched.
+		if originalState != nil {
+			originalState.CancelledAddonAssociationIDs = cancelledAddonAssocIDs
+			originalState.TerminatedLineItems = append(addonLineItemSnaps, planLineItemSnaps...)
 		}
 
 		// Step 7c: Handle scheduling for future cancellations (end_of_period and scheduled_date)
@@ -4303,7 +4312,7 @@ func (s *subscriptionService) validateEntitlementCompatibility(ctx context.Conte
 // and terminates subscription line items where entity type is addon and entity id is the addon id.
 // Called during subscription cancellation (immediate or end_of_period) with the effective cancellation date.
 // Uses the same GetActiveAddonAssociation path as the API so we reliably find all active addons on the subscription.
-func (s *subscriptionService) cancelAddonsForSubscription(ctx context.Context, subscriptionID string, effectiveDate time.Time, reason string) error {
+func (s *subscriptionService) cancelAddonsForSubscription(ctx context.Context, subscriptionID string, effectiveDate time.Time, reason string) (cancelledAssociationIDs []string, terminatedLineItems []subscription.TerminatedLineItemSnapshot, err error) {
 	logger := s.Logger.With(
 		zap.String("subscription_id", subscriptionID),
 		zap.Time("effective_date", effectiveDate),
@@ -4315,14 +4324,14 @@ func (s *subscriptionService) cancelAddonsForSubscription(ctx context.Context, s
 		EntityType: types.AddonAssociationEntityTypeSubscription,
 	})
 	if err != nil {
-		return ierr.WithError(err).
+		return nil, nil, ierr.WithError(err).
 			WithHint("Failed to get active addon associations for subscription").
 			Mark(ierr.ErrDatabase)
 	}
 
 	if activeAddons == nil || len(activeAddons.Items) == 0 {
 		logger.Debug("no active addon associations to cancel")
-		return nil
+		return nil, nil, nil
 	}
 
 	logger.Infow("cancelling addon associations for subscription",
@@ -4335,6 +4344,7 @@ func (s *subscriptionService) cancelAddonsForSubscription(ctx context.Context, s
 	}
 
 	addonIDsToCancel := make(map[string]struct{}, len(activeAddons.Items))
+	cancelledAssociationIDs = make([]string, 0, len(activeAddons.Items))
 
 	for _, addonResp := range activeAddons.Items {
 		if addonResp == nil || addonResp.AddonAssociation == nil {
@@ -4351,6 +4361,7 @@ func (s *subscriptionService) cancelAddonsForSubscription(ctx context.Context, s
 		}
 
 		addonIDsToCancel[association.AddonID] = struct{}{}
+		cancelledAssociationIDs = append(cancelledAssociationIDs, association.ID)
 
 		association.AddonStatus = types.AddonStatusCancelled
 		association.CancellationReason = cancellationReason
@@ -4361,7 +4372,7 @@ func (s *subscriptionService) cancelAddonsForSubscription(ctx context.Context, s
 			logger.Errorw("failed to update addon association",
 				"addon_association_id", association.ID,
 				"error", err)
-			return ierr.WithError(err).
+			return nil, nil, ierr.WithError(err).
 				WithHintf("Failed to cancel addon association %s", association.ID).
 				Mark(ierr.ErrDatabase)
 		}
@@ -4372,7 +4383,7 @@ func (s *subscriptionService) cancelAddonsForSubscription(ctx context.Context, s
 	}
 
 	if len(addonIDsToCancel) == 0 {
-		return nil
+		return cancelledAssociationIDs, nil, nil
 	}
 
 	addonIDList := lo.Keys(addonIDsToCancel)
@@ -4386,7 +4397,7 @@ func (s *subscriptionService) cancelAddonsForSubscription(ctx context.Context, s
 		logger.Errorw("failed to list subscription line items for addon termination",
 			"subscription_id", subscriptionID,
 			"error", err)
-		return ierr.WithError(err).
+		return cancelledAssociationIDs, nil, ierr.WithError(err).
 			WithHint("Failed to list subscription line items for addon termination").
 			Mark(ierr.ErrDatabase)
 	}
@@ -4397,29 +4408,32 @@ func (s *subscriptionService) cancelAddonsForSubscription(ctx context.Context, s
 		"line_items_found", len(allLineItems))
 
 	deleteReq := dto.DeleteSubscriptionLineItemRequest{EffectiveFrom: &effectiveDate}
-	terminated := 0
+	terminatedLineItems = make([]subscription.TerminatedLineItemSnapshot, 0, len(allLineItems))
 	for _, lineItem := range allLineItems {
 		if !lineItem.EndDate.IsZero() {
 			continue
 		}
+		// Pre-cancel end_date is always nil here (the skip above guarantees it). Snapshot the
+		// ID with EndDate=nil so restore knows to clear back to NULL.
+		terminatedLineItems = append(terminatedLineItems, subscription.TerminatedLineItemSnapshot{ID: lineItem.ID})
+
 		if _, err := s.DeleteSubscriptionLineItem(ctx, lineItem.ID, deleteReq); err != nil {
 			logger.Errorw("failed to terminate addon line item",
 				"line_item_id", lineItem.ID,
 				"entity_id", lineItem.EntityID,
 				"error", err)
-			return ierr.WithError(err).
+			return cancelledAssociationIDs, terminatedLineItems, ierr.WithError(err).
 				WithHintf("Failed to terminate line item %s (entity_type=addon, entity_id=%s)", lineItem.ID, lineItem.EntityID).
 				Mark(ierr.ErrDatabase)
 		}
-		terminated++
 	}
 
 	logger.Infow("terminated addon line items for subscription",
 		"subscription_id", subscriptionID,
 		"addon_ids_count", len(addonIDsToCancel),
-		"line_items_terminated", terminated)
+		"line_items_terminated", len(terminatedLineItems))
 
-	return nil
+	return cancelledAssociationIDs, terminatedLineItems, nil
 }
 
 // RemoveAddonFromSubscription removes an addon from a subscription by addon association ID
@@ -6955,6 +6969,14 @@ type subscriptionOriginalState struct {
 	CancelAt          *time.Time
 	EndDate           *time.Time
 	// Note: CancelledAt is not tracked because it should never be set for end_of_period cancellations
+
+	// TerminatedLineItems captures every line item the cancel touched (both addon and plan/sub
+	// scoped) along with its pre-cancel end_date so restore can put each one back verbatim.
+	TerminatedLineItems []subscription.TerminatedLineItemSnapshot
+	// CancelledAddonAssociationIDs is the IDs of addon associations transitioned from active to
+	// cancelled by this cancel call. Pre-cancel state is canonical (active, no cancelled_at,
+	// no end_date, no reason) by construction; restore resets to that.
+	CancelledAddonAssociationIDs []string
 }
 
 // createCancellationSchedule creates a subscription schedule entry for end_of_period cancellation
@@ -6967,12 +6989,14 @@ func (s *subscriptionService) createCancellationSchedule(
 ) error {
 	// Store original subscription state before cancellation
 	config := &subscription.CancellationConfiguration{
-		CancellationType:          req.CancellationType,
-		Reason:                    req.Reason,
-		ProrationBehavior:         req.ProrationBehavior,
-		OriginalCancelAtPeriodEnd: originalState.CancelAtPeriodEnd,
-		OriginalCancelAt:          originalState.CancelAt,
-		OriginalEndDate:           originalState.EndDate,
+		CancellationType:            req.CancellationType,
+		Reason:                      req.Reason,
+		ProrationBehavior:           req.ProrationBehavior,
+		OriginalCancelAtPeriodEnd:   originalState.CancelAtPeriodEnd,
+		OriginalCancelAt:            originalState.CancelAt,
+		OriginalEndDate:             originalState.EndDate,
+		OriginalTerminatedLineItems: originalState.TerminatedLineItems,
+		OriginalAddonAssociationIDs: originalState.CancelledAddonAssociationIDs,
 	}
 
 	// Create the schedule entry
@@ -7171,7 +7195,7 @@ func (s *subscriptionService) cancelPlanLineItemsForSubscription(
 	ctx context.Context,
 	subscriptionID string,
 	effectiveDate time.Time,
-) error {
+) ([]subscription.TerminatedLineItemSnapshot, error) {
 	logger := s.Logger.With(
 		zap.String("subscription_id", subscriptionID),
 		zap.Time("effective_date", effectiveDate),
@@ -7184,12 +7208,12 @@ func (s *subscriptionService) cancelPlanLineItemsForSubscription(
 	lineItems, err := s.SubscriptionLineItemRepo.List(ctx, lineItemFilter)
 	if err != nil {
 		logger.Errorw("failed to list plan line items for cancellation", "error", err)
-		return ierr.WithError(err).
+		return nil, ierr.WithError(err).
 			WithHint("Failed to list plan line items for cancellation").
 			Mark(ierr.ErrDatabase)
 	}
 
-	terminated := 0
+	snapshots := make([]subscription.TerminatedLineItemSnapshot, 0)
 	for _, item := range lineItems {
 		// Skip items that haven't started yet — they never became active
 		if item.StartDate.After(effectiveDate) {
@@ -7205,21 +7229,29 @@ func (s *subscriptionService) cancelPlanLineItemsForSubscription(
 				"end_date", item.EndDate)
 			continue
 		}
+		var endDateCopy *time.Time
+		if !item.EndDate.IsZero(){
+			endDateCopy = &item.EndDate
+		}
+		snapItem := subscription.TerminatedLineItemSnapshot{
+			ID:      item.ID,
+			EndDate: endDateCopy,
+		}
 		item.EndDate = effectiveDate
 		if err := s.SubscriptionLineItemRepo.Update(ctx, item); err != nil {
 			logger.Errorw("failed to update plan line item end date",
 				"line_item_id", item.ID,
 				"error", err)
-			return ierr.WithError(err).
+			return nil, ierr.WithError(err).
 				WithHintf("Failed to set EndDate on plan line item %s", item.ID).
 				Mark(ierr.ErrDatabase)
 		}
-		terminated++
+		snapshots = append(snapshots, snapItem)
 	}
 
 	logger.Infow("terminated plan line items for subscription",
-		"line_items_terminated", terminated)
-	return nil
+		"line_items_terminated", len(snapshots))
+	return snapshots, nil
 }
 
 // resolveExternalCustomersForInheritance resolves published customers by external ID and validates

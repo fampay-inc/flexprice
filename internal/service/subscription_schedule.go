@@ -487,15 +487,43 @@ func (s *subscriptionScheduleService) restoreCancellationState(
 	sub.CancelAt = config.OriginalCancelAt
 	sub.EndDate = config.OriginalEndDate
 
+	// Clear cancelled_at — the snapshot does not capture an "original cancelled_at"
+	// because pre-cancel it is always nil.
+	sub.CancelledAt = nil
+
+	// Strip cancellation metadata keys written by updateSubscriptionForCancellation.
+	if sub.Metadata != nil {
+		delete(sub.Metadata, "cancellation_type")
+		delete(sub.Metadata, "cancellation_reason")
+		delete(sub.Metadata, "effective_date")
+		if len(sub.Metadata) == 0 {
+			sub.Metadata = nil
+		}
+	}
+
 	// Update the subscription
 	if err := s.SubRepo.Update(ctx, sub); err != nil {
 		return fmt.Errorf("failed to restore subscription state: %w", err)
+	}
+
+	// Restore each terminated line item's pre-cancel end_date by ID.
+	lineItemsRestored, err := s.SubscriptionLineItemRepo.BulkRestoreLineItemEndDates(ctx, config.OriginalTerminatedLineItems)
+	if err != nil {
+		return fmt.Errorf("failed to restore terminated line items: %w", err)
+	}
+
+	// Restore addon associations the cancel transitioned.
+	addonsRestored, err := s.AddonAssociationRepo.BulkRestoreAssociations(ctx, config.OriginalAddonAssociationIDs)
+	if err != nil {
+		return fmt.Errorf("failed to restore addon associations: %w", err)
 	}
 
 	s.Logger.Info("subscription state restored successfully",
 		zap.String("schedule_id", schedule.ID),
 		zap.String("subscription_id", sub.ID),
 		zap.Bool("restored_cancel_at_period_end", sub.CancelAtPeriodEnd),
+		zap.Int("line_items_restored", lineItemsRestored),
+		zap.Int("addon_associations_restored", addonsRestored),
 	)
 
 	return nil
