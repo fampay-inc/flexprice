@@ -98,7 +98,7 @@ func (r *subscriptionRepository) Create(ctx context.Context, sub *domainSub.Subs
 		SetNillableParentSubscriptionID(sub.ParentSubscriptionID).
 		SetNillablePaymentTerms(sub.PaymentTerms).
 		SetSyncedPriceSequence(sub.SyncedPriceSequence).
-		SetNillableSku(sub.Sku).
+		SetSku(sub.Sku).
 		Save(ctx)
 
 	if err != nil {

@@ -111,7 +111,7 @@ func (s *subscriptionService) CreateSubscription(ctx context.Context, req dto.Cr
 	s.overRideSubscriptionBasedOnIntegration(ctx, sub, &req)
 
 	if plan.SKU != "" {
-		sub.Sku = &plan.SKU
+		sub.Sku = plan.SKU
 	}
 
 	// Validate and filter prices
@@ -2203,12 +2203,12 @@ func (s *subscriptionService) ListSubscriptions(ctx context.Context, filter *typ
 			s.Logger.Error(ctx, "failed to resolve external customer ID",
 				"error", err,
 				"external_customer_id", filter.ExternalCustomerID)
-			return nil, ierr.WithError(err).
+			return nil, ierr.NewError("customer not found").
 				WithHintf("Customer with external ID '%s' not found", filter.ExternalCustomerID).
 				WithReportableDetails(map[string]interface{}{
 					"external_customer_id": filter.ExternalCustomerID,
 				}).
-				Mark(ierr.ErrNotFound)
+				Mark(ierr.ErrCustomerNotFound)
 		}
 
 		// Set the resolved customer ID and clear the external customer ID

@@ -147,7 +147,7 @@ type Subscription struct {
 	SyncedPriceSequence int64 `db:"synced_price_sequence" json:"synced_price_sequence,omitempty"`
 
 	// Sku is denormalized from plan.sku at subscription creation time
-	Sku *string `db:"sku" json:"sku,omitempty"`
+	Sku string `db:"sku" json:"sku,omitempty"`
 
 	types.BaseModel
 }
