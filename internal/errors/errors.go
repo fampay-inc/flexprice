@@ -17,6 +17,7 @@ type errorMapping struct {
 // Common error types that can be used across the application
 var (
 	ErrNotFound           = new(ErrCodeNotFound, "resource not found")
+	ErrCustomerNotFound   = new(ErrCodeCustomerNotFound, "customer not found")
 	ErrAlreadyExists      = new(ErrCodeAlreadyExists, "resource already exists")
 	ErrVersionConflict    = new(ErrCodeVersionConflict, "version conflict")
 	ErrValidation         = new(ErrCodeValidation, "validation error")
@@ -33,6 +34,7 @@ var (
 	// ResolveError iterates this once to get both values.
 	errMappings = map[error]errorMapping{
 		ErrNotFound:           {http.StatusNotFound, ErrCodeNotFound},
+		ErrCustomerNotFound:   {http.StatusNotFound, ErrCodeCustomerNotFound},
 		ErrAlreadyExists:      {http.StatusConflict, ErrCodeAlreadyExists},
 		ErrVersionConflict:    {http.StatusConflict, ErrCodeVersionConflict},
 		ErrValidation:         {http.StatusBadRequest, ErrCodeValidation},
@@ -52,6 +54,7 @@ const (
 	ErrCodeSystemError        = "system_error"
 	ErrCodeInternalError      = "internal_error"
 	ErrCodeNotFound           = "not_found"
+	ErrCodeCustomerNotFound   = "customer_not_found"
 	ErrCodeAlreadyExists      = "already_exists"
 	ErrCodeVersionConflict    = "version_conflict"
 	ErrCodeValidation         = "validation_error"

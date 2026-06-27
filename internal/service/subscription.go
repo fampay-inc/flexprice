@@ -2020,12 +2020,12 @@ func (s *subscriptionService) ListSubscriptions(ctx context.Context, filter *typ
 			s.Logger.ErrorwCtx(ctx, "failed to resolve external customer ID",
 				"error", err,
 				"external_customer_id", filter.ExternalCustomerID)
-			return nil, ierr.WithError(err).
+			return nil, ierr.NewError("customer not found").
 				WithHintf("Customer with external ID '%s' not found", filter.ExternalCustomerID).
 				WithReportableDetails(map[string]interface{}{
 					"external_customer_id": filter.ExternalCustomerID,
 				}).
-				Mark(ierr.ErrNotFound)
+				Mark(ierr.ErrCustomerNotFound)
 		}
 
 		// Set the resolved customer ID and clear the external customer ID
@@ -7230,7 +7230,7 @@ func (s *subscriptionService) cancelPlanLineItemsForSubscription(
 			continue
 		}
 		var endDateCopy *time.Time
-		if !item.EndDate.IsZero(){
+		if !item.EndDate.IsZero() {
 			endDateCopy = &item.EndDate
 		}
 		snapItem := subscription.TerminatedLineItemSnapshot{
