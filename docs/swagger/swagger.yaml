@@ -7157,6 +7157,10 @@ definitions:
         type: string
       cancel_at_period_end:
         type: boolean
+      metadata:
+        additionalProperties:
+          type: string
+        type: object
       parent_subscription_id:
         description: ParentSubscriptionID sets or clears the parent subscription.
           Omit to leave unchanged; send "" to clear.
@@ -7703,6 +7707,7 @@ definitions:
     - system_error
     - internal_error
     - not_found
+    - customer_not_found
     - already_exists
     - version_conflict
     - validation_error
@@ -7718,6 +7723,7 @@ definitions:
     - ErrCodeSystemError
     - ErrCodeInternalError
     - ErrCodeNotFound
+    - ErrCodeCustomerNotFound
     - ErrCodeAlreadyExists
     - ErrCodeVersionConflict
     - ErrCodeValidation

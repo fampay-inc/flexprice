@@ -22162,6 +22162,12 @@ const docTemplate = `{
                 "cancel_at_period_end": {
                     "type": "boolean"
                 },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
                 "parent_subscription_id": {
                     "description": "ParentSubscriptionID sets or clears the parent subscription. Omit to leave unchanged; send \"\" to clear.",
                     "type": "string"
@@ -22923,6 +22929,7 @@ const docTemplate = `{
                 "system_error",
                 "internal_error",
                 "not_found",
+                "customer_not_found",
                 "already_exists",
                 "version_conflict",
                 "validation_error",
@@ -22938,6 +22945,7 @@ const docTemplate = `{
                 "ErrCodeSystemError",
                 "ErrCodeInternalError",
                 "ErrCodeNotFound",
+                "ErrCodeCustomerNotFound",
                 "ErrCodeAlreadyExists",
                 "ErrCodeVersionConflict",
                 "ErrCodeValidation",

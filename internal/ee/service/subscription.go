@@ -1894,6 +1894,10 @@ func (s *subscriptionService) UpdateSubscription(ctx context.Context, subscripti
 
 	subscription.CancelAtPeriodEnd = req.CancelAtPeriodEnd
 
+	if req.Metadata != nil {
+		subscription.Metadata = req.Metadata
+	}
+
 	// Update the subscription in the database
 	err = s.SubRepo.Update(ctx, subscription)
 	if err != nil {
