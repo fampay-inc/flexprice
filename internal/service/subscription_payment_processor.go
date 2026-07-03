@@ -100,7 +100,7 @@ func (s *subscriptionPaymentProcessor) HandlePaymentBehavior(
 	// Handle different collection methods
 	switch types.CollectionMethod(sub.CollectionMethod) {
 	case types.CollectionMethodSendInvoice:
-		return s.handleSendInvoiceMethod(ctx, sub, inv, behavior)
+		return s.handleSendInvoiceMethod(ctx, sub, inv, behavior, flowType)
 	case types.CollectionMethodChargeAutomatically:
 		return s.handleChargeAutomaticallyMethod(ctx, sub, inv, behavior, flowType)
 	default:
@@ -119,6 +119,7 @@ func (s *subscriptionPaymentProcessor) handleSendInvoiceMethod(
 	sub *subscription.Subscription,
 	inv *dto.InvoiceResponse,
 	behavior types.PaymentBehavior,
+	flowType types.InvoiceFlowType,
 ) error {
 	switch behavior {
 	case types.PaymentBehaviorDefaultActive:
@@ -132,6 +133,15 @@ func (s *subscriptionPaymentProcessor) handleSendInvoiceMethod(
 		return s.SubRepo.Update(ctx, sub)
 
 	case types.PaymentBehaviorDefaultIncomplete:
+		// For renewal flow the subscription is already active and must stay active during the
+		// grace window — only mark incomplete for initial subscription creation flows.
+		if flowType == types.InvoiceFlowRenewal {
+			s.Logger.Infow("send_invoice with default_incomplete (renewal) - keeping subscription active",
+				"subscription_id", sub.ID,
+				"invoice_id", inv.ID,
+			)
+			return nil
+		}
 		// Default incomplete behavior - set subscription to incomplete without payment attempt
 		s.Logger.Infow("send_invoice with default_incomplete - setting subscription to incomplete",
 			"subscription_id", sub.ID,
