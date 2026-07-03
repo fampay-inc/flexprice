@@ -2918,14 +2918,16 @@ func (s *subscriptionService) processSubscriptionPeriod(ctx context.Context, sub
 		for i := 0; i < len(periods)-1; i++ {
 			period := periods[i]
 
-			// Create a single invoice for both arrear and advance charges at period end
+			// Create an advance invoice for the upcoming billing period (periods[i+1]).
+			// The customer pays upfront for the next cycle, not for the one that just ended.
+			nextPeriod := periods[i+1]
 			paymentParams := dto.NewPaymentParametersFromSubscription(sub.CollectionMethod, sub.PaymentBehavior, sub.GatewayPaymentMethodID)
 			// Apply backward compatibility normalization
 			paymentParams = paymentParams.NormalizePaymentParameters()
 			inv, updatedSub, err := invoiceService.CreateSubscriptionInvoice(ctx, &dto.CreateSubscriptionInvoiceRequest{
 				SubscriptionID: sub.ID,
-				PeriodStart:    period.start,
-				PeriodEnd:      period.end,
+				PeriodStart:    nextPeriod.start,
+				PeriodEnd:      nextPeriod.end,
 				ReferencePoint: types.ReferencePointPeriodEnd,
 			}, paymentParams, types.InvoiceFlowRenewal, false)
 			if err != nil {
@@ -2966,19 +2968,19 @@ func (s *subscriptionService) processSubscriptionPeriod(ctx context.Context, sub
 			}
 
 			if inv == nil {
-				s.Logger.InfowCtx(ctx, "no invoice was created for period",
+				s.Logger.InfowCtx(ctx, "no invoice was created for next period",
 					"subscription_id", sub.ID,
-					"period_start", period.start,
-					"period_end", period.end,
+					"period_start", nextPeriod.start,
+					"period_end", nextPeriod.end,
 					"period_index", i)
 				continue
 			}
 
-			s.Logger.InfowCtx(ctx, "created invoice for period",
+			s.Logger.InfowCtx(ctx, "created advance invoice for next period",
 				"subscription_id", sub.ID,
 				"invoice_id", inv.ID,
-				"period_start", period.start,
-				"period_end", period.end,
+				"period_start", nextPeriod.start,
+				"period_end", nextPeriod.end,
 				"period_index", i)
 		}
 

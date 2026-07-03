@@ -2601,16 +2601,18 @@ func (s *billingService) CreateInvoiceRequestForCharges(
 			Mark(ierr.ErrValidation)
 	}
 
-	// Prepare invoice due date: use subscription payment terms if set, else tenant's configuration
+	// Prepare invoice due date anchored to periodStart, not periodEnd.
+	// For advance-billing invoices the payment is due when the new cycle begins,
+	// so DueDateDays is applied to periodStart (e.g. Jul 1 + 7 = Jul 8 grace end).
 	var invoiceDueDate time.Time
 	if sub.PaymentTerms != nil && *sub.PaymentTerms != "" {
 		if days, ok := types.PaymentTermsToDueDateDays(*sub.PaymentTerms); ok {
-			invoiceDueDate = periodEnd.Add(24 * time.Hour * time.Duration(days))
+			invoiceDueDate = periodStart.Add(24 * time.Hour * time.Duration(days))
 		} else {
-			invoiceDueDate = periodEnd.Add(24 * time.Hour * time.Duration(*invoiceConfig.DueDateDays))
+			invoiceDueDate = periodStart.Add(24 * time.Hour * time.Duration(*invoiceConfig.DueDateDays))
 		}
 	} else {
-		invoiceDueDate = periodEnd.Add(24 * time.Hour * time.Duration(*invoiceConfig.DueDateDays))
+		invoiceDueDate = periodStart.Add(24 * time.Hour * time.Duration(*invoiceConfig.DueDateDays))
 	}
 
 	if result == nil {
