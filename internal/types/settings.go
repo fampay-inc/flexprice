@@ -70,7 +70,7 @@ type DefaultSettingValue struct {
 
 // SubscriptionConfig represents the configuration for subscription auto-cancellation
 type SubscriptionConfig struct {
-	GracePeriodDays         int  `json:"grace_period_days" validate:"required,min=1"`
+	GracePeriodDays         int  `json:"grace_period_days" validate:"min=0"`
 	AutoCancellationEnabled bool `json:"auto_cancellation_enabled"`
 }
 
@@ -488,13 +488,13 @@ func GetDefaultSettings() (map[SettingKey]DefaultSettingValue, error) {
 		InvoiceNumberTimezone:                  DefaultTimezone,
 		InvoiceNumberSeparator:                 "-",
 		InvoiceNumberSuffixLength:              5,
-		DueDateDays:                            lo.ToPtr(1),
+		DueDateDays:                            lo.ToPtr(8),
 		AutoCompletePurchasedCreditTransaction: false,
 		FinalizationDelaySeconds:               7200, // 2 hours
 	}
 
 	defaultSubscriptionConfig := SubscriptionConfig{
-		GracePeriodDays:         3,
+		GracePeriodDays:         0,
 		AutoCancellationEnabled: false,
 	}
 
