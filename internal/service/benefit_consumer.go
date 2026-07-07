@@ -16,6 +16,7 @@ import (
 	pubsubRouter "github.com/flexprice/flexprice/internal/pubsub/router"
 	"github.com/flexprice/flexprice/internal/sentry"
 	"github.com/flexprice/flexprice/internal/types"
+	"github.com/google/uuid"
 	benefitsv1 "gitlab.famapp.in/backend/flexprice/protos/pb/v1"
 	"google.golang.org/protobuf/proto"
 )
@@ -99,6 +100,19 @@ func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
 		)
 		return nil
 	}
+	
+	for name, val := range map[string]string{
+		"subscription_id": ev.GetSubscriptionId(),
+		"cycle_id":        ev.GetCycleId(),
+		"feature_id":      ev.GetFeatureId(),
+	} {
+		if _, err := uuid.Parse(val); err != nil {
+			s.Logger.Warnw("dropping benefit event: "+name+" is not a valid uuid",
+				"event_id", ev.GetEventId(), name, val)
+			return nil
+		}
+	}
+
 	tenantID := s.Config.Billing.TenantID
 	environmentID := s.Config.Billing.EnvironmentID
 
@@ -132,6 +146,12 @@ func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
 			"cycle_id", ev.GetCycleId(),
 			"feature_id", ev.GetFeatureId(),
 		)
+		return nil
+	}
+
+	if _, err := uuid.Parse(customerID); err != nil {
+		s.Logger.Warnw("dropping benefit event: customer id is not a valid uuid (legacy customer)",
+			"event_id", ev.GetEventId(), "customer_id", customerID)
 		return nil
 	}
 
