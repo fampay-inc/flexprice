@@ -85,9 +85,7 @@ func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
 			"payload_len", len(msg.Payload),
 		)
 		s.sentryService.CaptureException(err)
-		return ierr.WithError(err).
-			WithHint("invalid benefit event protobuf").
-			Mark(ierr.ErrValidation)
+		return nil
 	}
 
 	if ev.GetEventId() == "" || ev.GetSubscriptionId() == "" ||
@@ -107,7 +105,7 @@ func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
 		"feature_id":      ev.GetFeatureId(),
 	} {
 		if _, err := uuid.Parse(val); err != nil {
-			s.Logger.Warnw("dropping benefit event: "+name+" is not a valid uuid",
+			s.Logger.Warnw("dropping invalid benefit event: "+name+" is not a valid uuid",
 				"event_id", ev.GetEventId(), name, val)
 			return nil
 		}
@@ -119,9 +117,7 @@ func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
 	if tenantID == "" {
 		s.Logger.Errorw("billing.tenant_id is not configured; cannot process benefit events",
 			"event_id", ev.GetEventId())
-		return ierr.NewError("billing tenant not configured").
-			WithHint("Set billing.tenant_id in config").
-			Mark(ierr.ErrSystem)
+		return nil
 	}
 
 	ctx := context.Background()
@@ -139,19 +135,13 @@ func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
 			Mark(ierr.ErrSystem)
 	}
 	if dropReason != "" {
-		s.Logger.Warnw("dropping benefit event: "+dropReason,
+		s.Logger.Warnw("dropping invalid benefit event: "+dropReason,
 			"event_id", ev.GetEventId(),
 			"subscription_id", ev.GetSubscriptionId(),
 			"external_customer_id", ev.GetExternalCustomerId(),
 			"cycle_id", ev.GetCycleId(),
 			"feature_id", ev.GetFeatureId(),
 		)
-		return nil
-	}
-
-	if _, err := uuid.Parse(customerID); err != nil {
-		s.Logger.Warnw("dropping benefit event: customer id is not a valid uuid (legacy customer)",
-			"event_id", ev.GetEventId(), "customer_id", customerID)
 		return nil
 	}
 
@@ -223,6 +213,10 @@ func (s *benefitConsumptionService) validateEvent(
 		}
 		return "", "", "", ierr.WithError(err).WithHint("customer lookup failed").Mark(ierr.ErrDatabase)
 	}
+	
+	if _, err := uuid.Parse(cust.ID); err != nil {
+		return "", "", "customer id is not a valid uuid", nil
+	}
 
 	sub, err := s.SubRepo.Get(ctx, ev.GetSubscriptionId())
 	if err != nil {
@@ -233,9 +227,6 @@ func (s *benefitConsumptionService) validateEvent(
 	}
 	if sub.CustomerID != cust.ID {
 		return "", "", "subscription does not belong to customer", nil
-	}
-	if sub.SubscriptionStatus != types.SubscriptionStatusActive {
-		return "", "", "subscription is not active", nil
 	}
 	if sub.Sku == nil || *sub.Sku == "" {
 		return "", "", "subscription has no sku", nil

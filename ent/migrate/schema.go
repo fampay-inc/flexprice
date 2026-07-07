@@ -195,17 +195,12 @@ var (
 			{
 				Name:    "uq_benefit_ledger_event_id",
 				Unique:  true,
-				Columns: []*schema.Column{BenefitLedgersColumns[8]},
+				Columns: []*schema.Column{BenefitLedgersColumns[11], BenefitLedgersColumns[8]},
 			},
 			{
 				Name:    "idx_benefit_ledger_customer_cycle",
 				Unique:  false,
 				Columns: []*schema.Column{BenefitLedgersColumns[1], BenefitLedgersColumns[7], BenefitLedgersColumns[10], BenefitLedgersColumns[12]},
-			},
-			{
-				Name:    "idx_benefit_ledger_sku_customer",
-				Unique:  false,
-				Columns: []*schema.Column{BenefitLedgersColumns[1], BenefitLedgersColumns[7], BenefitLedgersColumns[11], BenefitLedgersColumns[10]},
 			},
 		},
 	}

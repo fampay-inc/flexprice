@@ -17,7 +17,7 @@ CREATE TABLE benefit_ledgers (
     value           bigint       NOT NULL,
     event_timestamp timestamptz  NOT NULL,
     PRIMARY KEY (id, sku),
-    CONSTRAINT uq_benefit_ledger_event_id UNIQUE (event_id, sku)
+    CONSTRAINT uq_benefit_ledger_event_id UNIQUE (sku, event_id)
 ) PARTITION BY LIST (sku);
 
 CREATE TABLE benefit_ledgers_limitless PARTITION OF benefit_ledgers FOR VALUES IN ('limitless');
