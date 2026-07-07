@@ -9,6 +9,7 @@ import (
 	"github.com/flexprice/flexprice/ent/addonassociation"
 	"github.com/flexprice/flexprice/ent/alertlogs"
 	"github.com/flexprice/flexprice/ent/auth"
+	"github.com/flexprice/flexprice/ent/benefitledger"
 	"github.com/flexprice/flexprice/ent/billingsequence"
 	"github.com/flexprice/flexprice/ent/connection"
 	"github.com/flexprice/flexprice/ent/costsheet"
@@ -218,6 +219,59 @@ func init() {
 	auth.DefaultUpdatedAt = authDescUpdatedAt.Default.(func() time.Time)
 	// auth.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
 	auth.UpdateDefaultUpdatedAt = authDescUpdatedAt.UpdateDefault.(func() time.Time)
+	benefitledgerMixin := schema.BenefitLedger{}.Mixin()
+	benefitledgerMixinFields0 := benefitledgerMixin[0].Fields()
+	_ = benefitledgerMixinFields0
+	benefitledgerMixinFields1 := benefitledgerMixin[1].Fields()
+	_ = benefitledgerMixinFields1
+	benefitledgerFields := schema.BenefitLedger{}.Fields()
+	_ = benefitledgerFields
+	// benefitledgerDescTenantID is the schema descriptor for tenant_id field.
+	benefitledgerDescTenantID := benefitledgerMixinFields0[0].Descriptor()
+	// benefitledger.TenantIDValidator is a validator for the "tenant_id" field. It is called by the builders before save.
+	benefitledger.TenantIDValidator = benefitledgerDescTenantID.Validators[0].(func(string) error)
+	// benefitledgerDescStatus is the schema descriptor for status field.
+	benefitledgerDescStatus := benefitledgerMixinFields0[1].Descriptor()
+	// benefitledger.DefaultStatus holds the default value on creation for the status field.
+	benefitledger.DefaultStatus = benefitledgerDescStatus.Default.(string)
+	// benefitledgerDescCreatedAt is the schema descriptor for created_at field.
+	benefitledgerDescCreatedAt := benefitledgerMixinFields0[2].Descriptor()
+	// benefitledger.DefaultCreatedAt holds the default value on creation for the created_at field.
+	benefitledger.DefaultCreatedAt = benefitledgerDescCreatedAt.Default.(func() time.Time)
+	// benefitledgerDescUpdatedAt is the schema descriptor for updated_at field.
+	benefitledgerDescUpdatedAt := benefitledgerMixinFields0[3].Descriptor()
+	// benefitledger.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	benefitledger.DefaultUpdatedAt = benefitledgerDescUpdatedAt.Default.(func() time.Time)
+	// benefitledger.UpdateDefaultUpdatedAt holds the default value on update for the updated_at field.
+	benefitledger.UpdateDefaultUpdatedAt = benefitledgerDescUpdatedAt.UpdateDefault.(func() time.Time)
+	// benefitledgerDescEnvironmentID is the schema descriptor for environment_id field.
+	benefitledgerDescEnvironmentID := benefitledgerMixinFields1[0].Descriptor()
+	// benefitledger.DefaultEnvironmentID holds the default value on creation for the environment_id field.
+	benefitledger.DefaultEnvironmentID = benefitledgerDescEnvironmentID.Default.(string)
+	// benefitledgerDescEventID is the schema descriptor for event_id field.
+	benefitledgerDescEventID := benefitledgerFields[1].Descriptor()
+	// benefitledger.EventIDValidator is a validator for the "event_id" field. It is called by the builders before save.
+	benefitledger.EventIDValidator = benefitledgerDescEventID.Validators[0].(func(string) error)
+	// benefitledgerDescSubscriptionID is the schema descriptor for subscription_id field.
+	benefitledgerDescSubscriptionID := benefitledgerFields[2].Descriptor()
+	// benefitledger.SubscriptionIDValidator is a validator for the "subscription_id" field. It is called by the builders before save.
+	benefitledger.SubscriptionIDValidator = benefitledgerDescSubscriptionID.Validators[0].(func(string) error)
+	// benefitledgerDescCustomerID is the schema descriptor for customer_id field.
+	benefitledgerDescCustomerID := benefitledgerFields[3].Descriptor()
+	// benefitledger.CustomerIDValidator is a validator for the "customer_id" field. It is called by the builders before save.
+	benefitledger.CustomerIDValidator = benefitledgerDescCustomerID.Validators[0].(func(string) error)
+	// benefitledgerDescSku is the schema descriptor for sku field.
+	benefitledgerDescSku := benefitledgerFields[4].Descriptor()
+	// benefitledger.SkuValidator is a validator for the "sku" field. It is called by the builders before save.
+	benefitledger.SkuValidator = benefitledgerDescSku.Validators[0].(func(string) error)
+	// benefitledgerDescCycleID is the schema descriptor for cycle_id field.
+	benefitledgerDescCycleID := benefitledgerFields[5].Descriptor()
+	// benefitledger.CycleIDValidator is a validator for the "cycle_id" field. It is called by the builders before save.
+	benefitledger.CycleIDValidator = benefitledgerDescCycleID.Validators[0].(func(string) error)
+	// benefitledgerDescCategory is the schema descriptor for category field.
+	benefitledgerDescCategory := benefitledgerFields[6].Descriptor()
+	// benefitledger.CategoryValidator is a validator for the "category" field. It is called by the builders before save.
+	benefitledger.CategoryValidator = benefitledgerDescCategory.Validators[0].(func(string) error)
 	billingsequenceFields := schema.BillingSequence{}.Fields()
 	_ = billingsequenceFields
 	// billingsequenceDescTenantID is the schema descriptor for tenant_id field.

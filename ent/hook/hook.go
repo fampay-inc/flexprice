@@ -57,6 +57,18 @@ func (f AuthFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error)
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.AuthMutation", m)
 }
 
+// The BenefitLedgerFunc type is an adapter to allow the use of ordinary
+// function as BenefitLedger mutator.
+type BenefitLedgerFunc func(context.Context, *ent.BenefitLedgerMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f BenefitLedgerFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.BenefitLedgerMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.BenefitLedgerMutation", m)
+}
+
 // The BillingSequenceFunc type is an adapter to allow the use of ordinary
 // function as BillingSequence mutator.
 type BillingSequenceFunc func(context.Context, *ent.BillingSequenceMutation) (ent.Value, error)

@@ -7,6 +7,7 @@ import (
 	"github.com/flexprice/flexprice/internal/domain/addonassociation"
 	"github.com/flexprice/flexprice/internal/domain/alertlogs"
 	"github.com/flexprice/flexprice/internal/domain/auth"
+	"github.com/flexprice/flexprice/internal/domain/benefit"
 	"github.com/flexprice/flexprice/internal/domain/connection"
 	"github.com/flexprice/flexprice/internal/domain/costsheet"
 	"github.com/flexprice/flexprice/internal/domain/coupon"
@@ -229,6 +230,10 @@ func NewSettingsRepository(p RepositoryParams) settings.Repository {
 
 func NewAlertLogsRepository(p RepositoryParams) alertlogs.Repository {
 	return entRepo.NewAlertLogsRepository(p.EntClient, p.Logger, p.Cache)
+}
+
+func NewBenefitLedgerRepository(p RepositoryParams) benefit.Repository {
+	return entRepo.NewBenefitLedgerRepository(p.EntClient, p.Logger)
 }
 
 func NewSystemEventRepository(p RepositoryParams) *entRepo.SystemEventRepository {

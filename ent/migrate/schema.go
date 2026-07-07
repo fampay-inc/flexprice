@@ -166,6 +166,49 @@ var (
 			},
 		},
 	}
+	// BenefitLedgersColumns holds the columns for the "benefit_ledgers" table.
+	BenefitLedgersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeString, Unique: true, SchemaType: map[string]string{"postgres": "varchar(50)"}},
+		{Name: "tenant_id", Type: field.TypeString, SchemaType: map[string]string{"postgres": "varchar(50)"}},
+		{Name: "status", Type: field.TypeString, Default: "published", SchemaType: map[string]string{"postgres": "varchar(20)"}},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "created_by", Type: field.TypeString, Nullable: true},
+		{Name: "updated_by", Type: field.TypeString, Nullable: true},
+		{Name: "environment_id", Type: field.TypeString, Nullable: true, Default: "", SchemaType: map[string]string{"postgres": "varchar(50)"}},
+		{Name: "event_id", Type: field.TypeString, SchemaType: map[string]string{"postgres": "varchar(255)"}},
+		{Name: "subscription_id", Type: field.TypeString, SchemaType: map[string]string{"postgres": "varchar(50)"}},
+		{Name: "customer_id", Type: field.TypeString, SchemaType: map[string]string{"postgres": "varchar(50)"}},
+		{Name: "sku", Type: field.TypeString, SchemaType: map[string]string{"postgres": "varchar(50)"}},
+		{Name: "cycle_id", Type: field.TypeString, SchemaType: map[string]string{"postgres": "varchar(50)"}},
+		{Name: "category", Type: field.TypeString, SchemaType: map[string]string{"postgres": "varchar(50)"}},
+		{Name: "feature_id", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "varchar(50)"}},
+		{Name: "value", Type: field.TypeInt},
+		{Name: "event_timestamp", Type: field.TypeTime},
+	}
+	// BenefitLedgersTable holds the schema information for the "benefit_ledgers" table.
+	BenefitLedgersTable = &schema.Table{
+		Name:       "benefit_ledgers",
+		Columns:    BenefitLedgersColumns,
+		PrimaryKey: []*schema.Column{BenefitLedgersColumns[0]},
+		Indexes: []*schema.Index{
+			{
+				Name:    "uq_benefit_ledger_event_id",
+				Unique:  true,
+				Columns: []*schema.Column{BenefitLedgersColumns[8]},
+			},
+			{
+				Name:    "idx_benefit_ledger_customer_cycle",
+				Unique:  false,
+				Columns: []*schema.Column{BenefitLedgersColumns[1], BenefitLedgersColumns[7], BenefitLedgersColumns[10], BenefitLedgersColumns[12]},
+			},
+			{
+				Name:    "idx_benefit_ledger_sku_customer",
+				Unique:  false,
+				Columns: []*schema.Column{BenefitLedgersColumns[1], BenefitLedgersColumns[7], BenefitLedgersColumns[11], BenefitLedgersColumns[10]},
+			},
+		},
+	}
 	// BillingSequencesColumns holds the columns for the "billing_sequences" table.
 	BillingSequencesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
@@ -2404,6 +2447,7 @@ var (
 		AddonAssociationsTable,
 		AlertLogsTable,
 		AuthsTable,
+		BenefitLedgersTable,
 		BillingSequencesTable,
 		ConnectionsTable,
 		CostsheetsTable,

@@ -15,6 +15,7 @@ import (
 	"github.com/flexprice/flexprice/ent/addonassociation"
 	"github.com/flexprice/flexprice/ent/alertlogs"
 	"github.com/flexprice/flexprice/ent/auth"
+	"github.com/flexprice/flexprice/ent/benefitledger"
 	"github.com/flexprice/flexprice/ent/billingsequence"
 	"github.com/flexprice/flexprice/ent/connection"
 	"github.com/flexprice/flexprice/ent/costsheet"
@@ -77,6 +78,7 @@ const (
 	TypeAddonAssociation         = "AddonAssociation"
 	TypeAlertLogs                = "AlertLogs"
 	TypeAuth                     = "Auth"
+	TypeBenefitLedger            = "BenefitLedger"
 	TypeBillingSequence          = "BillingSequence"
 	TypeConnection               = "Connection"
 	TypeCostsheet                = "Costsheet"
@@ -4281,6 +4283,1263 @@ func (m *AuthMutation) ClearEdge(name string) error {
 // It returns an error if the edge is not defined in the schema.
 func (m *AuthMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Auth edge %s", name)
+}
+
+// BenefitLedgerMutation represents an operation that mutates the BenefitLedger nodes in the graph.
+type BenefitLedgerMutation struct {
+	config
+	op              Op
+	typ             string
+	id              *string
+	tenant_id       *string
+	status          *string
+	created_at      *time.Time
+	updated_at      *time.Time
+	created_by      *string
+	updated_by      *string
+	environment_id  *string
+	event_id        *string
+	subscription_id *string
+	customer_id     *string
+	sku             *string
+	cycle_id        *string
+	category        *string
+	feature_id      *string
+	value           *int
+	addvalue        *int
+	event_timestamp *time.Time
+	clearedFields   map[string]struct{}
+	done            bool
+	oldValue        func(context.Context) (*BenefitLedger, error)
+	predicates      []predicate.BenefitLedger
+}
+
+var _ ent.Mutation = (*BenefitLedgerMutation)(nil)
+
+// benefitledgerOption allows management of the mutation configuration using functional options.
+type benefitledgerOption func(*BenefitLedgerMutation)
+
+// newBenefitLedgerMutation creates new mutation for the BenefitLedger entity.
+func newBenefitLedgerMutation(c config, op Op, opts ...benefitledgerOption) *BenefitLedgerMutation {
+	m := &BenefitLedgerMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeBenefitLedger,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withBenefitLedgerID sets the ID field of the mutation.
+func withBenefitLedgerID(id string) benefitledgerOption {
+	return func(m *BenefitLedgerMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *BenefitLedger
+		)
+		m.oldValue = func(ctx context.Context) (*BenefitLedger, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().BenefitLedger.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withBenefitLedger sets the old BenefitLedger of the mutation.
+func withBenefitLedger(node *BenefitLedger) benefitledgerOption {
+	return func(m *BenefitLedgerMutation) {
+		m.oldValue = func(context.Context) (*BenefitLedger, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m BenefitLedgerMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m BenefitLedgerMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of BenefitLedger entities.
+func (m *BenefitLedgerMutation) SetID(id string) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *BenefitLedgerMutation) ID() (id string, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *BenefitLedgerMutation) IDs(ctx context.Context) ([]string, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []string{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().BenefitLedger.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetTenantID sets the "tenant_id" field.
+func (m *BenefitLedgerMutation) SetTenantID(s string) {
+	m.tenant_id = &s
+}
+
+// TenantID returns the value of the "tenant_id" field in the mutation.
+func (m *BenefitLedgerMutation) TenantID() (r string, exists bool) {
+	v := m.tenant_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTenantID returns the old "tenant_id" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldTenantID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTenantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTenantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTenantID: %w", err)
+	}
+	return oldValue.TenantID, nil
+}
+
+// ResetTenantID resets all changes to the "tenant_id" field.
+func (m *BenefitLedgerMutation) ResetTenantID() {
+	m.tenant_id = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *BenefitLedgerMutation) SetStatus(s string) {
+	m.status = &s
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *BenefitLedgerMutation) Status() (r string, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldStatus(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *BenefitLedgerMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetCreatedAt sets the "created_at" field.
+func (m *BenefitLedgerMutation) SetCreatedAt(t time.Time) {
+	m.created_at = &t
+}
+
+// CreatedAt returns the value of the "created_at" field in the mutation.
+func (m *BenefitLedgerMutation) CreatedAt() (r time.Time, exists bool) {
+	v := m.created_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedAt returns the old "created_at" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+	}
+	return oldValue.CreatedAt, nil
+}
+
+// ResetCreatedAt resets all changes to the "created_at" field.
+func (m *BenefitLedgerMutation) ResetCreatedAt() {
+	m.created_at = nil
+}
+
+// SetUpdatedAt sets the "updated_at" field.
+func (m *BenefitLedgerMutation) SetUpdatedAt(t time.Time) {
+	m.updated_at = &t
+}
+
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
+func (m *BenefitLedgerMutation) UpdatedAt() (r time.Time, exists bool) {
+	v := m.updated_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedAt returns the old "updated_at" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedAt: %w", err)
+	}
+	return oldValue.UpdatedAt, nil
+}
+
+// ResetUpdatedAt resets all changes to the "updated_at" field.
+func (m *BenefitLedgerMutation) ResetUpdatedAt() {
+	m.updated_at = nil
+}
+
+// SetCreatedBy sets the "created_by" field.
+func (m *BenefitLedgerMutation) SetCreatedBy(s string) {
+	m.created_by = &s
+}
+
+// CreatedBy returns the value of the "created_by" field in the mutation.
+func (m *BenefitLedgerMutation) CreatedBy() (r string, exists bool) {
+	v := m.created_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreatedBy returns the old "created_by" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldCreatedBy(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreatedBy: %w", err)
+	}
+	return oldValue.CreatedBy, nil
+}
+
+// ClearCreatedBy clears the value of the "created_by" field.
+func (m *BenefitLedgerMutation) ClearCreatedBy() {
+	m.created_by = nil
+	m.clearedFields[benefitledger.FieldCreatedBy] = struct{}{}
+}
+
+// CreatedByCleared returns if the "created_by" field was cleared in this mutation.
+func (m *BenefitLedgerMutation) CreatedByCleared() bool {
+	_, ok := m.clearedFields[benefitledger.FieldCreatedBy]
+	return ok
+}
+
+// ResetCreatedBy resets all changes to the "created_by" field.
+func (m *BenefitLedgerMutation) ResetCreatedBy() {
+	m.created_by = nil
+	delete(m.clearedFields, benefitledger.FieldCreatedBy)
+}
+
+// SetUpdatedBy sets the "updated_by" field.
+func (m *BenefitLedgerMutation) SetUpdatedBy(s string) {
+	m.updated_by = &s
+}
+
+// UpdatedBy returns the value of the "updated_by" field in the mutation.
+func (m *BenefitLedgerMutation) UpdatedBy() (r string, exists bool) {
+	v := m.updated_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdatedBy returns the old "updated_by" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldUpdatedBy(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdatedBy is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdatedBy requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdatedBy: %w", err)
+	}
+	return oldValue.UpdatedBy, nil
+}
+
+// ClearUpdatedBy clears the value of the "updated_by" field.
+func (m *BenefitLedgerMutation) ClearUpdatedBy() {
+	m.updated_by = nil
+	m.clearedFields[benefitledger.FieldUpdatedBy] = struct{}{}
+}
+
+// UpdatedByCleared returns if the "updated_by" field was cleared in this mutation.
+func (m *BenefitLedgerMutation) UpdatedByCleared() bool {
+	_, ok := m.clearedFields[benefitledger.FieldUpdatedBy]
+	return ok
+}
+
+// ResetUpdatedBy resets all changes to the "updated_by" field.
+func (m *BenefitLedgerMutation) ResetUpdatedBy() {
+	m.updated_by = nil
+	delete(m.clearedFields, benefitledger.FieldUpdatedBy)
+}
+
+// SetEnvironmentID sets the "environment_id" field.
+func (m *BenefitLedgerMutation) SetEnvironmentID(s string) {
+	m.environment_id = &s
+}
+
+// EnvironmentID returns the value of the "environment_id" field in the mutation.
+func (m *BenefitLedgerMutation) EnvironmentID() (r string, exists bool) {
+	v := m.environment_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEnvironmentID returns the old "environment_id" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldEnvironmentID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEnvironmentID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEnvironmentID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEnvironmentID: %w", err)
+	}
+	return oldValue.EnvironmentID, nil
+}
+
+// ClearEnvironmentID clears the value of the "environment_id" field.
+func (m *BenefitLedgerMutation) ClearEnvironmentID() {
+	m.environment_id = nil
+	m.clearedFields[benefitledger.FieldEnvironmentID] = struct{}{}
+}
+
+// EnvironmentIDCleared returns if the "environment_id" field was cleared in this mutation.
+func (m *BenefitLedgerMutation) EnvironmentIDCleared() bool {
+	_, ok := m.clearedFields[benefitledger.FieldEnvironmentID]
+	return ok
+}
+
+// ResetEnvironmentID resets all changes to the "environment_id" field.
+func (m *BenefitLedgerMutation) ResetEnvironmentID() {
+	m.environment_id = nil
+	delete(m.clearedFields, benefitledger.FieldEnvironmentID)
+}
+
+// SetEventID sets the "event_id" field.
+func (m *BenefitLedgerMutation) SetEventID(s string) {
+	m.event_id = &s
+}
+
+// EventID returns the value of the "event_id" field in the mutation.
+func (m *BenefitLedgerMutation) EventID() (r string, exists bool) {
+	v := m.event_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEventID returns the old "event_id" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldEventID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEventID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEventID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEventID: %w", err)
+	}
+	return oldValue.EventID, nil
+}
+
+// ResetEventID resets all changes to the "event_id" field.
+func (m *BenefitLedgerMutation) ResetEventID() {
+	m.event_id = nil
+}
+
+// SetSubscriptionID sets the "subscription_id" field.
+func (m *BenefitLedgerMutation) SetSubscriptionID(s string) {
+	m.subscription_id = &s
+}
+
+// SubscriptionID returns the value of the "subscription_id" field in the mutation.
+func (m *BenefitLedgerMutation) SubscriptionID() (r string, exists bool) {
+	v := m.subscription_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSubscriptionID returns the old "subscription_id" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldSubscriptionID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSubscriptionID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSubscriptionID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSubscriptionID: %w", err)
+	}
+	return oldValue.SubscriptionID, nil
+}
+
+// ResetSubscriptionID resets all changes to the "subscription_id" field.
+func (m *BenefitLedgerMutation) ResetSubscriptionID() {
+	m.subscription_id = nil
+}
+
+// SetCustomerID sets the "customer_id" field.
+func (m *BenefitLedgerMutation) SetCustomerID(s string) {
+	m.customer_id = &s
+}
+
+// CustomerID returns the value of the "customer_id" field in the mutation.
+func (m *BenefitLedgerMutation) CustomerID() (r string, exists bool) {
+	v := m.customer_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCustomerID returns the old "customer_id" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldCustomerID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCustomerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCustomerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCustomerID: %w", err)
+	}
+	return oldValue.CustomerID, nil
+}
+
+// ResetCustomerID resets all changes to the "customer_id" field.
+func (m *BenefitLedgerMutation) ResetCustomerID() {
+	m.customer_id = nil
+}
+
+// SetSku sets the "sku" field.
+func (m *BenefitLedgerMutation) SetSku(s string) {
+	m.sku = &s
+}
+
+// Sku returns the value of the "sku" field in the mutation.
+func (m *BenefitLedgerMutation) Sku() (r string, exists bool) {
+	v := m.sku
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSku returns the old "sku" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldSku(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSku is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSku requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSku: %w", err)
+	}
+	return oldValue.Sku, nil
+}
+
+// ResetSku resets all changes to the "sku" field.
+func (m *BenefitLedgerMutation) ResetSku() {
+	m.sku = nil
+}
+
+// SetCycleID sets the "cycle_id" field.
+func (m *BenefitLedgerMutation) SetCycleID(s string) {
+	m.cycle_id = &s
+}
+
+// CycleID returns the value of the "cycle_id" field in the mutation.
+func (m *BenefitLedgerMutation) CycleID() (r string, exists bool) {
+	v := m.cycle_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCycleID returns the old "cycle_id" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldCycleID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCycleID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCycleID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCycleID: %w", err)
+	}
+	return oldValue.CycleID, nil
+}
+
+// ResetCycleID resets all changes to the "cycle_id" field.
+func (m *BenefitLedgerMutation) ResetCycleID() {
+	m.cycle_id = nil
+}
+
+// SetCategory sets the "category" field.
+func (m *BenefitLedgerMutation) SetCategory(s string) {
+	m.category = &s
+}
+
+// Category returns the value of the "category" field in the mutation.
+func (m *BenefitLedgerMutation) Category() (r string, exists bool) {
+	v := m.category
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCategory returns the old "category" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldCategory(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCategory is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCategory requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCategory: %w", err)
+	}
+	return oldValue.Category, nil
+}
+
+// ResetCategory resets all changes to the "category" field.
+func (m *BenefitLedgerMutation) ResetCategory() {
+	m.category = nil
+}
+
+// SetFeatureID sets the "feature_id" field.
+func (m *BenefitLedgerMutation) SetFeatureID(s string) {
+	m.feature_id = &s
+}
+
+// FeatureID returns the value of the "feature_id" field in the mutation.
+func (m *BenefitLedgerMutation) FeatureID() (r string, exists bool) {
+	v := m.feature_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldFeatureID returns the old "feature_id" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldFeatureID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldFeatureID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldFeatureID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldFeatureID: %w", err)
+	}
+	return oldValue.FeatureID, nil
+}
+
+// ClearFeatureID clears the value of the "feature_id" field.
+func (m *BenefitLedgerMutation) ClearFeatureID() {
+	m.feature_id = nil
+	m.clearedFields[benefitledger.FieldFeatureID] = struct{}{}
+}
+
+// FeatureIDCleared returns if the "feature_id" field was cleared in this mutation.
+func (m *BenefitLedgerMutation) FeatureIDCleared() bool {
+	_, ok := m.clearedFields[benefitledger.FieldFeatureID]
+	return ok
+}
+
+// ResetFeatureID resets all changes to the "feature_id" field.
+func (m *BenefitLedgerMutation) ResetFeatureID() {
+	m.feature_id = nil
+	delete(m.clearedFields, benefitledger.FieldFeatureID)
+}
+
+// SetValue sets the "value" field.
+func (m *BenefitLedgerMutation) SetValue(i int) {
+	m.value = &i
+	m.addvalue = nil
+}
+
+// Value returns the value of the "value" field in the mutation.
+func (m *BenefitLedgerMutation) Value() (r int, exists bool) {
+	v := m.value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldValue returns the old "value" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldValue(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldValue is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldValue requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldValue: %w", err)
+	}
+	return oldValue.Value, nil
+}
+
+// AddValue adds i to the "value" field.
+func (m *BenefitLedgerMutation) AddValue(i int) {
+	if m.addvalue != nil {
+		*m.addvalue += i
+	} else {
+		m.addvalue = &i
+	}
+}
+
+// AddedValue returns the value that was added to the "value" field in this mutation.
+func (m *BenefitLedgerMutation) AddedValue() (r int, exists bool) {
+	v := m.addvalue
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetValue resets all changes to the "value" field.
+func (m *BenefitLedgerMutation) ResetValue() {
+	m.value = nil
+	m.addvalue = nil
+}
+
+// SetEventTimestamp sets the "event_timestamp" field.
+func (m *BenefitLedgerMutation) SetEventTimestamp(t time.Time) {
+	m.event_timestamp = &t
+}
+
+// EventTimestamp returns the value of the "event_timestamp" field in the mutation.
+func (m *BenefitLedgerMutation) EventTimestamp() (r time.Time, exists bool) {
+	v := m.event_timestamp
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEventTimestamp returns the old "event_timestamp" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldEventTimestamp(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEventTimestamp is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEventTimestamp requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEventTimestamp: %w", err)
+	}
+	return oldValue.EventTimestamp, nil
+}
+
+// ResetEventTimestamp resets all changes to the "event_timestamp" field.
+func (m *BenefitLedgerMutation) ResetEventTimestamp() {
+	m.event_timestamp = nil
+}
+
+// Where appends a list predicates to the BenefitLedgerMutation builder.
+func (m *BenefitLedgerMutation) Where(ps ...predicate.BenefitLedger) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the BenefitLedgerMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *BenefitLedgerMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.BenefitLedger, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *BenefitLedgerMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *BenefitLedgerMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (BenefitLedger).
+func (m *BenefitLedgerMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *BenefitLedgerMutation) Fields() []string {
+	fields := make([]string, 0, 16)
+	if m.tenant_id != nil {
+		fields = append(fields, benefitledger.FieldTenantID)
+	}
+	if m.status != nil {
+		fields = append(fields, benefitledger.FieldStatus)
+	}
+	if m.created_at != nil {
+		fields = append(fields, benefitledger.FieldCreatedAt)
+	}
+	if m.updated_at != nil {
+		fields = append(fields, benefitledger.FieldUpdatedAt)
+	}
+	if m.created_by != nil {
+		fields = append(fields, benefitledger.FieldCreatedBy)
+	}
+	if m.updated_by != nil {
+		fields = append(fields, benefitledger.FieldUpdatedBy)
+	}
+	if m.environment_id != nil {
+		fields = append(fields, benefitledger.FieldEnvironmentID)
+	}
+	if m.event_id != nil {
+		fields = append(fields, benefitledger.FieldEventID)
+	}
+	if m.subscription_id != nil {
+		fields = append(fields, benefitledger.FieldSubscriptionID)
+	}
+	if m.customer_id != nil {
+		fields = append(fields, benefitledger.FieldCustomerID)
+	}
+	if m.sku != nil {
+		fields = append(fields, benefitledger.FieldSku)
+	}
+	if m.cycle_id != nil {
+		fields = append(fields, benefitledger.FieldCycleID)
+	}
+	if m.category != nil {
+		fields = append(fields, benefitledger.FieldCategory)
+	}
+	if m.feature_id != nil {
+		fields = append(fields, benefitledger.FieldFeatureID)
+	}
+	if m.value != nil {
+		fields = append(fields, benefitledger.FieldValue)
+	}
+	if m.event_timestamp != nil {
+		fields = append(fields, benefitledger.FieldEventTimestamp)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *BenefitLedgerMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case benefitledger.FieldTenantID:
+		return m.TenantID()
+	case benefitledger.FieldStatus:
+		return m.Status()
+	case benefitledger.FieldCreatedAt:
+		return m.CreatedAt()
+	case benefitledger.FieldUpdatedAt:
+		return m.UpdatedAt()
+	case benefitledger.FieldCreatedBy:
+		return m.CreatedBy()
+	case benefitledger.FieldUpdatedBy:
+		return m.UpdatedBy()
+	case benefitledger.FieldEnvironmentID:
+		return m.EnvironmentID()
+	case benefitledger.FieldEventID:
+		return m.EventID()
+	case benefitledger.FieldSubscriptionID:
+		return m.SubscriptionID()
+	case benefitledger.FieldCustomerID:
+		return m.CustomerID()
+	case benefitledger.FieldSku:
+		return m.Sku()
+	case benefitledger.FieldCycleID:
+		return m.CycleID()
+	case benefitledger.FieldCategory:
+		return m.Category()
+	case benefitledger.FieldFeatureID:
+		return m.FeatureID()
+	case benefitledger.FieldValue:
+		return m.Value()
+	case benefitledger.FieldEventTimestamp:
+		return m.EventTimestamp()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *BenefitLedgerMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case benefitledger.FieldTenantID:
+		return m.OldTenantID(ctx)
+	case benefitledger.FieldStatus:
+		return m.OldStatus(ctx)
+	case benefitledger.FieldCreatedAt:
+		return m.OldCreatedAt(ctx)
+	case benefitledger.FieldUpdatedAt:
+		return m.OldUpdatedAt(ctx)
+	case benefitledger.FieldCreatedBy:
+		return m.OldCreatedBy(ctx)
+	case benefitledger.FieldUpdatedBy:
+		return m.OldUpdatedBy(ctx)
+	case benefitledger.FieldEnvironmentID:
+		return m.OldEnvironmentID(ctx)
+	case benefitledger.FieldEventID:
+		return m.OldEventID(ctx)
+	case benefitledger.FieldSubscriptionID:
+		return m.OldSubscriptionID(ctx)
+	case benefitledger.FieldCustomerID:
+		return m.OldCustomerID(ctx)
+	case benefitledger.FieldSku:
+		return m.OldSku(ctx)
+	case benefitledger.FieldCycleID:
+		return m.OldCycleID(ctx)
+	case benefitledger.FieldCategory:
+		return m.OldCategory(ctx)
+	case benefitledger.FieldFeatureID:
+		return m.OldFeatureID(ctx)
+	case benefitledger.FieldValue:
+		return m.OldValue(ctx)
+	case benefitledger.FieldEventTimestamp:
+		return m.OldEventTimestamp(ctx)
+	}
+	return nil, fmt.Errorf("unknown BenefitLedger field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BenefitLedgerMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case benefitledger.FieldTenantID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTenantID(v)
+		return nil
+	case benefitledger.FieldStatus:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case benefitledger.FieldCreatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedAt(v)
+		return nil
+	case benefitledger.FieldUpdatedAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedAt(v)
+		return nil
+	case benefitledger.FieldCreatedBy:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreatedBy(v)
+		return nil
+	case benefitledger.FieldUpdatedBy:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdatedBy(v)
+		return nil
+	case benefitledger.FieldEnvironmentID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEnvironmentID(v)
+		return nil
+	case benefitledger.FieldEventID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEventID(v)
+		return nil
+	case benefitledger.FieldSubscriptionID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSubscriptionID(v)
+		return nil
+	case benefitledger.FieldCustomerID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCustomerID(v)
+		return nil
+	case benefitledger.FieldSku:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSku(v)
+		return nil
+	case benefitledger.FieldCycleID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCycleID(v)
+		return nil
+	case benefitledger.FieldCategory:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCategory(v)
+		return nil
+	case benefitledger.FieldFeatureID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetFeatureID(v)
+		return nil
+	case benefitledger.FieldValue:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetValue(v)
+		return nil
+	case benefitledger.FieldEventTimestamp:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEventTimestamp(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BenefitLedger field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *BenefitLedgerMutation) AddedFields() []string {
+	var fields []string
+	if m.addvalue != nil {
+		fields = append(fields, benefitledger.FieldValue)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *BenefitLedgerMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case benefitledger.FieldValue:
+		return m.AddedValue()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *BenefitLedgerMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case benefitledger.FieldValue:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddValue(v)
+		return nil
+	}
+	return fmt.Errorf("unknown BenefitLedger numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *BenefitLedgerMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(benefitledger.FieldCreatedBy) {
+		fields = append(fields, benefitledger.FieldCreatedBy)
+	}
+	if m.FieldCleared(benefitledger.FieldUpdatedBy) {
+		fields = append(fields, benefitledger.FieldUpdatedBy)
+	}
+	if m.FieldCleared(benefitledger.FieldEnvironmentID) {
+		fields = append(fields, benefitledger.FieldEnvironmentID)
+	}
+	if m.FieldCleared(benefitledger.FieldFeatureID) {
+		fields = append(fields, benefitledger.FieldFeatureID)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *BenefitLedgerMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *BenefitLedgerMutation) ClearField(name string) error {
+	switch name {
+	case benefitledger.FieldCreatedBy:
+		m.ClearCreatedBy()
+		return nil
+	case benefitledger.FieldUpdatedBy:
+		m.ClearUpdatedBy()
+		return nil
+	case benefitledger.FieldEnvironmentID:
+		m.ClearEnvironmentID()
+		return nil
+	case benefitledger.FieldFeatureID:
+		m.ClearFeatureID()
+		return nil
+	}
+	return fmt.Errorf("unknown BenefitLedger nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *BenefitLedgerMutation) ResetField(name string) error {
+	switch name {
+	case benefitledger.FieldTenantID:
+		m.ResetTenantID()
+		return nil
+	case benefitledger.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case benefitledger.FieldCreatedAt:
+		m.ResetCreatedAt()
+		return nil
+	case benefitledger.FieldUpdatedAt:
+		m.ResetUpdatedAt()
+		return nil
+	case benefitledger.FieldCreatedBy:
+		m.ResetCreatedBy()
+		return nil
+	case benefitledger.FieldUpdatedBy:
+		m.ResetUpdatedBy()
+		return nil
+	case benefitledger.FieldEnvironmentID:
+		m.ResetEnvironmentID()
+		return nil
+	case benefitledger.FieldEventID:
+		m.ResetEventID()
+		return nil
+	case benefitledger.FieldSubscriptionID:
+		m.ResetSubscriptionID()
+		return nil
+	case benefitledger.FieldCustomerID:
+		m.ResetCustomerID()
+		return nil
+	case benefitledger.FieldSku:
+		m.ResetSku()
+		return nil
+	case benefitledger.FieldCycleID:
+		m.ResetCycleID()
+		return nil
+	case benefitledger.FieldCategory:
+		m.ResetCategory()
+		return nil
+	case benefitledger.FieldFeatureID:
+		m.ResetFeatureID()
+		return nil
+	case benefitledger.FieldValue:
+		m.ResetValue()
+		return nil
+	case benefitledger.FieldEventTimestamp:
+		m.ResetEventTimestamp()
+		return nil
+	}
+	return fmt.Errorf("unknown BenefitLedger field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *BenefitLedgerMutation) AddedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *BenefitLedgerMutation) AddedIDs(name string) []ent.Value {
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *BenefitLedgerMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *BenefitLedgerMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *BenefitLedgerMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 0)
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *BenefitLedgerMutation) EdgeCleared(name string) bool {
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *BenefitLedgerMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown BenefitLedger unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *BenefitLedgerMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown BenefitLedger edge %s", name)
 }
 
 // BillingSequenceMutation represents an operation that mutates the BillingSequence nodes in the graph.
