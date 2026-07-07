@@ -13,7 +13,7 @@ CREATE TABLE benefit_ledgers (
     sku             varchar(50)  NOT NULL,
     cycle_id        uuid         NOT NULL,
     category        varchar(50)  NOT NULL,
-    feature_id      uuid,
+    feature_id      uuid         NOT NULL,
     value           bigint       NOT NULL,
     event_timestamp timestamptz  NOT NULL,
     PRIMARY KEY (id, sku),
@@ -24,4 +24,3 @@ CREATE TABLE benefit_ledgers_limitless PARTITION OF benefit_ledgers FOR VALUES I
 CREATE TABLE benefit_ledgers_default   PARTITION OF benefit_ledgers DEFAULT;
 
 CREATE INDEX idx_benefit_ledger_customer_cycle ON benefit_ledgers (tenant_id, environment_id, customer_id, cycle_id);
-CREATE INDEX idx_benefit_ledger_sku_customer   ON benefit_ledgers (tenant_id, environment_id, sku, customer_id);
