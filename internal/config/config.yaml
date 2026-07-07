@@ -305,6 +305,12 @@ event_processing:
   # (or enable auto.create.topics.enable) before enabling in an environment.
   topic_dlq: "event_processing_dlq"
 
+benefit_events:
+  enabled: true
+  topic: "flexprice.benefit.events"
+  rate_limit: 12
+  consumer_group: "v1_benefit_events"
+
 event_processing_lazy:
   enabled: true
   topic: "events_lazy"

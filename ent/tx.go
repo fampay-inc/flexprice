@@ -24,6 +24,8 @@ type Tx struct {
 	AlertSettings *AlertSettingsClient
 	// Auth is the client for interacting with the Auth builders.
 	Auth *AuthClient
+	// BenefitLedger is the client for interacting with the BenefitLedger builders.
+	BenefitLedger *BenefitLedgerClient
 	// BillingSequence is the client for interacting with the BillingSequence builders.
 	BillingSequence *BillingSequenceClient
 	// CheckoutSession is the client for interacting with the CheckoutSession builders.
@@ -256,6 +258,7 @@ func (tx *Tx) init() {
 	tx.AlertLogs = NewAlertLogsClient(tx.config)
 	tx.AlertSettings = NewAlertSettingsClient(tx.config)
 	tx.Auth = NewAuthClient(tx.config)
+	tx.BenefitLedger = NewBenefitLedgerClient(tx.config)
 	tx.BillingSequence = NewBillingSequenceClient(tx.config)
 	tx.CheckoutSession = NewCheckoutSessionClient(tx.config)
 	tx.Connection = NewConnectionClient(tx.config)

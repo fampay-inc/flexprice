@@ -73,6 +73,7 @@ type Configuration struct {
 	OnboardingEvents           OnboardingEventsConfig           `mapstructure:"onboarding_events" validate:"omitempty"`
 	WebhookRetryJob            WebhookRetryJobConfig            `mapstructure:"webhook_retry_job" validate:"omitempty"`
 	Gemini                     GeminiConfig                     `mapstructure:"gemini" validate:"omitempty"`
+	BenefitEvents              BenefitEventsConfig              `mapstructure:"benefit_events" validate:"omitempty"`
 	Whop                       WhopConfig                       `mapstructure:"whop" validate:"omitempty"`
 }
 
@@ -418,6 +419,13 @@ type EventProcessingConfig struct {
 	RateLimitBackfill     int64  `mapstructure:"rate_limit_backfill" default:"1"`
 	ConsumerGroupBackfill string `mapstructure:"consumer_group_backfill" default:"v1_event_processing_backfill"`
 	TopicDLQ              string `mapstructure:"topic_dlq" default:""`
+}
+
+type BenefitEventsConfig struct {
+	Enabled       bool   `mapstructure:"enabled" default:"true"`
+	Topic         string `mapstructure:"topic" default:"flexprice.benefit.events"`
+	RateLimit     int64  `mapstructure:"rate_limit" default:"1"`
+	ConsumerGroup string `mapstructure:"consumer_group" default:"v1_benefit_events"`
 }
 
 type EventPostProcessingConfig struct {
