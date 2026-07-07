@@ -1,12 +1,3 @@
--- benefit_ledgers as a LIST-partitioned table keyed by `sku`.
--- Assumes the table does NOT already exist. If it does, drop it first:
---     DROP TABLE IF EXISTS benefit_ledgers CASCADE;
---
--- The partition key (sku) must be part of every PK / UNIQUE constraint, so the
--- PK is (id, sku) and event_id uniqueness is (event_id, sku). INSERTs into
--- benefit_ledgers are routed automatically to the matching partition, or to
--- benefit_ledgers_default when the sku has no dedicated partition.
-
 CREATE TABLE benefit_ledgers (
     id              varchar(50)  NOT NULL,
     tenant_id       varchar(50)  NOT NULL,

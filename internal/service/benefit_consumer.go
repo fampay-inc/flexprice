@@ -250,9 +250,6 @@ func (s *benefitConsumptionService) validateEvent(
 	return *sub.Sku, cust.ID, "", nil
 }
 
-// assertPlanGrantsFeature verifies the subscribed plan has an enabled
-// entitlement for the feature. Subscription-level overrides are not checked:
-// Felix (the only producer) does not create per-subscription entitlements.
 func (s *benefitConsumptionService) assertPlanGrantsFeature(
 	ctx context.Context,
 	planID string,
