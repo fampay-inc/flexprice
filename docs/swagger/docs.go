@@ -434,7 +434,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Returns lifetime benefits granted to a customer for a SKU, aggregated by category from the benefit ledger.",
+                "description": "Returns lifetime benefits granted to a customer for a SKU, aggregated by feature from the benefit ledger.",
                 "produces": [
                     "application/json"
                 ],
@@ -446,7 +446,7 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "External customer id (username)",
+                        "description": "External customer ID",
                         "name": "external_customer_id",
                         "in": "query",
                         "required": true
@@ -12288,10 +12288,13 @@ const docTemplate = `{
         "BenefitAggregateResponse": {
             "type": "object",
             "properties": {
-                "category": {
-                    "type": "string"
+                "metadata": {
+                    "$ref": "#/definitions/types.Metadata"
                 },
                 "name": {
+                    "type": "string"
+                },
+                "slug": {
                     "type": "string"
                 },
                 "total": {

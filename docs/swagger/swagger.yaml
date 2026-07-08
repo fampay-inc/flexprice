@@ -562,9 +562,11 @@ definitions:
     type: object
   BenefitAggregateResponse:
     properties:
-      category:
-        type: string
+      metadata:
+        $ref: '#/definitions/types.Metadata'
       name:
+        type: string
+      slug:
         type: string
       total:
         type: integer
@@ -10227,10 +10229,10 @@ paths:
   /benefits:
     get:
       description: Returns lifetime benefits granted to a customer for a SKU, aggregated
-        by category from the benefit ledger.
+        by feature from the benefit ledger.
       operationId: getBenefits
       parameters:
-      - description: External customer id (username)
+      - description: External customer ID
         in: query
         name: external_customer_id
         required: true

@@ -514,13 +514,13 @@
           "Benefits"
         ],
         "summary": "Get aggregated benefits for a customer and SKU",
-        "description": "Returns lifetime benefits granted to a customer for a SKU, aggregated by category from the benefit ledger.",
+        "description": "Returns lifetime benefits granted to a customer for a SKU, aggregated by feature from the benefit ledger.",
         "operationId": "getBenefits",
         "parameters": [
           {
             "name": "external_customer_id",
             "in": "query",
-            "description": "External customer id (username)",
+            "description": "External customer ID",
             "required": true,
             "schema": {
               "type": "string"
@@ -14312,10 +14312,13 @@
       "BenefitAggregateResponse": {
         "type": "object",
         "properties": {
-          "category": {
-            "type": "string"
+          "metadata": {
+            "$ref": "#/components/schemas/types.Metadata"
           },
           "name": {
+            "type": "string"
+          },
+          "slug": {
             "type": "string"
           },
           "total": {

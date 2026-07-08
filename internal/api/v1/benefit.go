@@ -24,11 +24,11 @@ func NewBenefitHandler(benefitService service.BenefitService, log *logger.Logger
 // GetBenefits godoc
 // @Summary Get aggregated benefits for a customer and SKU
 // @ID getBenefits
-// @Description Returns lifetime benefits granted to a customer for a SKU, aggregated by category from the benefit ledger.
+// @Description Returns lifetime benefits granted to a customer for a SKU, aggregated by feature from the benefit ledger.
 // @Tags Benefits
 // @Produce json
 // @Security ApiKeyAuth
-// @Param external_customer_id query string true "External customer id (username)"
+// @Param external_customer_id query string true "External customer ID"
 // @Param sku query string true "SKU"
 // @Success 200 {array} dto.BenefitAggregateResponse
 // @Failure 400 {object} ierr.ErrorResponse "Invalid request"
