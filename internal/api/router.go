@@ -35,6 +35,7 @@ type Handlers struct {
 	Tenant                   *v1.TenantHandler
 	Invoice                  *v1.InvoiceHandler
 	Feature                  *v1.FeatureHandler
+	Benefit                  *v1.BenefitHandler
 	Entitlement              *v1.EntitlementHandler
 	CreditGrant              *v1.CreditGrantHandler
 	Payment                  *v1.PaymentHandler
@@ -353,6 +354,11 @@ func NewRouter(
 				schedules.POST("/:schedule_id/cancel", write(types.EntitySubscription, types.ActionWrite), handlers.SubscriptionSchedule.CancelSchedule)
 				schedules.POST("/cancel", write(types.EntitySubscription, types.ActionWrite), handlers.SubscriptionSchedule.CancelSchedule)
 			}
+		}
+
+		benefits := v1Private.Group("/benefits")
+		{
+			benefits.GET("", handlers.Benefit.GetBenefits)
 		}
 
 		wallet := v1Private.Group("/wallets")

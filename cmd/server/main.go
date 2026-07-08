@@ -254,18 +254,6 @@ func main() {
 			service.NewFeatureService,
 			service.NewEntitlementService,
 			service.NewPaymentService,
-			service.NewPaymentProcessorService,
-			service.NewTaskService,
-			service.NewSecretService,
-			service.NewOnboardingService,
-			service.NewGeminiPricingService,
-			service.NewBillingService,
-			service.NewCreditGrantService,
-			service.NewCostsheetService,
-			service.NewRevenueAnalyticsService,
-			service.NewCreditNoteService,
-			service.NewConnectionService,
-			service.NewMarketplaceService,
 			service.NewEntityIntegrationMappingService,
 			service.NewIntegrationSyncService,
 			service.NewTaxService,
@@ -287,6 +275,7 @@ func main() {
 			service.NewWorkflowExecutionService,
 			service.NewWorkflowService,
 			service.NewBenefitConsumptionService,
+			service.NewBenefitService,
 		),
 	)
 
@@ -381,6 +370,7 @@ func provideHandlers(
 	geminiPricingService service.GeminiPricingService,
 	webhookService *webhook.WebhookService,
 	usageBenchmarkService service.UsageBenchmarkService,
+	benefitService service.BenefitConsumptionService,
 ) api.Handlers {
 	return api.Handlers{
 		Events:                   v1.NewEventsHandler(eventService, eventPostProcessingService, featureUsageTrackingService, rawEventsReprocessingService, rawEventConsumptionService, meterUsageService, usageBenchmarkService, cfg, logger),
@@ -401,6 +391,7 @@ func provideHandlers(
 		Tenant:                   v1.NewTenantHandler(tenantService, logger),
 		Invoice:                  v1.NewInvoiceHandler(invoiceService, cfg, logger),
 		Feature:                  v1.NewFeatureHandler(featureService, logger),
+		Benefit:                  v1.NewBenefitHandler(benefitService, logger),
 		Entitlement:              v1.NewEntitlementHandler(entitlementService, logger),
 		Payment:                  v1.NewPaymentHandler(paymentService, paymentProcessorService, logger),
 		Task:                     v1.NewTaskHandler(taskService, temporalService, logger),

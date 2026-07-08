@@ -901,6 +901,86 @@
         ]
       }
     },
+    "/benefits": {
+      "get": {
+        "tags": [
+          "Benefits"
+        ],
+        "summary": "Get aggregated benefits for a customer and SKU",
+        "description": "Returns lifetime benefits granted to a customer for a SKU, aggregated by category from the benefit ledger.",
+        "operationId": "getBenefits",
+        "parameters": [
+          {
+            "name": "external_customer_id",
+            "in": "query",
+            "description": "External customer id (username)",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sku",
+            "in": "query",
+            "description": "SKU",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BenefitAggregateResponse"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errors.ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Customer not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errors.ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/errors.ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ]
+      }
+    },
     "/checkout/sessions": {
       "post": {
         "tags": [
@@ -15536,6 +15616,20 @@
           },
           "status": {
             "$ref": "#/components/schemas/types.DebugTrackerStatus"
+          }
+        }
+      },
+      "BenefitAggregateResponse": {
+        "type": "object",
+        "properties": {
+          "category": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "total": {
+            "type": "integer"
           }
         }
       },

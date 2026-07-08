@@ -667,6 +667,15 @@ definitions:
       status:
         $ref: '#/definitions/types.DebugTrackerStatus'
     type: object
+  BenefitAggregateResponse:
+    properties:
+      category:
+        type: string
+      name:
+        type: string
+      total:
+        type: integer
+    type: object
   BillingCycleInfo:
     properties:
       billing_anchor:
@@ -11786,6 +11795,48 @@ paths:
       tags:
       - AlertSettings
       x-scope: read
+  /benefits:
+    get:
+      description: Returns lifetime benefits granted to a customer for a SKU, aggregated
+        by category from the benefit ledger.
+      operationId: getBenefits
+      parameters:
+      - description: External customer id (username)
+        in: query
+        name: external_customer_id
+        required: true
+        type: string
+      - description: SKU
+        in: query
+        name: sku
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/BenefitAggregateResponse'
+            type: array
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/errors.ErrorResponse'
+        "404":
+          description: Customer not found
+          schema:
+            $ref: '#/definitions/errors.ErrorResponse'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/errors.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get aggregated benefits for a customer and SKU
+      tags:
+      - Benefits
   /checkout/sessions:
     post:
       consumes:

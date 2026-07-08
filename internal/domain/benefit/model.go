@@ -19,3 +19,9 @@ type BenefitLedger struct {
 	EnvironmentID  string    `db:"environment_id" json:"environment_id"`
 	types.BaseModel
 }
+
+type BenefitAggregate struct {
+	Category  string `db:"category" json:"category"`
+	FeatureID string `db:"feature_id" json:"feature_id"`
+	Total     int64  `db:"total" json:"total"`
+}
