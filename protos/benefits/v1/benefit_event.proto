@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package benefitsv1;
+
+option go_package = "gitlab.famapp.in/backend/flexprice/protos/pb/v1;benefitsv1";
+
+enum BenefitEventCategory {
+  BENEFIT_EVENT_CATEGORY_UNSPECIFIED = 0;
+  BENEFIT_EVENT_CATEGORY_BUF_SAVED = 1;
+  BENEFIT_EVENT_CATEGORY_RFEE_SAVED = 2;
+  BENEFIT_EVENT_CATEGORY_CARD_REWARD = 3;
+  BENEFIT_EVENT_CATEGORY_IOK_REWARD = 4;
+}
+
+message BenefitEvent {
+  string event_id = 1;
+  string subscription_id = 2;
+  string cycle_id = 3;
+  string feature_id = 4;
+  BenefitEventCategory category = 5;
+  int64 value = 6;
+  int64 timestamp = 7;
+}
