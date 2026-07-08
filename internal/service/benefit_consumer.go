@@ -88,8 +88,7 @@ func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
 		return nil
 	}
 
-	if ev.GetEventId() == "" || ev.GetSubscriptionId() == "" ||
-		ev.GetExternalCustomerId() == "" || ev.GetCycleId() == "" || ev.GetFeatureId() == "" {
+	if ev.GetEventId() == "" || ev.GetSubscriptionId() == "" || ev.GetCycleId() == "" || ev.GetFeatureId() == "" {
 		s.Logger.Warnw("dropping invalid benefit event: missing required fields",
 			"event_id", ev.GetEventId(),
 			"subscription_id", ev.GetSubscriptionId(),
@@ -98,7 +97,7 @@ func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
 		)
 		return nil
 	}
-	
+
 	for name, val := range map[string]string{
 		"subscription_id": ev.GetSubscriptionId(),
 		"cycle_id":        ev.GetCycleId(),
@@ -138,7 +137,6 @@ func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
 		s.Logger.Warnw("dropping invalid benefit event: "+dropReason,
 			"event_id", ev.GetEventId(),
 			"subscription_id", ev.GetSubscriptionId(),
-			"external_customer_id", ev.GetExternalCustomerId(),
 			"cycle_id", ev.GetCycleId(),
 			"feature_id", ev.GetFeatureId(),
 		)
@@ -205,19 +203,6 @@ func (s *benefitConsumptionService) validateEvent(
 	ctx context.Context,
 	ev *benefitsv1.BenefitEvent,
 ) (sku string, customerID string, dropReason string, retryErr error) {
-
-	cust, err := s.CustomerRepo.GetByLookupKey(ctx, ev.GetExternalCustomerId())
-	if err != nil {
-		if ierr.IsNotFound(err) {
-			return "", "", "customer not found for external_customer_id", nil
-		}
-		return "", "", "", ierr.WithError(err).WithHint("customer lookup failed").Mark(ierr.ErrDatabase)
-	}
-	
-	if _, err := uuid.Parse(cust.ID); err != nil {
-		return "", "", "customer id is not a valid uuid", nil
-	}
-
 	sub, err := s.SubRepo.Get(ctx, ev.GetSubscriptionId())
 	if err != nil {
 		if ierr.IsNotFound(err) {
@@ -225,14 +210,8 @@ func (s *benefitConsumptionService) validateEvent(
 		}
 		return "", "", "", ierr.WithError(err).WithHint("subscription lookup failed").Mark(ierr.ErrDatabase)
 	}
-	if sub.CustomerID != cust.ID {
-		return "", "", "subscription does not belong to customer", nil
-	}
-	if sub.Sku == nil || *sub.Sku == "" {
-		return "", "", "subscription has no sku", nil
-	}
 
-	if reason, rErr := s.assertPlanGrantsFeature(ctx, sub.PlanID, ev.GetFeatureId()); rErr != nil {
+	if reason, rErr := s.validateFeatureId(ctx, sub.PlanID, ev.GetFeatureId()); rErr != nil {
 		return "", "", "", rErr
 	} else if reason != "" {
 		return "", "", reason, nil
@@ -248,9 +227,6 @@ func (s *benefitConsumptionService) validateEvent(
 	if inv.SubscriptionID == nil || *inv.SubscriptionID != ev.GetSubscriptionId() {
 		return "", "", "invoice does not belong to subscription", nil
 	}
-	if inv.CustomerID != cust.ID {
-		return "", "", "invoice does not belong to customer", nil
-	}
 	if inv.InvoiceStatus != types.InvoiceStatusFinalized {
 		return "", "", "invoice is not finalized", nil
 	}
@@ -258,10 +234,10 @@ func (s *benefitConsumptionService) validateEvent(
 		return "", "", "invoice payment is not succeeded", nil
 	}
 
-	return *sub.Sku, cust.ID, "", nil
+	return *sub.Sku, sub.CustomerID, "", nil
 }
 
-func (s *benefitConsumptionService) assertPlanGrantsFeature(
+func (s *benefitConsumptionService) validateFeatureId(
 	ctx context.Context,
 	planID string,
 	featureID string,
