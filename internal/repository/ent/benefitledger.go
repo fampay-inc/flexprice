@@ -18,7 +18,6 @@ type benefitLedgerRepository struct {
 	log    *logger.Logger
 }
 
-
 func NewBenefitLedgerRepository(client postgres.IClient, log *logger.Logger) domainBenefit.Repository {
 	return &benefitLedgerRepository{
 		client: client,
@@ -94,16 +93,15 @@ func (r *benefitLedgerRepository) GetAggregatedBenefits(ctx context.Context, cus
 	defer FinishSpan(span)
 
 	query := `
-		SELECT category, feature_id, COALESCE(SUM(value), 0)::bigint AS total
+		SELECT feature_id, COALESCE(SUM(value), 0)::bigint AS total
 		FROM benefit_ledgers
-		WHERE tenant_id = $1
-			AND environment_id = $2
-			AND customer_id = $3
-			AND sku = $4
-			AND status = 'published'
-		GROUP BY category, feature_id`
+		WHERE sku = $1
+			AND tenant_id = $2
+			AND environment_id = $3
+			AND customer_id = $4
+		GROUP BY feature_id`
 
-	rows, err := r.client.Reader(ctx).QueryContext(ctx, query, tenantID, environmentID, customerID, sku)
+	rows, err := r.client.Reader(ctx).QueryContext(ctx, query, sku, tenantID, environmentID, customerID)
 	if err != nil {
 		SetSpanError(span, err)
 		return nil, ierr.WithError(err).
@@ -115,7 +113,7 @@ func (r *benefitLedgerRepository) GetAggregatedBenefits(ctx context.Context, cus
 	results := make([]*domainBenefit.BenefitAggregate, 0)
 	for rows.Next() {
 		agg := &domainBenefit.BenefitAggregate{}
-		if err := rows.Scan(&agg.Category, &agg.FeatureID, &agg.Total); err != nil {
+		if err := rows.Scan(&agg.FeatureID, &agg.Total); err != nil {
 			SetSpanError(span, err)
 			return nil, ierr.WithError(err).
 				WithHint("Failed to scan benefit aggregate row").
