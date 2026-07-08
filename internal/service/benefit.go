@@ -5,7 +5,6 @@ import (
 
 	"github.com/flexprice/flexprice/internal/api/dto"
 	featureDomain "github.com/flexprice/flexprice/internal/domain/feature"
-	ierr "github.com/flexprice/flexprice/internal/errors"
 )
 
 type BenefitService interface {
@@ -21,17 +20,6 @@ func NewBenefitService(params ServiceParams) BenefitService {
 }
 
 func (s *benefitService) GetBenefitsBySKU(ctx context.Context, externalCustomerID, sku string) ([]*dto.BenefitAggregateResponse, error) {
-	if externalCustomerID == "" {
-		return nil, ierr.NewError("external_customer_id is required").
-			WithHint("external_customer_id is required").
-			Mark(ierr.ErrValidation)
-	}
-	if sku == "" {
-		return nil, ierr.NewError("sku is required").
-			WithHint("sku is required").
-			Mark(ierr.ErrValidation)
-	}
-
 	cust, err := s.CustomerRepo.GetByLookupKey(ctx, externalCustomerID)
 	if err != nil {
 		return nil, err
