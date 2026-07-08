@@ -122,6 +122,13 @@ test-coverage:
 install-ent:
 	@which ent > /dev/null || (go install entgo.io/ent/cmd/ent@latest)
 
+.PHONY: generate-proto
+generate-proto:
+	@echo "Generating proto code..."
+	@cd protos && buf generate
+	@[ -f protos/pb/go.mod ] || (cd protos/pb && go mod init gitlab.famapp.in/backend/flexprice/protos/pb)
+	@cd protos/pb && go mod tidy
+
 .PHONY: generate-ent
 generate-ent: install-ent
 	@echo "Generating ent code..."
