@@ -13,10 +13,10 @@ auth:
   api_key:
     header: "x-api-key"
     keys:
-      "0cfd568f22158887f8b77bc019fb245b1f14077b80936342b052985efa7de46c":
-        tenant_id: "felix-tenant-id"
+      "6ab2d4bbbac2111edee4a0bca86de6c01bac4f1af8a1a3ca95964d184fd92e57":
+        tenant_id: "tenant_01KTTQFGTJ8FN68J1G1DH7S6F5"
         user_id: "00000000-0000-0000-0000-000000000000"
-        name: "Local Dev API Key"
+        name: "Local Dev API Key (Fam)"
         is_active: true
 
 kafka:
@@ -112,11 +112,13 @@ webhook:
       excluded_events:
         - "tenant.created"
         - "tenant.updated"
-    "felix-tenant-id":
+    "tenant_01KTTQFGTJ8FN68J1G1DH7S6F5":
       enabled: true
       endpoint: "http://localhost:3000/webhook/flexprice"
       headers: { }
-      excluded_events: [ ]
+      excluded_events:
+        - "tenant.created"
+        - "tenant.updated"
   svix_config:
     enabled: false
     auth_token: "svix_auth_token"

@@ -2931,6 +2931,16 @@ func (s *subscriptionService) processSubscriptionPeriod(ctx context.Context, sub
 				ReferencePoint: types.ReferencePointPeriodEnd,
 			}, paymentParams, types.InvoiceFlowRenewal, false)
 			if err != nil {
+				if ierr.IsAlreadyExists(err) {
+					// Invoice was already created and finalized on a previous attempt (Temporal retry).
+					// Treat as idempotent success and continue advancing the subscription period.
+					s.Logger.InfowCtx(ctx, "invoice already exists for period, skipping creation",
+						"subscription_id", sub.ID,
+						"period_start", nextPeriod.start,
+						"period_end", nextPeriod.end,
+					)
+					continue
+				}
 				return err
 			}
 
