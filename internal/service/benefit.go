@@ -22,8 +22,8 @@ func NewBenefitService(params ServiceParams) BenefitService {
 
 func (s *benefitService) GetBenefitsBySKU(ctx context.Context, externalCustomerID, sku string) ([]*dto.BenefitAggregateResponse, error) {
 	if externalCustomerID == "" {
-		return nil, ierr.NewError("username is required").
-			WithHint("username is required").
+		return nil, ierr.NewError("external_customer_id is required").
+			WithHint("external_customer_id is required").
 			Mark(ierr.ErrValidation)
 	}
 	if sku == "" {
@@ -43,12 +43,8 @@ func (s *benefitService) GetBenefitsBySKU(ctx context.Context, externalCustomerI
 	}
 
 	featureIDs := make([]string, 0, len(aggregates))
-	seen := make(map[string]struct{}, len(aggregates))
 	for _, agg := range aggregates {
-		if _, ok := seen[agg.FeatureID]; !ok {
-			seen[agg.FeatureID] = struct{}{}
-			featureIDs = append(featureIDs, agg.FeatureID)
-		}
+		featureIDs = append(featureIDs, agg.FeatureID)
 	}
 
 	featureMap := make(map[string]*featureDomain.Feature, len(featureIDs))
