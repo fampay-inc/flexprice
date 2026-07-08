@@ -299,6 +299,9 @@ func (c *SubscriptionInheritanceConfig) Validate() error {
 
 type CreateSubscriptionRequest struct {
 
+	// id is an optional custom subscription ID. If not provided, one will be generated.
+	ID string `json:"id,omitempty"`
+
 	// customer_id is the flexprice customer id
 	// and it is prioritized over external_customer_id in case both are provided.
 	CustomerID string `json:"customer_id"`
@@ -1154,8 +1157,13 @@ func (r *CreateSubscriptionRequest) ToSubscription(ctx context.Context) *subscri
 		trialStart, trialEnd = r.TrialStart, r.TrialEnd
 	}
 
+	id := r.ID
+	if id == "" {
+		id = types.GenerateUUIDWithPrefix(types.UUID_PREFIX_SUBSCRIPTION)
+	}
+
 	sub := &subscription.Subscription{
-		ID:                 types.GenerateUUIDWithPrefix(types.UUID_PREFIX_SUBSCRIPTION),
+		ID:                 id,
 		CustomerID:         r.CustomerID,
 		PlanID:             r.PlanID,
 		Currency:           strings.ToLower(r.Currency),

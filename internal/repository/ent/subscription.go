@@ -2,6 +2,7 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/flexprice/flexprice/internal/logger"
 	"github.com/flexprice/flexprice/internal/postgres"
 	"github.com/flexprice/flexprice/internal/types"
+	"github.com/lib/pq"
 	"github.com/samber/lo"
 )
 
@@ -99,6 +101,27 @@ func (r *subscriptionRepository) Create(ctx context.Context, sub *domainSub.Subs
 
 	if err != nil {
 		SetSpanError(span, err)
+		if ent.IsConstraintError(err) {
+			var pqErr *pq.Error
+			if errors.As(err, &pqErr) {
+				switch pqErr.Constraint {
+				case "subscriptions_pkey":
+					return ierr.NewError("subscription with this ID already exists").
+						WithHint("A subscription with the provided ID already exists; use a different ID or omit it to auto-generate one").
+						WithReportableDetails(map[string]interface{}{"subscription_id": sub.ID}).
+						Mark(ierr.ErrAlreadyExists)
+				case "subscriptions_tenant_env_customer_sku_active_idx":
+					return ierr.NewError("customer already has an active subscription for this plan").
+						WithHint("Only one active subscription per plan SKU is allowed per customer").
+						WithReportableDetails(map[string]interface{}{"customer_id": sub.CustomerID, "sku": sub.Sku}).
+						Mark(ierr.ErrAlreadyExists)
+				}
+			}
+			return ierr.NewError("subscription violates a uniqueness constraint").
+				WithHint("A subscription with conflicting unique fields already exists").
+				WithReportableDetails(map[string]interface{}{"subscription_id": sub.ID}).
+				Mark(ierr.ErrAlreadyExists)
+		}
 		return fmt.Errorf("failed to create subscription: %w", err)
 	}
 
