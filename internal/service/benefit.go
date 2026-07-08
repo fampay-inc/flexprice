@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/flexprice/flexprice/internal/api/dto"
+	featureDomain "github.com/flexprice/flexprice/internal/domain/feature"
 	ierr "github.com/flexprice/flexprice/internal/errors"
 )
 
@@ -21,8 +22,8 @@ func NewBenefitService(params ServiceParams) BenefitService {
 
 func (s *benefitService) GetBenefitsBySKU(ctx context.Context, externalCustomerID, sku string) ([]*dto.BenefitAggregateResponse, error) {
 	if externalCustomerID == "" {
-		return nil, ierr.NewError("external_customer_id is required").
-			WithHint("external_customer_id is required").
+		return nil, ierr.NewError("username is required").
+			WithHint("username is required").
 			Mark(ierr.ErrValidation)
 	}
 	if sku == "" {
@@ -50,30 +51,31 @@ func (s *benefitService) GetBenefitsBySKU(ctx context.Context, externalCustomerI
 		}
 	}
 
-	featureNames := make(map[string]string, len(featureIDs))
+	featureMap := make(map[string]*featureDomain.Feature, len(featureIDs))
 	if len(featureIDs) > 0 {
 		features, err := s.FeatureRepo.ListByIDs(ctx, featureIDs)
 		if err != nil {
 			return nil, err
 		}
 		for _, f := range features {
-			featureNames[f.ID] = f.Name
+			featureMap[f.ID] = f
 		}
 	}
 
 	response := make([]*dto.BenefitAggregateResponse, 0, len(aggregates))
 	for _, agg := range aggregates {
-		name, ok := featureNames[agg.FeatureID]
+		f, ok := featureMap[agg.FeatureID]
 		if !ok {
 			s.Logger.Warnw("feature not found for benefit aggregate",
 				"feature_id", agg.FeatureID,
-				"category", agg.Category,
 				"sku", sku,
 			)
+			continue
 		}
 		response = append(response, &dto.BenefitAggregateResponse{
-			Name:     name,
-			Category: agg.Category,
+			Name:     f.Name,
+			Slug:     f.LookupKey,
+			Metadata: f.Metadata,
 			Total:    agg.Total,
 		})
 	}
