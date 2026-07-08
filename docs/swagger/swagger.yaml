@@ -2142,6 +2142,10 @@ definitions:
         type: string
       gateway_payment_method_id:
         type: string
+      id:
+        description: id is an optional custom subscription ID. If not provided, one
+          will be generated.
+        type: string
       inheritance:
         allOf:
         - $ref: '#/definitions/SubscriptionInheritanceConfig'

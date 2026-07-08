@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -279,7 +280,7 @@ func (h *handler) deliverSvix(ctx context.Context, event *types.WebhookEvent, me
 
 // deliverNative sends a webhook to the configured HTTP endpoint.
 func (h *handler) deliverNative(ctx context.Context, event *types.WebhookEvent, messageUUID string) error {
-	tenantCfg, ok := h.config.Tenants[event.TenantID]
+	tenantCfg, ok := h.config.Tenants[strings.ToLower(event.TenantID)]
 	if !ok {
 		return ierr.NewError("native webhook is not configured for this tenant").
 			WithHint("Add the tenant to webhook.tenants in configuration.").

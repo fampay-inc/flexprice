@@ -16338,6 +16338,10 @@
           "gateway_payment_method_id": {
             "type": "string"
           },
+          "id": {
+            "type": "string",
+            "description": "id is an optional custom subscription ID. If not provided, one will be generated."
+          },
           "inheritance": {
             "$ref": "#/components/schemas/SubscriptionInheritanceConfig"
           },

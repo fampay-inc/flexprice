@@ -14466,6 +14466,10 @@ const docTemplate = `{
                 "gateway_payment_method_id": {
                     "type": "string"
                 },
+                "id": {
+                    "description": "id is an optional custom subscription ID. If not provided, one will be generated.",
+                    "type": "string"
+                },
                 "inheritance": {
                     "description": "Inheritance groups all customer-hierarchy fields.\nWhen provided with at least one child ID, the subscription becomes a PARENT type.",
                     "allOf": [
