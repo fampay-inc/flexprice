@@ -406,6 +406,9 @@ type CreateSubscriptionRequest struct {
 	// Never populated from external JSON.
 	ID string `json:"-"`
 
+	// id is an optional custom subscription ID. If not provided, one will be generated.
+	ID string `json:"id,omitempty"`
+
 	// customer_id is the flexprice customer id
 	// and it is prioritized over external_customer_id in case both are provided.
 	CustomerID string `json:"customer_id"`

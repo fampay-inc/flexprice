@@ -794,6 +794,9 @@ func NewConfig() (*Configuration, error) {
 	}
 
 	// tenant webhook config
+	// UnmarshalKey is unreliable when any sibling FLEXPRICE_WEBHOOK_* env var is set
+	// (Viper AutomaticEnv shadows the YAML map). Only use it if v.Unmarshal did not
+	// already populate the tenants (e.g. when running without env var overrides).
 	tenantWebhookConfig := make(map[string]TenantWebhookConfig)
 	if err := v.UnmarshalKey("webhook.tenants", &tenantWebhookConfig); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal webhook tenants config: %v", err)
