@@ -271,6 +271,7 @@ func main() {
 			service.NewWorkflowExecutionService,
 			service.NewWorkflowService,
 			service.NewBenefitConsumptionService,
+			service.NewBenefitService,
 
 			// Enterprise (ee) services
 			ee.NewEnterpriseParams,
@@ -365,6 +366,7 @@ func provideHandlers(
 	meterUsageService service.MeterUsageService,
 	geminiPricingService service.GeminiPricingService,
 	webhookService *webhook.WebhookService,
+	benefitService service.BenefitService,
 ) api.Handlers {
 	return api.Handlers{
 		Events:                   v1.NewEventsHandler(eventService, eventPostProcessingService, featureUsageTrackingService, rawEventsReprocessingService, rawEventConsumptionService, cfg, logger),
@@ -385,6 +387,7 @@ func provideHandlers(
 		Tenant:                   v1.NewTenantHandler(tenantService, logger),
 		Invoice:                  v1.NewInvoiceHandler(invoiceService, logger),
 		Feature:                  v1.NewFeatureHandler(featureService, logger),
+		Benefit:                  v1.NewBenefitHandler(benefitService, logger),
 		Entitlement:              v1.NewEntitlementHandler(entitlementService, logger),
 		Payment:                  v1.NewPaymentHandler(paymentService, paymentProcessorService, logger),
 		Task:                     v1.NewTaskHandler(taskService, temporalService, logger),
