@@ -1,7 +1,7 @@
 CREATE TABLE benefit_ledgers (
     id              varchar(50)  NOT NULL,
     tenant_id       varchar(50)  NOT NULL,
-    status          varchar(20)  NOT NULL DEFAULT 'published',
+    status          varchar(20)  NOT NULL DEFAULT 'granted',
     created_at      timestamptz  NOT NULL,
     updated_at      timestamptz  NOT NULL,
     created_by      varchar,
