@@ -472,8 +472,8 @@ github.com/yuin/goldmark v1.2.1/go.mod h1:3hX8gzYuyVAZsxl0MRgGTJEmQBFcNTphYh9dec
 github.com/yuin/goldmark v1.3.5/go.mod h1:mwnBkeHKe2W/ZEtQ+71ViKU8L12m81fl3OWwC1Zlc8k=
 github.com/zclconf/go-cty v1.8.0 h1:s4AvqaeQzJIu3ndv4gVIhplVD0krU+bgrcLSVUnaWuA=
 github.com/zclconf/go-cty v1.8.0/go.mod h1:vVKLxnk3puL4qRAv72AO+W99LUD4da90g3uUAzyuvAk=
-gitlab.famapp.in/backend/flexprice/protos/pb v0.0.0-20260705103333-12c5261f8ca4 h1:UMGLczx8d/WhBKI5Nx1PFMOtH/yS0B2IrwygG0OEF2U=
-gitlab.famapp.in/backend/flexprice/protos/pb v0.0.0-20260705103333-12c5261f8ca4/go.mod h1:cnJ5LVP3bnmVRoB57C4DJgkQ/ExArtAofIEAYjKACCs=
+gitlab.famapp.in/backend/flexprice/protos/pb v0.0.1 h1:YQjb1e8WL28MmkhfHxYiDbx2X/jxqu/QMC061BDhCTs=
+gitlab.famapp.in/backend/flexprice/protos/pb v0.0.1/go.mod h1:6po4q37CfeVmFKqfJPbj+eLBnO5Q/L1f6syxSfGIhTo=
 go.mongodb.org/mongo-driver v1.11.4/go.mod h1:PTSz5yu21bkT/wXpkS7WR5f0ddqw5quethTUn9WM+2g=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=
 go.opentelemetry.io/auto/sdk v1.2.1/go.mod h1:KRTj+aOaElaLi+wW1kO/DZRXwkF4C5xPbEe3ZiIhN7Y=

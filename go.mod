@@ -50,7 +50,7 @@ require (
 	github.com/swaggo/swag/v2 v2.0.0-rc5
 	github.com/teris-io/shortid v0.0.0-20220617161101-71ec9f2aa569
 	github.com/xdg-go/scram v1.1.1
-	gitlab.famapp.in/backend/flexprice/protos/pb v0.0.0-20260705103333-12c5261f8ca4
+	gitlab.famapp.in/backend/flexprice/protos/pb v0.0.1
 	go.opentelemetry.io/contrib/bridges/otelzap v0.16.0
 	go.opentelemetry.io/otel v1.41.0
 	go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploggrpc v0.17.0
@@ -213,4 +213,3 @@ require (
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
