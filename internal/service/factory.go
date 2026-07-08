@@ -6,6 +6,7 @@ import (
 	"github.com/flexprice/flexprice/internal/domain/addonassociation"
 	"github.com/flexprice/flexprice/internal/domain/alertlogs"
 	"github.com/flexprice/flexprice/internal/domain/auth"
+	"github.com/flexprice/flexprice/internal/domain/benefit"
 	"github.com/flexprice/flexprice/internal/domain/connection"
 	costsheet "github.com/flexprice/flexprice/internal/domain/costsheet"
 	"github.com/flexprice/flexprice/internal/domain/coupon"
@@ -111,6 +112,7 @@ type ServiceParams struct {
 	ScheduledTaskRepo            scheduledtask.Repository
 	PlanPriceSyncRepo            planpricesync.Repository
 	WorkflowExecutionRepo        workflowexecution.Repository
+	BenefitLedgerRepo            benefit.Repository
 
 	// Publishers
 	EventPublisher   publisher.EventPublisher
@@ -194,6 +196,7 @@ func NewServiceParams(
 	webhookPubSub pubsub.PubSub,
 	planPriceSyncRepo planpricesync.Repository,
 	workflowExecutionRepo workflowexecution.Repository,
+	benefitLedgerRepo benefit.Repository,
 ) ServiceParams {
 	return ServiceParams{
 		Logger:                       logger,
@@ -257,5 +260,6 @@ func NewServiceParams(
 		WebhookPubSub:                webhookPubSub,
 		PlanPriceSyncRepo:            planPriceSyncRepo,
 		WorkflowExecutionRepo:        workflowExecutionRepo,
+		BenefitLedgerRepo:            benefitLedgerRepo,
 	}
 }

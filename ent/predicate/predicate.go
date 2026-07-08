@@ -18,6 +18,9 @@ type AlertLogs func(*sql.Selector)
 // Auth is the predicate function for auth builders.
 type Auth func(*sql.Selector)
 
+// BenefitLedger is the predicate function for benefitledger builders.
+type BenefitLedger func(*sql.Selector)
+
 // BillingSequence is the predicate function for billingsequence builders.
 type BillingSequence func(*sql.Selector)
 
