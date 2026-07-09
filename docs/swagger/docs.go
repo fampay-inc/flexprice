@@ -427,6 +427,69 @@ const docTemplate = `{
                 }
             }
         },
+        "/benefits": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Returns lifetime benefits granted to a customer for a SKU, aggregated by feature from the benefit ledger.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Benefits"
+                ],
+                "summary": "Get aggregated benefits for a customer and SKU",
+                "operationId": "getBenefits",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "External customer ID",
+                        "name": "external_customer_id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "SKU",
+                        "name": "sku",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/BenefitAggregateResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Customer not found",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Server error",
+                        "schema": {
+                            "$ref": "#/definitions/errors.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/costs": {
             "post": {
                 "security": [
@@ -12219,6 +12282,23 @@ const docTemplate = `{
                 },
                 "wallet": {
                     "$ref": "#/definitions/WalletResponse"
+                }
+            }
+        },
+        "BenefitAggregateResponse": {
+            "type": "object",
+            "properties": {
+                "metadata": {
+                    "$ref": "#/definitions/types.Metadata"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -24831,6 +24911,7 @@ const docTemplate = `{
         "types.WindowSize": {
             "type": "string",
             "enum": [
+                "MONTH",
                 "MINUTE",
                 "15MIN",
                 "30MIN",
@@ -24840,10 +24921,10 @@ const docTemplate = `{
                 "12HOUR",
                 "DAY",
                 "WEEK",
-                "MONTH",
                 "MONTH"
             ],
             "x-enum-varnames": [
+                "DefaultWindowSize",
                 "WindowSizeMinute",
                 "WindowSize15Min",
                 "WindowSize30Min",
@@ -24853,8 +24934,7 @@ const docTemplate = `{
                 "WindowSize12Hour",
                 "WindowSizeDay",
                 "WindowSizeWeek",
-                "WindowSizeMonth",
-                "DefaultWindowSize"
+                "WindowSizeMonth"
             ]
         },
         "types.WorkflowExecutionFilter": {

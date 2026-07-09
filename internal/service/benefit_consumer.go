@@ -23,6 +23,24 @@ import (
 
 const categoryEnumPrefix = "BENEFIT_EVENT_CATEGORY_"
 
+type dropEvent struct {
+	reason string
+}
+
+func (e *dropEvent) Error() string { return e.reason }
+
+func drop(reason string) *dropEvent { return &dropEvent{reason: reason} }
+
+func isDropEvent(err error) bool {
+	var de *dropEvent
+	return errors.As(err, &de)
+}
+
+type eventValidation struct {
+	SKU        string
+	CustomerID string
+}
+
 type BenefitConsumptionService interface {
 	RegisterHandler(router *pubsubRouter.Router, cfg *config.Configuration)
 }
@@ -88,62 +106,46 @@ func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
 		return nil
 	}
 
-	if ev.GetEventId() == "" || ev.GetSubscriptionId() == "" || ev.GetCycleId() == "" || ev.GetFeatureId() == "" {
-		s.Logger.Warnw("dropping invalid benefit event: missing required fields",
+	if err := validateProtoFields(&ev); err != nil {
+		s.Logger.Warnw("dropping invalid benefit event",
+			"reason", err.Error(),
 			"event_id", ev.GetEventId(),
-			"subscription_id", ev.GetSubscriptionId(),
-			"cycle_id", ev.GetCycleId(),
-			"feature_id", ev.GetFeatureId(),
 		)
 		return nil
 	}
 
-	for name, val := range map[string]string{
-		"subscription_id": ev.GetSubscriptionId(),
-		"cycle_id":        ev.GetCycleId(),
-		"feature_id":      ev.GetFeatureId(),
-	} {
-		if _, err := uuid.Parse(val); err != nil {
-			s.Logger.Warnw("dropping invalid benefit event: "+name+" is not a valid uuid",
-				"event_id", ev.GetEventId(), name, val)
-			return nil
-		}
-	}
-
 	tenantID := s.Config.Billing.TenantID
-	environmentID := s.Config.Billing.EnvironmentID
-
 	if tenantID == "" {
 		s.Logger.Errorw("billing.tenant_id is not configured; cannot process benefit events",
 			"event_id", ev.GetEventId())
 		return nil
 	}
 
-	ctx := context.Background()
-	ctx = context.WithValue(ctx, types.CtxTenantID, tenantID)
-	if environmentID != "" {
+	ctx := context.WithValue(context.Background(), types.CtxTenantID, tenantID)
+	if environmentID := s.Config.Billing.EnvironmentID; environmentID != "" {
 		ctx = context.WithValue(ctx, types.CtxEnvironmentID, environmentID)
 	}
 
-	sku, customerID, dropReason, retryErr := s.validateEvent(ctx, &ev)
-	if retryErr != nil {
+	validated, err := s.validateEvent(ctx, &ev)
+	if err != nil {
+		if isDropEvent(err) {
+			s.Logger.Warnw("dropping invalid benefit event",
+				"reason", err.Error(),
+				"event_id", ev.GetEventId(),
+				"subscription_id", ev.GetSubscriptionId(),
+			)
+			return nil
+		}
 		s.Logger.Errorw("benefit event validation errored, will retry",
-			"error", retryErr, "event_id", ev.GetEventId())
-		return ierr.WithError(retryErr).
+			"error", err,
+			"event_id", ev.GetEventId(),
+		)
+		return ierr.WithError(err).
 			WithHint("Failed to validate benefit event").
 			Mark(ierr.ErrSystem)
 	}
-	if dropReason != "" {
-		s.Logger.Warnw("dropping invalid benefit event: "+dropReason,
-			"event_id", ev.GetEventId(),
-			"subscription_id", ev.GetSubscriptionId(),
-			"cycle_id", ev.GetCycleId(),
-			"feature_id", ev.GetFeatureId(),
-		)
-		return nil
-	}
 
-	row := toLedgerRow(&ev, sku, customerID, tenantID, environmentID)
+	row := toLedgerRow(&ev, validated, tenantID, s.Config.Billing.EnvironmentID)
 
 	if err := s.BenefitLedgerRepo.Create(ctx, row); err != nil {
 		if ierr.IsAlreadyExists(err) {
@@ -171,10 +173,74 @@ func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
 	return nil
 }
 
+func validateProtoFields(ev *benefitsv1.BenefitEvent) error {
+	if ev.GetEventId() == "" || ev.GetSubscriptionId() == "" || ev.GetCycleId() == "" || ev.GetFeatureId() == "" {
+		return drop("missing required fields or fields empty")
+	}
+	if ev.GetCategory() == benefitsv1.BenefitEventCategory_BENEFIT_EVENT_CATEGORY_UNSPECIFIED {
+		return drop("unspecified category")
+	}
+	for name, val := range map[string]string{
+		"subscription_id": ev.GetSubscriptionId(),
+		"cycle_id":        ev.GetCycleId(),
+		"feature_id":      ev.GetFeatureId(),
+	} {
+		if _, err := uuid.Parse(val); err != nil {
+			return drop(name + " is not a valid UUID")
+		}
+	}
+	return nil
+}
+
+func (s *benefitConsumptionService) validateEvent(ctx context.Context, ev *benefitsv1.BenefitEvent) (*eventValidation, error) {
+	sub, err := s.SubRepo.Get(ctx, ev.GetSubscriptionId())
+	if err != nil {
+		if ierr.IsNotFound(err) {
+			return nil, drop("subscription not found")
+		}
+		return nil, ierr.WithError(err).WithHint("subscription lookup failed").Mark(ierr.ErrDatabase)
+	}
+
+	if err := s.validateFeatureEntitlement(ctx, sub.PlanID, ev.GetFeatureId()); err != nil {
+		return nil, err
+	}
+
+	inv, err := s.InvoiceRepo.Get(ctx, ev.GetCycleId())
+	if err != nil {
+		if ierr.IsNotFound(err) {
+			return nil, drop("invoice (cycle_id) not found")
+		}
+		return nil, ierr.WithError(err).WithHint("invoice lookup failed").Mark(ierr.ErrDatabase)
+	}
+	if inv.SubscriptionID == nil || *inv.SubscriptionID != ev.GetSubscriptionId() {
+		return nil, drop("invoice does not belong to subscription")
+	}
+	if inv.InvoiceStatus != types.InvoiceStatusFinalized {
+		return nil, drop("invoice is not finalized")
+	}
+	if inv.PaymentStatus != types.PaymentStatusSucceeded {
+		return nil, drop("invoice payment is not succeeded")
+	}
+
+	return &eventValidation{SKU: *sub.Sku, CustomerID: sub.CustomerID}, nil
+}
+
+func (s *benefitConsumptionService) validateFeatureEntitlement(ctx context.Context, planID, featureID string) error {
+	planEnts, err := s.EntitlementRepo.ListByPlanIDs(ctx, []string{planID})
+	if err != nil {
+		return ierr.WithError(err).WithHint("plan entitlement lookup failed").Mark(ierr.ErrDatabase)
+	}
+	for _, e := range planEnts {
+		if e != nil && e.FeatureID == featureID && e.IsEnabled {
+			return nil
+		}
+	}
+	return drop("plan does not grant this feature")
+}
+
 func toLedgerRow(
 	ev *benefitsv1.BenefitEvent,
-	sku string,
-	customerID string,
+	v *eventValidation,
 	tenantID string,
 	environmentID string,
 ) *domainBenefit.BenefitLedger {
@@ -183,8 +249,8 @@ func toLedgerRow(
 		ID:             types.GenerateUUID(),
 		EventID:        ev.GetEventId(),
 		SubscriptionID: ev.GetSubscriptionId(),
-		CustomerID:     customerID,
-		SKU:            sku,
+		CustomerID:     v.CustomerID,
+		SKU:            v.SKU,
 		CycleID:        ev.GetCycleId(),
 		Category:       strings.TrimPrefix(ev.GetCategory().String(), categoryEnumPrefix),
 		FeatureID:      ev.GetFeatureId(),
@@ -197,61 +263,6 @@ func toLedgerRow(
 	row.CreatedAt = now
 	row.UpdatedAt = now
 	return row
-}
-
-func (s *benefitConsumptionService) validateEvent(
-	ctx context.Context,
-	ev *benefitsv1.BenefitEvent,
-) (sku string, customerID string, dropReason string, retryErr error) {
-	sub, err := s.SubRepo.Get(ctx, ev.GetSubscriptionId())
-	if err != nil {
-		if ierr.IsNotFound(err) {
-			return "", "", "subscription not found", nil
-		}
-		return "", "", "", ierr.WithError(err).WithHint("subscription lookup failed").Mark(ierr.ErrDatabase)
-	}
-
-	if reason, rErr := s.validateFeatureId(ctx, sub.PlanID, ev.GetFeatureId()); rErr != nil {
-		return "", "", "", rErr
-	} else if reason != "" {
-		return "", "", reason, nil
-	}
-
-	inv, err := s.InvoiceRepo.Get(ctx, ev.GetCycleId())
-	if err != nil {
-		if ierr.IsNotFound(err) {
-			return "", "", "invoice (cycle_id) not found", nil
-		}
-		return "", "", "", ierr.WithError(err).WithHint("invoice lookup failed").Mark(ierr.ErrDatabase)
-	}
-	if inv.SubscriptionID == nil || *inv.SubscriptionID != ev.GetSubscriptionId() {
-		return "", "", "invoice does not belong to subscription", nil
-	}
-	if inv.InvoiceStatus != types.InvoiceStatusFinalized {
-		return "", "", "invoice is not finalized", nil
-	}
-	if inv.PaymentStatus != types.PaymentStatusSucceeded {
-		return "", "", "invoice payment is not succeeded", nil
-	}
-
-	return *sub.Sku, sub.CustomerID, "", nil
-}
-
-func (s *benefitConsumptionService) validateFeatureId(
-	ctx context.Context,
-	planID string,
-	featureID string,
-) (dropReason string, err error) {
-	planEnts, err := s.EntitlementRepo.ListByPlanIDs(ctx, []string{planID})
-	if err != nil {
-		return "", ierr.WithError(err).WithHint("plan entitlement lookup failed").Mark(ierr.ErrDatabase)
-	}
-	for _, e := range planEnts {
-		if e != nil && e.FeatureID == featureID && e.IsEnabled {
-			return "", nil
-		}
-	}
-	return "plan does not grant this feature", nil
 }
 
 func (s *benefitConsumptionService) shouldRetryError(err error) bool {

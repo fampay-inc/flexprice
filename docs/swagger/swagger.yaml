@@ -560,6 +560,17 @@ definitions:
       wallet:
         $ref: '#/definitions/WalletResponse'
     type: object
+  BenefitAggregateResponse:
+    properties:
+      metadata:
+        $ref: '#/definitions/types.Metadata'
+      name:
+        type: string
+      slug:
+        type: string
+      total:
+        type: integer
+    type: object
   BillingCycleInfo:
     properties:
       billing_anchor:
@@ -9754,6 +9765,7 @@ definitions:
     - WebhookEventCreditNoteUpdated
   types.WindowSize:
     enum:
+    - MONTH
     - MINUTE
     - 15MIN
     - 30MIN
@@ -9764,9 +9776,9 @@ definitions:
     - DAY
     - WEEK
     - MONTH
-    - MONTH
     type: string
     x-enum-varnames:
+    - DefaultWindowSize
     - WindowSizeMinute
     - WindowSize15Min
     - WindowSize30Min
@@ -9777,7 +9789,6 @@ definitions:
     - WindowSizeDay
     - WindowSizeWeek
     - WindowSizeMonth
-    - DefaultWindowSize
   types.WorkflowExecutionFilter:
     properties:
       end_time:
@@ -10215,6 +10226,48 @@ paths:
       summary: Query alert logs
       tags:
       - Alerts
+  /benefits:
+    get:
+      description: Returns lifetime benefits granted to a customer for a SKU, aggregated
+        by feature from the benefit ledger.
+      operationId: getBenefits
+      parameters:
+      - description: External customer ID
+        in: query
+        name: external_customer_id
+        required: true
+        type: string
+      - description: SKU
+        in: query
+        name: sku
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/BenefitAggregateResponse'
+            type: array
+        "400":
+          description: Invalid request
+          schema:
+            $ref: '#/definitions/errors.ErrorResponse'
+        "404":
+          description: Customer not found
+          schema:
+            $ref: '#/definitions/errors.ErrorResponse'
+        "500":
+          description: Server error
+          schema:
+            $ref: '#/definitions/errors.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get aggregated benefits for a customer and SKU
+      tags:
+      - Benefits
   /costs:
     post:
       consumes:
