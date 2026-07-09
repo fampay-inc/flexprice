@@ -98,6 +98,14 @@ func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
 		return nil
 	}
 
+	if ev.GetCategory() == benefitsv1.BenefitEventCategory_BENEFIT_EVENT_CATEGORY_UNSPECIFIED {
+		s.Logger.Warnw("dropping invalid benefit event: unspecified category",
+			"event_id", ev.GetEventId(),
+			"subscription_id", ev.GetSubscriptionId(),
+		)
+		return nil
+	}
+
 	for name, val := range map[string]string{
 		"subscription_id": ev.GetSubscriptionId(),
 		"cycle_id":        ev.GetCycleId(),
