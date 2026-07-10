@@ -7716,42 +7716,23 @@ definitions:
       workflow_type:
         type: string
     type: object
-  errors.ErrorCode:
-    enum:
-    - http_client_error
-    - system_error
-    - internal_error
-    - not_found
-    - customer_not_found
-    - already_exists
-    - version_conflict
-    - validation_error
-    - invalid_operation
-    - permission_denied
-    - database_error
-    - service_unavailable
-    - too_many_requests
-    - not_implemented
-    type: string
-    x-enum-varnames:
-    - ErrCodeHTTPClient
-    - ErrCodeSystemError
-    - ErrCodeInternalError
-    - ErrCodeNotFound
-    - ErrCodeCustomerNotFound
-    - ErrCodeAlreadyExists
-    - ErrCodeVersionConflict
-    - ErrCodeValidation
-    - ErrCodeInvalidOperation
-    - ErrCodePermissionDenied
-    - ErrCodeDatabase
-    - ErrCodeServiceUnavailable
-    - ErrCodeTooManyRequests
-    - ErrCodeNotImplemented
   errors.ErrorResponse:
     properties:
       code:
-        $ref: '#/definitions/errors.ErrorCode'
+        enum:
+        - not_found
+        - already_exists
+        - version_conflict
+        - validation_error
+        - invalid_operation
+        - permission_denied
+        - http_client_error
+        - database_error
+        - system_error
+        - internal_error
+        - service_unavailable
+        - customer_not_found
+        type: string
       http_status_code:
         type: integer
       message:

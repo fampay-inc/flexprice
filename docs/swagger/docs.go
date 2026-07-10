@@ -23006,46 +23006,25 @@ const docTemplate = `{
                 }
             }
         },
-        "errors.ErrorCode": {
-            "type": "string",
-            "enum": [
-                "http_client_error",
-                "system_error",
-                "internal_error",
-                "not_found",
-                "customer_not_found",
-                "already_exists",
-                "version_conflict",
-                "validation_error",
-                "invalid_operation",
-                "permission_denied",
-                "database_error",
-                "service_unavailable",
-                "too_many_requests",
-                "not_implemented"
-            ],
-            "x-enum-varnames": [
-                "ErrCodeHTTPClient",
-                "ErrCodeSystemError",
-                "ErrCodeInternalError",
-                "ErrCodeNotFound",
-                "ErrCodeCustomerNotFound",
-                "ErrCodeAlreadyExists",
-                "ErrCodeVersionConflict",
-                "ErrCodeValidation",
-                "ErrCodeInvalidOperation",
-                "ErrCodePermissionDenied",
-                "ErrCodeDatabase",
-                "ErrCodeServiceUnavailable",
-                "ErrCodeTooManyRequests",
-                "ErrCodeNotImplemented"
-            ]
-        },
         "errors.ErrorResponse": {
             "type": "object",
             "properties": {
                 "code": {
-                    "$ref": "#/definitions/errors.ErrorCode"
+                    "type": "string",
+                    "enum": [
+                        "not_found",
+                        "already_exists",
+                        "version_conflict",
+                        "validation_error",
+                        "invalid_operation",
+                        "permission_denied",
+                        "http_client_error",
+                        "database_error",
+                        "system_error",
+                        "internal_error",
+                        "service_unavailable",
+                        "customer_not_found"
+                    ]
                 },
                 "http_status_code": {
                     "type": "integer"
