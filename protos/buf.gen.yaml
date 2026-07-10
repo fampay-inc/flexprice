@@ -15,10 +15,7 @@ plugins:
       - require_unimplemented_servers=false
 
   - remote: buf.build/protocolbuffers/python:v23.4
-    out: python_pb
+    out: flexprice_python_pb
 
   - remote: buf.build/protocolbuffers/pyi:v23.4
-    out: python_pb
-
-  - remote: buf.build/grpc/python:v1.56.1
-    out: python_pb
+    out: flexprice_python_pb
