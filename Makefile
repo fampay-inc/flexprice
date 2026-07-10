@@ -128,6 +128,10 @@ generate-proto:
 	@cd protos && buf generate
 	@[ -f protos/pb/go.mod ] || (cd protos/pb && go mod init gitlab.famapp.in/backend/flexprice/protos/pb)
 	@cd protos/pb && go mod tidy
+	@echo "Fixing python proto imports..."
+	@sed -i '' 's/from v1 import/from . import/g' protos/flexprice_python_pb/v1/*.py*
+	@find protos/flexprice_python_pb/ -type d -exec touch {}/__init__.py \;
+
 
 .PHONY: generate-ent
 generate-ent: install-ent

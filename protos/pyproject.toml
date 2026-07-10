@@ -12,3 +12,4 @@ dependencies = [
 
 [tool.setuptools.packages.find]
 where = ["."]
+include = ["flexprice_python_pb*"]
