@@ -10,7 +10,7 @@ type BenefitLedger struct {
 	EventID        string    `db:"event_id" json:"event_id"`
 	SubscriptionID string    `db:"subscription_id" json:"subscription_id"`
 	CustomerID     string    `db:"customer_id" json:"customer_id"`
-	SKU            string    `db:"sku" json:"sku"`
+	Product        string    `db:"product" json:"product"`
 	CycleID        string    `db:"cycle_id" json:"cycle_id"`
 	Category       string    `db:"category" json:"category"`
 	FeatureID      string    `db:"feature_id" json:"feature_id"`

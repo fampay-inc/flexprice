@@ -37,8 +37,8 @@ type BenefitLedger struct {
 	SubscriptionID string `json:"subscription_id,omitempty"`
 	// CustomerID holds the value of the "customer_id" field.
 	CustomerID string `json:"customer_id,omitempty"`
-	// Sku holds the value of the "sku" field.
-	Sku string `json:"sku,omitempty"`
+	// Product holds the value of the "product" field.
+	Product string `json:"product,omitempty"`
 	// CycleID holds the value of the "cycle_id" field.
 	CycleID string `json:"cycle_id,omitempty"`
 	// Category holds the value of the "category" field.
@@ -59,7 +59,7 @@ func (*BenefitLedger) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case benefitledger.FieldValue:
 			values[i] = new(sql.NullInt64)
-		case benefitledger.FieldID, benefitledger.FieldTenantID, benefitledger.FieldStatus, benefitledger.FieldCreatedBy, benefitledger.FieldUpdatedBy, benefitledger.FieldEnvironmentID, benefitledger.FieldEventID, benefitledger.FieldSubscriptionID, benefitledger.FieldCustomerID, benefitledger.FieldSku, benefitledger.FieldCycleID, benefitledger.FieldCategory, benefitledger.FieldFeatureID:
+		case benefitledger.FieldID, benefitledger.FieldTenantID, benefitledger.FieldStatus, benefitledger.FieldCreatedBy, benefitledger.FieldUpdatedBy, benefitledger.FieldEnvironmentID, benefitledger.FieldEventID, benefitledger.FieldSubscriptionID, benefitledger.FieldCustomerID, benefitledger.FieldProduct, benefitledger.FieldCycleID, benefitledger.FieldCategory, benefitledger.FieldFeatureID:
 			values[i] = new(sql.NullString)
 		case benefitledger.FieldCreatedAt, benefitledger.FieldUpdatedAt, benefitledger.FieldEventTimestamp:
 			values[i] = new(sql.NullTime)
@@ -144,11 +144,11 @@ func (bl *BenefitLedger) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				bl.CustomerID = value.String
 			}
-		case benefitledger.FieldSku:
+		case benefitledger.FieldProduct:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field sku", values[i])
+				return fmt.Errorf("unexpected type %T for field product", values[i])
 			} else if value.Valid {
-				bl.Sku = value.String
+				bl.Product = value.String
 			}
 		case benefitledger.FieldCycleID:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -246,8 +246,8 @@ func (bl *BenefitLedger) String() string {
 	builder.WriteString("customer_id=")
 	builder.WriteString(bl.CustomerID)
 	builder.WriteString(", ")
-	builder.WriteString("sku=")
-	builder.WriteString(bl.Sku)
+	builder.WriteString("product=")
+	builder.WriteString(bl.Product)
 	builder.WriteString(", ")
 	builder.WriteString("cycle_id=")
 	builder.WriteString(bl.CycleID)

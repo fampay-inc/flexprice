@@ -48,7 +48,7 @@ func (BenefitLedger) Fields() []ent.Field {
 			NotEmpty().
 			Immutable(),
 
-		field.String("sku").
+		field.String("product").
 			SchemaType(map[string]string{
 				"postgres": "varchar(50)",
 			}).
@@ -89,7 +89,7 @@ func (BenefitLedger) Edges() []ent.Edge {
 
 func (BenefitLedger) Indexes() []ent.Index {
 	return []ent.Index{
-		index.Fields("sku", "event_id").
+		index.Fields("product", "event_id").
 			Unique().
 			StorageKey("uq_benefit_ledger_event_id"),
 		index.Fields("tenant_id", "environment_id", "customer_id", "cycle_id").
