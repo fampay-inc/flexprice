@@ -33,8 +33,8 @@ const (
 	FieldSubscriptionID = "subscription_id"
 	// FieldCustomerID holds the string denoting the customer_id field in the database.
 	FieldCustomerID = "customer_id"
-	// FieldSku holds the string denoting the sku field in the database.
-	FieldSku = "sku"
+	// FieldProduct holds the string denoting the product field in the database.
+	FieldProduct = "product"
 	// FieldCycleID holds the string denoting the cycle_id field in the database.
 	FieldCycleID = "cycle_id"
 	// FieldCategory holds the string denoting the category field in the database.
@@ -62,7 +62,7 @@ var Columns = []string{
 	FieldEventID,
 	FieldSubscriptionID,
 	FieldCustomerID,
-	FieldSku,
+	FieldProduct,
 	FieldCycleID,
 	FieldCategory,
 	FieldFeatureID,
@@ -99,8 +99,8 @@ var (
 	SubscriptionIDValidator func(string) error
 	// CustomerIDValidator is a validator for the "customer_id" field. It is called by the builders before save.
 	CustomerIDValidator func(string) error
-	// SkuValidator is a validator for the "sku" field. It is called by the builders before save.
-	SkuValidator func(string) error
+	// ProductValidator is a validator for the "product" field. It is called by the builders before save.
+	ProductValidator func(string) error
 	// CycleIDValidator is a validator for the "cycle_id" field. It is called by the builders before save.
 	CycleIDValidator func(string) error
 )
@@ -163,9 +163,9 @@ func ByCustomerID(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCustomerID, opts...).ToFunc()
 }
 
-// BySku orders the results by the sku field.
-func BySku(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSku, opts...).ToFunc()
+// ByProduct orders the results by the product field.
+func ByProduct(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProduct, opts...).ToFunc()
 }
 
 // ByCycleID orders the results by the cycle_id field.

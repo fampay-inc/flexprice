@@ -128,9 +128,9 @@ func (blc *BenefitLedgerCreate) SetCustomerID(s string) *BenefitLedgerCreate {
 	return blc
 }
 
-// SetSku sets the "sku" field.
-func (blc *BenefitLedgerCreate) SetSku(s string) *BenefitLedgerCreate {
-	blc.mutation.SetSku(s)
+// SetProduct sets the "product" field.
+func (blc *BenefitLedgerCreate) SetProduct(s string) *BenefitLedgerCreate {
+	blc.mutation.SetProduct(s)
 	return blc
 }
 
@@ -274,12 +274,12 @@ func (blc *BenefitLedgerCreate) check() error {
 			return &ValidationError{Name: "customer_id", err: fmt.Errorf(`ent: validator failed for field "BenefitLedger.customer_id": %w`, err)}
 		}
 	}
-	if _, ok := blc.mutation.Sku(); !ok {
-		return &ValidationError{Name: "sku", err: errors.New(`ent: missing required field "BenefitLedger.sku"`)}
+	if _, ok := blc.mutation.Product(); !ok {
+		return &ValidationError{Name: "product", err: errors.New(`ent: missing required field "BenefitLedger.product"`)}
 	}
-	if v, ok := blc.mutation.Sku(); ok {
-		if err := benefitledger.SkuValidator(v); err != nil {
-			return &ValidationError{Name: "sku", err: fmt.Errorf(`ent: validator failed for field "BenefitLedger.sku": %w`, err)}
+	if v, ok := blc.mutation.Product(); ok {
+		if err := benefitledger.ProductValidator(v); err != nil {
+			return &ValidationError{Name: "product", err: fmt.Errorf(`ent: validator failed for field "BenefitLedger.product": %w`, err)}
 		}
 	}
 	if _, ok := blc.mutation.CycleID(); !ok {
@@ -374,9 +374,9 @@ func (blc *BenefitLedgerCreate) createSpec() (*BenefitLedger, *sqlgraph.CreateSp
 		_spec.SetField(benefitledger.FieldCustomerID, field.TypeString, value)
 		_node.CustomerID = value
 	}
-	if value, ok := blc.mutation.Sku(); ok {
-		_spec.SetField(benefitledger.FieldSku, field.TypeString, value)
-		_node.Sku = value
+	if value, ok := blc.mutation.Product(); ok {
+		_spec.SetField(benefitledger.FieldProduct, field.TypeString, value)
+		_node.Product = value
 	}
 	if value, ok := blc.mutation.CycleID(); ok {
 		_spec.SetField(benefitledger.FieldCycleID, field.TypeString, value)

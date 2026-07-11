@@ -31,7 +31,7 @@ func (r *benefitLedgerRepository) Create(ctx context.Context, b *domainBenefit.B
 	span := StartRepositorySpan(ctx, "benefit_ledger", "create", map[string]interface{}{
 		"event_id":        b.EventID,
 		"subscription_id": b.SubscriptionID,
-		"sku":             b.SKU,
+		"product":         b.Product,
 		"category":        b.Category,
 	})
 	defer FinishSpan(span)
@@ -47,7 +47,7 @@ func (r *benefitLedgerRepository) Create(ctx context.Context, b *domainBenefit.B
 		SetEventID(b.EventID).
 		SetSubscriptionID(b.SubscriptionID).
 		SetCustomerID(b.CustomerID).
-		SetSku(b.SKU).
+		SetProduct(b.Product).
 		SetCycleID(b.CycleID).
 		SetCategory(b.Category).
 		SetFeatureID(b.FeatureID).
@@ -95,7 +95,7 @@ func (r *benefitLedgerRepository) GetAggregatedBenefits(ctx context.Context, cus
 	query := `
 		SELECT feature_id, COALESCE(SUM(value), 0)::bigint AS total
 		FROM benefit_ledgers
-		WHERE sku = $1
+		WHERE product = $1
 			AND tenant_id = $2
 			AND environment_id = $3
 			AND customer_id = $4

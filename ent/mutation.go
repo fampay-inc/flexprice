@@ -4301,7 +4301,7 @@ type BenefitLedgerMutation struct {
 	event_id        *string
 	subscription_id *string
 	customer_id     *string
-	sku             *string
+	product         *string
 	cycle_id        *string
 	category        *string
 	feature_id      *string
@@ -4817,40 +4817,40 @@ func (m *BenefitLedgerMutation) ResetCustomerID() {
 	m.customer_id = nil
 }
 
-// SetSku sets the "sku" field.
-func (m *BenefitLedgerMutation) SetSku(s string) {
-	m.sku = &s
+// SetProduct sets the "product" field.
+func (m *BenefitLedgerMutation) SetProduct(s string) {
+	m.product = &s
 }
 
-// Sku returns the value of the "sku" field in the mutation.
-func (m *BenefitLedgerMutation) Sku() (r string, exists bool) {
-	v := m.sku
+// Product returns the value of the "product" field in the mutation.
+func (m *BenefitLedgerMutation) Product() (r string, exists bool) {
+	v := m.product
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldSku returns the old "sku" field's value of the BenefitLedger entity.
+// OldProduct returns the old "product" field's value of the BenefitLedger entity.
 // If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *BenefitLedgerMutation) OldSku(ctx context.Context) (v string, err error) {
+func (m *BenefitLedgerMutation) OldProduct(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSku is only allowed on UpdateOne operations")
+		return v, errors.New("OldProduct is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSku requires an ID field in the mutation")
+		return v, errors.New("OldProduct requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSku: %w", err)
+		return v, fmt.Errorf("querying old value for OldProduct: %w", err)
 	}
-	return oldValue.Sku, nil
+	return oldValue.Product, nil
 }
 
-// ResetSku resets all changes to the "sku" field.
-func (m *BenefitLedgerMutation) ResetSku() {
-	m.sku = nil
+// ResetProduct resets all changes to the "product" field.
+func (m *BenefitLedgerMutation) ResetProduct() {
+	m.product = nil
 }
 
 // SetCycleID sets the "cycle_id" field.
@@ -5131,8 +5131,8 @@ func (m *BenefitLedgerMutation) Fields() []string {
 	if m.customer_id != nil {
 		fields = append(fields, benefitledger.FieldCustomerID)
 	}
-	if m.sku != nil {
-		fields = append(fields, benefitledger.FieldSku)
+	if m.product != nil {
+		fields = append(fields, benefitledger.FieldProduct)
 	}
 	if m.cycle_id != nil {
 		fields = append(fields, benefitledger.FieldCycleID)
@@ -5177,8 +5177,8 @@ func (m *BenefitLedgerMutation) Field(name string) (ent.Value, bool) {
 		return m.SubscriptionID()
 	case benefitledger.FieldCustomerID:
 		return m.CustomerID()
-	case benefitledger.FieldSku:
-		return m.Sku()
+	case benefitledger.FieldProduct:
+		return m.Product()
 	case benefitledger.FieldCycleID:
 		return m.CycleID()
 	case benefitledger.FieldCategory:
@@ -5218,8 +5218,8 @@ func (m *BenefitLedgerMutation) OldField(ctx context.Context, name string) (ent.
 		return m.OldSubscriptionID(ctx)
 	case benefitledger.FieldCustomerID:
 		return m.OldCustomerID(ctx)
-	case benefitledger.FieldSku:
-		return m.OldSku(ctx)
+	case benefitledger.FieldProduct:
+		return m.OldProduct(ctx)
 	case benefitledger.FieldCycleID:
 		return m.OldCycleID(ctx)
 	case benefitledger.FieldCategory:
@@ -5309,12 +5309,12 @@ func (m *BenefitLedgerMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetCustomerID(v)
 		return nil
-	case benefitledger.FieldSku:
+	case benefitledger.FieldProduct:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetSku(v)
+		m.SetProduct(v)
 		return nil
 	case benefitledger.FieldCycleID:
 		v, ok := value.(string)
@@ -5472,8 +5472,8 @@ func (m *BenefitLedgerMutation) ResetField(name string) error {
 	case benefitledger.FieldCustomerID:
 		m.ResetCustomerID()
 		return nil
-	case benefitledger.FieldSku:
-		m.ResetSku()
+	case benefitledger.FieldProduct:
+		m.ResetProduct()
 		return nil
 	case benefitledger.FieldCycleID:
 		m.ResetCycleID()
