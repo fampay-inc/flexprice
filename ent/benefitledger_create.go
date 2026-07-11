@@ -293,11 +293,6 @@ func (blc *BenefitLedgerCreate) check() error {
 	if _, ok := blc.mutation.Category(); !ok {
 		return &ValidationError{Name: "category", err: errors.New(`ent: missing required field "BenefitLedger.category"`)}
 	}
-	if v, ok := blc.mutation.Category(); ok {
-		if err := benefitledger.CategoryValidator(v); err != nil {
-			return &ValidationError{Name: "category", err: fmt.Errorf(`ent: validator failed for field "BenefitLedger.category": %w`, err)}
-		}
-	}
 	if _, ok := blc.mutation.Value(); !ok {
 		return &ValidationError{Name: "value", err: errors.New(`ent: missing required field "BenefitLedger.value"`)}
 	}

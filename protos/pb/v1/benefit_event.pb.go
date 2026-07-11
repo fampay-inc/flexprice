@@ -21,68 +21,13 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type BenefitEventCategory int32
-
-const (
-	BenefitEventCategory_BENEFIT_EVENT_CATEGORY_UNSPECIFIED BenefitEventCategory = 0
-	BenefitEventCategory_BENEFIT_EVENT_CATEGORY_BUF_SAVED   BenefitEventCategory = 1
-	BenefitEventCategory_BENEFIT_EVENT_CATEGORY_RFEE_SAVED  BenefitEventCategory = 2
-	BenefitEventCategory_BENEFIT_EVENT_CATEGORY_CARD_REWARD BenefitEventCategory = 3
-	BenefitEventCategory_BENEFIT_EVENT_CATEGORY_IOK_REWARD  BenefitEventCategory = 4
-)
-
-// Enum value maps for BenefitEventCategory.
-var (
-	BenefitEventCategory_name = map[int32]string{
-		0: "BENEFIT_EVENT_CATEGORY_UNSPECIFIED",
-		1: "BENEFIT_EVENT_CATEGORY_BUF_SAVED",
-		2: "BENEFIT_EVENT_CATEGORY_RFEE_SAVED",
-		3: "BENEFIT_EVENT_CATEGORY_CARD_REWARD",
-		4: "BENEFIT_EVENT_CATEGORY_IOK_REWARD",
-	}
-	BenefitEventCategory_value = map[string]int32{
-		"BENEFIT_EVENT_CATEGORY_UNSPECIFIED": 0,
-		"BENEFIT_EVENT_CATEGORY_BUF_SAVED":   1,
-		"BENEFIT_EVENT_CATEGORY_RFEE_SAVED":  2,
-		"BENEFIT_EVENT_CATEGORY_CARD_REWARD": 3,
-		"BENEFIT_EVENT_CATEGORY_IOK_REWARD":  4,
-	}
-)
-
-func (x BenefitEventCategory) Enum() *BenefitEventCategory {
-	p := new(BenefitEventCategory)
-	*p = x
-	return p
-}
-
-func (x BenefitEventCategory) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (BenefitEventCategory) Descriptor() protoreflect.EnumDescriptor {
-	return file_v1_benefit_event_proto_enumTypes[0].Descriptor()
-}
-
-func (BenefitEventCategory) Type() protoreflect.EnumType {
-	return &file_v1_benefit_event_proto_enumTypes[0]
-}
-
-func (x BenefitEventCategory) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use BenefitEventCategory.Descriptor instead.
-func (BenefitEventCategory) EnumDescriptor() ([]byte, []int) {
-	return file_v1_benefit_event_proto_rawDescGZIP(), []int{0}
-}
-
 type BenefitEvent struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	EventId        string                 `protobuf:"bytes,1,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
 	SubscriptionId string                 `protobuf:"bytes,2,opt,name=subscription_id,json=subscriptionId,proto3" json:"subscription_id,omitempty"`
 	CycleId        string                 `protobuf:"bytes,3,opt,name=cycle_id,json=cycleId,proto3" json:"cycle_id,omitempty"`
 	FeatureId      string                 `protobuf:"bytes,4,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
-	Category       BenefitEventCategory   `protobuf:"varint,5,opt,name=category,proto3,enum=benefitsv1.BenefitEventCategory" json:"category,omitempty"`
+	Category       string                 `protobuf:"bytes,5,opt,name=category,proto3" json:"category,omitempty"`
 	Value          int64                  `protobuf:"varint,6,opt,name=value,proto3" json:"value,omitempty"`
 	Timestamp      int64                  `protobuf:"varint,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	unknownFields  protoimpl.UnknownFields
@@ -147,11 +92,11 @@ func (x *BenefitEvent) GetFeatureId() string {
 	return ""
 }
 
-func (x *BenefitEvent) GetCategory() BenefitEventCategory {
+func (x *BenefitEvent) GetCategory() string {
 	if x != nil {
 		return x.Category
 	}
-	return BenefitEventCategory_BENEFIT_EVENT_CATEGORY_UNSPECIFIED
+	return ""
 }
 
 func (x *BenefitEvent) GetValue() int64 {
@@ -173,22 +118,16 @@ var File_v1_benefit_event_proto protoreflect.FileDescriptor
 const file_v1_benefit_event_proto_rawDesc = "" +
 	"\n" +
 	"\x16v1/benefit_event.proto\x12\n" +
-	"benefitsv1\"\xfe\x01\n" +
+	"benefitsv1\"\xdc\x01\n" +
 	"\fBenefitEvent\x12\x19\n" +
 	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12'\n" +
 	"\x0fsubscription_id\x18\x02 \x01(\tR\x0esubscriptionId\x12\x19\n" +
 	"\bcycle_id\x18\x03 \x01(\tR\acycleId\x12\x1d\n" +
 	"\n" +
-	"feature_id\x18\x04 \x01(\tR\tfeatureId\x12<\n" +
-	"\bcategory\x18\x05 \x01(\x0e2 .benefitsv1.BenefitEventCategoryR\bcategory\x12\x14\n" +
+	"feature_id\x18\x04 \x01(\tR\tfeatureId\x12\x1a\n" +
+	"\bcategory\x18\x05 \x01(\tR\bcategory\x12\x14\n" +
 	"\x05value\x18\x06 \x01(\x03R\x05value\x12\x1c\n" +
-	"\ttimestamp\x18\a \x01(\x03R\ttimestamp*\xda\x01\n" +
-	"\x14BenefitEventCategory\x12&\n" +
-	"\"BENEFIT_EVENT_CATEGORY_UNSPECIFIED\x10\x00\x12$\n" +
-	" BENEFIT_EVENT_CATEGORY_BUF_SAVED\x10\x01\x12%\n" +
-	"!BENEFIT_EVENT_CATEGORY_RFEE_SAVED\x10\x02\x12&\n" +
-	"\"BENEFIT_EVENT_CATEGORY_CARD_REWARD\x10\x03\x12%\n" +
-	"!BENEFIT_EVENT_CATEGORY_IOK_REWARD\x10\x04B<Z:gitlab.famapp.in/backend/flexprice/protos/pb/v1;benefitsv1b\x06proto3"
+	"\ttimestamp\x18\a \x01(\x03R\ttimestampB<Z:gitlab.famapp.in/backend/flexprice/protos/pb/v1;benefitsv1b\x06proto3"
 
 var (
 	file_v1_benefit_event_proto_rawDescOnce sync.Once
@@ -202,19 +141,16 @@ func file_v1_benefit_event_proto_rawDescGZIP() []byte {
 	return file_v1_benefit_event_proto_rawDescData
 }
 
-var file_v1_benefit_event_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
 var file_v1_benefit_event_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_v1_benefit_event_proto_goTypes = []any{
-	(BenefitEventCategory)(0), // 0: benefitsv1.BenefitEventCategory
-	(*BenefitEvent)(nil),      // 1: benefitsv1.BenefitEvent
+	(*BenefitEvent)(nil), // 0: benefitsv1.BenefitEvent
 }
 var file_v1_benefit_event_proto_depIdxs = []int32{
-	0, // 0: benefitsv1.BenefitEvent.category:type_name -> benefitsv1.BenefitEventCategory
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	0, // [0:0] is the sub-list for method output_type
+	0, // [0:0] is the sub-list for method input_type
+	0, // [0:0] is the sub-list for extension type_name
+	0, // [0:0] is the sub-list for extension extendee
+	0, // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_v1_benefit_event_proto_init() }
@@ -227,14 +163,13 @@ func file_v1_benefit_event_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_v1_benefit_event_proto_rawDesc), len(file_v1_benefit_event_proto_rawDesc)),
-			NumEnums:      1,
+			NumEnums:      0,
 			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_v1_benefit_event_proto_goTypes,
 		DependencyIndexes: file_v1_benefit_event_proto_depIdxs,
-		EnumInfos:         file_v1_benefit_event_proto_enumTypes,
 		MessageInfos:      file_v1_benefit_event_proto_msgTypes,
 	}.Build()
 	File_v1_benefit_event_proto = out.File

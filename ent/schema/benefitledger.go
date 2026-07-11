@@ -66,7 +66,6 @@ func (BenefitLedger) Fields() []ent.Field {
 			SchemaType(map[string]string{
 				"postgres": "varchar(50)",
 			}).
-			NotEmpty().
 			Immutable(),
 
 		field.String("feature_id").
