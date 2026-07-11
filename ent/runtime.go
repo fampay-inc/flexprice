@@ -268,10 +268,6 @@ func init() {
 	benefitledgerDescCycleID := benefitledgerFields[5].Descriptor()
 	// benefitledger.CycleIDValidator is a validator for the "cycle_id" field. It is called by the builders before save.
 	benefitledger.CycleIDValidator = benefitledgerDescCycleID.Validators[0].(func(string) error)
-	// benefitledgerDescCategory is the schema descriptor for category field.
-	benefitledgerDescCategory := benefitledgerFields[6].Descriptor()
-	// benefitledger.CategoryValidator is a validator for the "category" field. It is called by the builders before save.
-	benefitledger.CategoryValidator = benefitledgerDescCategory.Validators[0].(func(string) error)
 	billingsequenceFields := schema.BillingSequence{}.Fields()
 	_ = billingsequenceFields
 	// billingsequenceDescTenantID is the schema descriptor for tenant_id field.

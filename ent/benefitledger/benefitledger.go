@@ -103,8 +103,6 @@ var (
 	SkuValidator func(string) error
 	// CycleIDValidator is a validator for the "cycle_id" field. It is called by the builders before save.
 	CycleIDValidator func(string) error
-	// CategoryValidator is a validator for the "category" field. It is called by the builders before save.
-	CategoryValidator func(string) error
 )
 
 // OrderOption defines the ordering options for the BenefitLedger queries.
