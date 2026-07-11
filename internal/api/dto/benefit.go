@@ -1,10 +1,7 @@
 package dto
 
-import "github.com/flexprice/flexprice/internal/types"
-
 type BenefitAggregateResponse struct {
-	Name     string         `json:"name"`
-	Slug     string         `json:"slug"`
-	Metadata types.Metadata `json:"metadata"`
-	Total    int64          `json:"total"`
+	Category  string `json:"category,omitempty"`
+	FeatureID string `json:"feature_id,omitempty"`
+	Total     int64  `json:"total"`
 }
