@@ -4,11 +4,13 @@ import (
 	"context"
 
 	"github.com/flexprice/flexprice/internal/api/dto"
-	featureDomain "github.com/flexprice/flexprice/internal/domain/feature"
+	ierr "github.com/flexprice/flexprice/internal/errors"
 )
 
+const benefitGroupByCategory = "category"
+
 type BenefitService interface {
-	GetBenefitsBySKU(ctx context.Context, externalCustomerID, sku string) ([]*dto.BenefitAggregateResponse, error)
+	GetBenefits(ctx context.Context, externalCustomerID, product, groupBy string) ([]*dto.BenefitAggregateResponse, error)
 }
 
 type benefitService struct {
@@ -19,49 +21,38 @@ func NewBenefitService(params ServiceParams) BenefitService {
 	return &benefitService{ServiceParams: params}
 }
 
-func (s *benefitService) GetBenefitsBySKU(ctx context.Context, externalCustomerID, sku string) ([]*dto.BenefitAggregateResponse, error) {
+func (s *benefitService) GetBenefits(ctx context.Context, externalCustomerID, product, groupBy string) ([]*dto.BenefitAggregateResponse, error) {
+	if groupBy != "" && groupBy != benefitGroupByCategory {
+		return nil, ierr.NewError("unsupported group_by value").
+			WithHint("group_by must be 'category'").
+			Mark(ierr.ErrValidation)
+	}
+
 	cust, err := s.CustomerRepo.GetByLookupKey(ctx, externalCustomerID)
 	if err != nil {
 		return nil, err
 	}
 
-	aggregates, err := s.BenefitLedgerRepo.GetAggregatedBenefits(ctx, cust.ID, sku)
+	aggregates, err := s.BenefitLedgerRepo.GetAggregatedBenefits(ctx, cust.ID, product, groupBy)
 	if err != nil {
 		return nil, err
 	}
 
-	featureIDs := make([]string, 0, len(aggregates))
-	for _, agg := range aggregates {
-		featureIDs = append(featureIDs, agg.FeatureID)
-	}
-
-	featureMap := make(map[string]*featureDomain.Feature, len(featureIDs))
-	if len(featureIDs) > 0 {
-		features, err := s.FeatureRepo.ListByIDs(ctx, featureIDs)
-		if err != nil {
-			return nil, err
-		}
-		for _, f := range features {
-			featureMap[f.ID] = f
-		}
-	}
+	byCategory := groupBy == benefitGroupByCategory
 
 	response := make([]*dto.BenefitAggregateResponse, 0, len(aggregates))
 	for _, agg := range aggregates {
-		f, ok := featureMap[agg.FeatureID]
-		if !ok {
-			s.Logger.Warnw("feature not found for benefit aggregate",
-				"feature_id", agg.FeatureID,
-				"sku", sku,
-			)
-			continue
+		if byCategory {
+			response = append(response, &dto.BenefitAggregateResponse{
+				Category: agg.Category,
+				Total:    agg.Total,
+			})
+		} else {
+			response = append(response, &dto.BenefitAggregateResponse{
+				FeatureID: agg.FeatureID,
+				Total:     agg.Total,
+			})
 		}
-		response = append(response, &dto.BenefitAggregateResponse{
-			Name:     f.Name,
-			Slug:     f.LookupKey,
-			Metadata: f.Metadata,
-			Total:    agg.Total,
-		})
 	}
 
 	return response, nil
