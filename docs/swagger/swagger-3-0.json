@@ -906,8 +906,8 @@
         "tags": [
           "Benefits"
         ],
-        "summary": "Get aggregated benefits for a customer and SKU",
-        "description": "Returns lifetime benefits granted to a customer for a SKU, aggregated by feature from the benefit ledger.",
+        "summary": "Get aggregated benefits for a customer and product",
+        "description": "Returns lifetime benefits granted to a customer for a product, aggregated by category from the benefit ledger.",
         "operationId": "getBenefits",
         "parameters": [
           {
@@ -920,10 +920,18 @@
             }
           },
           {
-            "name": "sku",
+            "name": "product",
             "in": "query",
-            "description": "SKU",
+            "description": "Product (partition key of the benefit ledger)",
             "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "group_by",
+            "in": "query",
+            "description": "Aggregation grouping. Omit to group by feature_id (default); pass 'category' to group by category instead",
             "schema": {
               "type": "string"
             }
@@ -15622,13 +15630,10 @@
       "BenefitAggregateResponse": {
         "type": "object",
         "properties": {
-          "metadata": {
-            "$ref": "#/components/schemas/types.Metadata"
-          },
-          "name": {
+          "category": {
             "type": "string"
           },
-          "slug": {
+          "feature_id": {
             "type": "string"
           },
           "total": {

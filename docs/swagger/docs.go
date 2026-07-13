@@ -762,14 +762,14 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Returns lifetime benefits granted to a customer for a SKU, aggregated by feature from the benefit ledger.",
+                "description": "Returns lifetime benefits granted to a customer for a product, aggregated by category from the benefit ledger.",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "Benefits"
                 ],
-                "summary": "Get aggregated benefits for a customer and SKU",
+                "summary": "Get aggregated benefits for a customer and product",
                 "operationId": "getBenefits",
                 "parameters": [
                     {
@@ -781,10 +781,16 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "SKU",
-                        "name": "sku",
+                        "description": "Product (partition key of the benefit ledger)",
+                        "name": "product",
                         "in": "query",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Aggregation grouping. Omit to group by feature_id (default); pass 'category' to group by category instead",
+                        "name": "group_by",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -13403,13 +13409,10 @@ const docTemplate = `{
         "BenefitAggregateResponse": {
             "type": "object",
             "properties": {
-                "metadata": {
-                    "$ref": "#/definitions/types.Metadata"
-                },
-                "name": {
+                "category": {
                     "type": "string"
                 },
-                "slug": {
+                "feature_id": {
                     "type": "string"
                 },
                 "total": {
