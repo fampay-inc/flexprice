@@ -22,14 +22,15 @@ func NewBenefitHandler(benefitService service.BenefitService, log *logger.Logger
 }
 
 // GetBenefits godoc
-// @Summary Get aggregated benefits for a customer and SKU
+// @Summary Get aggregated benefits for a customer and product
 // @ID getBenefits
-// @Description Returns lifetime benefits granted to a customer for a SKU, aggregated by feature from the benefit ledger.
+// @Description Returns lifetime benefits granted to a customer for a product, aggregated by category from the benefit ledger.
 // @Tags Benefits
 // @Produce json
 // @Security ApiKeyAuth
 // @Param external_customer_id query string true "External customer ID"
-// @Param sku query string true "SKU"
+// @Param product query string true "Product (partition key of the benefit ledger)"
+// @Param group_by query string false "Aggregation grouping. Omit to group by feature_id (default); pass 'category' to group by category instead"
 // @Success 200 {array} dto.BenefitAggregateResponse
 // @Failure 400 {object} ierr.ErrorResponse "Invalid request"
 // @Failure 404 {object} ierr.ErrorResponse "Customer not found"
@@ -37,16 +38,17 @@ func NewBenefitHandler(benefitService service.BenefitService, log *logger.Logger
 // @Router /benefits [get]
 func (h *BenefitHandler) GetBenefits(c *gin.Context) {
 	externalCustomerID := c.Query("external_customer_id")
-	sku := c.Query("sku")
+	product := c.Query("product")
+	groupBy := c.Query("group_by")
 
-	if externalCustomerID == "" || sku == "" {
-		c.Error(ierr.NewError("external_customer_id and sku are required").
-			WithHint("Provide external_customer_id and sku query params").
+	if externalCustomerID == "" || product == "" {
+		c.Error(ierr.NewError("external_customer_id and product are required").
+			WithHint("Provide external_customer_id and product query params").
 			Mark(ierr.ErrValidation))
 		return
 	}
 
-	benefits, err := h.benefitService.GetBenefitsBySKU(c.Request.Context(), externalCustomerID, sku)
+	benefits, err := h.benefitService.GetBenefits(c.Request.Context(), externalCustomerID, product, groupBy)
 	if err != nil {
 		c.Error(err)
 		return

@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"strings"
 	"time"
 
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -21,8 +20,6 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-const categoryEnumPrefix = "BENEFIT_EVENT_CATEGORY_"
-
 type dropEvent struct {
 	reason string
 }
@@ -37,7 +34,7 @@ func isDropEvent(err error) bool {
 }
 
 type eventValidation struct {
-	SKU        string
+	Product    string
 	CustomerID string
 }
 
@@ -166,9 +163,6 @@ func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
 
 	s.Logger.Debugw("stored benefit event",
 		"event_id", row.EventID,
-		"sku", row.SKU,
-		"category", row.Category,
-		"value", row.Value,
 	)
 	return nil
 }
@@ -177,9 +171,7 @@ func validateProtoFields(ev *benefitsv1.BenefitEvent) error {
 	if ev.GetEventId() == "" || ev.GetSubscriptionId() == "" || ev.GetCycleId() == "" || ev.GetFeatureId() == "" {
 		return drop("missing required fields or fields empty")
 	}
-	if ev.GetCategory() == benefitsv1.BenefitEventCategory_BENEFIT_EVENT_CATEGORY_UNSPECIFIED {
-		return drop("unspecified category")
-	}
+
 	for name, val := range map[string]string{
 		"subscription_id": ev.GetSubscriptionId(),
 		"cycle_id":        ev.GetCycleId(),
@@ -222,7 +214,7 @@ func (s *benefitConsumptionService) validateEvent(ctx context.Context, ev *benef
 		return nil, drop("invoice payment is not succeeded")
 	}
 
-	return &eventValidation{SKU: *sub.Sku, CustomerID: sub.CustomerID}, nil
+	return &eventValidation{Product: *sub.Sku, CustomerID: sub.CustomerID}, nil
 }
 
 func (s *benefitConsumptionService) validateFeatureEntitlement(ctx context.Context, planID, featureID string) error {
@@ -250,9 +242,9 @@ func toLedgerRow(
 		EventID:        ev.GetEventId(),
 		SubscriptionID: ev.GetSubscriptionId(),
 		CustomerID:     v.CustomerID,
-		SKU:            v.SKU,
+		Product:        v.Product,
 		CycleID:        ev.GetCycleId(),
-		Category:       strings.TrimPrefix(ev.GetCategory().String(), categoryEnumPrefix),
+		Category:       ev.GetCategory(),
 		FeatureID:      ev.GetFeatureId(),
 		Value:          int(ev.GetValue()),
 		EventTimestamp: time.Unix(ev.GetTimestamp(), 0).UTC(),

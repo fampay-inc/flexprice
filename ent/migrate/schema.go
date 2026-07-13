@@ -179,7 +179,7 @@ var (
 		{Name: "event_id", Type: field.TypeString, SchemaType: map[string]string{"postgres": "varchar(255)"}},
 		{Name: "subscription_id", Type: field.TypeString, SchemaType: map[string]string{"postgres": "uuid"}},
 		{Name: "customer_id", Type: field.TypeString, SchemaType: map[string]string{"postgres": "uuid"}},
-		{Name: "sku", Type: field.TypeString, SchemaType: map[string]string{"postgres": "varchar(50)"}},
+		{Name: "product", Type: field.TypeString, SchemaType: map[string]string{"postgres": "varchar(50)"}},
 		{Name: "cycle_id", Type: field.TypeString, SchemaType: map[string]string{"postgres": "uuid"}},
 		{Name: "category", Type: field.TypeString, SchemaType: map[string]string{"postgres": "varchar(50)"}},
 		{Name: "feature_id", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "uuid"}},
