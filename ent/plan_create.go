@@ -165,9 +165,9 @@ func (pc *PlanCreate) SetNillableDisplayOrder(i *int) *PlanCreate {
 	return pc
 }
 
-// SetSku sets the "sku" field.
-func (pc *PlanCreate) SetSku(s string) *PlanCreate {
-	pc.mutation.SetSku(s)
+// SetProduct sets the "product" field.
+func (pc *PlanCreate) SetProduct(s string) *PlanCreate {
+	pc.mutation.SetProduct(s)
 	return pc
 }
 
@@ -279,12 +279,12 @@ func (pc *PlanCreate) check() error {
 	if _, ok := pc.mutation.DisplayOrder(); !ok {
 		return &ValidationError{Name: "display_order", err: errors.New(`ent: missing required field "Plan.display_order"`)}
 	}
-	if _, ok := pc.mutation.Sku(); !ok {
-		return &ValidationError{Name: "sku", err: errors.New(`ent: missing required field "Plan.sku"`)}
+	if _, ok := pc.mutation.Product(); !ok {
+		return &ValidationError{Name: "product", err: errors.New(`ent: missing required field "Plan.product"`)}
 	}
-	if v, ok := pc.mutation.Sku(); ok {
-		if err := plan.SkuValidator(v); err != nil {
-			return &ValidationError{Name: "sku", err: fmt.Errorf(`ent: validator failed for field "Plan.sku": %w`, err)}
+	if v, ok := pc.mutation.Product(); ok {
+		if err := plan.ProductValidator(v); err != nil {
+			return &ValidationError{Name: "product", err: fmt.Errorf(`ent: validator failed for field "Plan.product": %w`, err)}
 		}
 	}
 	return nil
@@ -370,9 +370,9 @@ func (pc *PlanCreate) createSpec() (*Plan, *sqlgraph.CreateSpec) {
 		_spec.SetField(plan.FieldDisplayOrder, field.TypeInt, value)
 		_node.DisplayOrder = value
 	}
-	if value, ok := pc.mutation.Sku(); ok {
-		_spec.SetField(plan.FieldSku, field.TypeString, value)
-		_node.Sku = value
+	if value, ok := pc.mutation.Product(); ok {
+		_spec.SetField(plan.FieldProduct, field.TypeString, value)
+		_node.Product = value
 	}
 	if nodes := pc.mutation.CreditGrantsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

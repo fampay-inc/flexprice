@@ -13,7 +13,7 @@ type Plan struct {
 	Name          string         `db:"name" json:"name"`
 	LookupKey     string         `db:"lookup_key" json:"lookup_key"`
 	Description   string         `db:"description" json:"description"`
-	SKU           string         `db:"sku" json:"sku"`
+	Product       string         `db:"product" json:"product"`
 	EnvironmentID string         `db:"environment_id" json:"environment_id"`
 	Metadata      types.Metadata `db:"metadata" json:"metadata"`
 	DisplayOrder  *int           `db:"display_order" json:"display_order,omitempty"`
@@ -26,7 +26,7 @@ type PlanCloneOverrides struct {
 	Name          *string
 	LookupKey     *string
 	Description   *string
-	SKU           *string
+	Product       *string
 	EnvironmentID *string // nil = derive from ctx; non-nil = use explicit value
 	Metadata      types.Metadata
 	DisplayOrder  *int
@@ -52,8 +52,8 @@ func (p *Plan) CopyWith(ctx context.Context, overrides *PlanCloneOverrides) *Pla
 	if overrides.LookupKey != nil {
 		out.LookupKey = lo.FromPtr(overrides.LookupKey)
 	}
-	if overrides.SKU != nil {
-		out.SKU = lo.FromPtr(overrides.SKU)
+	if overrides.Product != nil {
+		out.Product = lo.FromPtr(overrides.Product)
 	}
 	if overrides.Description != nil {
 		out.Description = lo.FromPtr(overrides.Description)
@@ -88,7 +88,7 @@ func FromEnt(e *ent.Plan) *Plan {
 		Name:          e.Name,
 		LookupKey:     e.LookupKey,
 		Description:   e.Description,
-		SKU:           e.Sku,
+		Product:       e.Product,
 		EnvironmentID: e.EnvironmentID,
 		Metadata:      types.Metadata(e.Metadata),
 		DisplayOrder:  &e.DisplayOrder,

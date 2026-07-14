@@ -230,7 +230,7 @@ func (s *benefitConsumptionService) validateEvent(ctx context.Context, ev *benef
 		return nil, err
 	}
 
-	return &eventValidation{Product: *sub.Sku, CustomerID: sub.CustomerID}, nil
+	return &eventValidation{Product: *sub.Product, CustomerID: sub.CustomerID}, nil
 }
 
 func (s *benefitConsumptionService) validateFeatureEntitlement(ctx context.Context, subscriptionID, featureID string) error {

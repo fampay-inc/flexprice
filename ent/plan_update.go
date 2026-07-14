@@ -156,16 +156,16 @@ func (pu *PlanUpdate) AddDisplayOrder(i int) *PlanUpdate {
 	return pu
 }
 
-// SetSku sets the "sku" field.
-func (pu *PlanUpdate) SetSku(s string) *PlanUpdate {
-	pu.mutation.SetSku(s)
+// SetProduct sets the "product" field.
+func (pu *PlanUpdate) SetProduct(s string) *PlanUpdate {
+	pu.mutation.SetProduct(s)
 	return pu
 }
 
-// SetNillableSku sets the "sku" field if the given value is not nil.
-func (pu *PlanUpdate) SetNillableSku(s *string) *PlanUpdate {
+// SetNillableProduct sets the "product" field if the given value is not nil.
+func (pu *PlanUpdate) SetNillableProduct(s *string) *PlanUpdate {
 	if s != nil {
-		pu.SetSku(*s)
+		pu.SetProduct(*s)
 	}
 	return pu
 }
@@ -254,9 +254,9 @@ func (pu *PlanUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Plan.name": %w`, err)}
 		}
 	}
-	if v, ok := pu.mutation.Sku(); ok {
-		if err := plan.SkuValidator(v); err != nil {
-			return &ValidationError{Name: "sku", err: fmt.Errorf(`ent: validator failed for field "Plan.sku": %w`, err)}
+	if v, ok := pu.mutation.Product(); ok {
+		if err := plan.ProductValidator(v); err != nil {
+			return &ValidationError{Name: "product", err: fmt.Errorf(`ent: validator failed for field "Plan.product": %w`, err)}
 		}
 	}
 	return nil
@@ -319,8 +319,8 @@ func (pu *PlanUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := pu.mutation.AddedDisplayOrder(); ok {
 		_spec.AddField(plan.FieldDisplayOrder, field.TypeInt, value)
 	}
-	if value, ok := pu.mutation.Sku(); ok {
-		_spec.SetField(plan.FieldSku, field.TypeString, value)
+	if value, ok := pu.mutation.Product(); ok {
+		_spec.SetField(plan.FieldProduct, field.TypeString, value)
 	}
 	if pu.mutation.CreditGrantsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -514,16 +514,16 @@ func (puo *PlanUpdateOne) AddDisplayOrder(i int) *PlanUpdateOne {
 	return puo
 }
 
-// SetSku sets the "sku" field.
-func (puo *PlanUpdateOne) SetSku(s string) *PlanUpdateOne {
-	puo.mutation.SetSku(s)
+// SetProduct sets the "product" field.
+func (puo *PlanUpdateOne) SetProduct(s string) *PlanUpdateOne {
+	puo.mutation.SetProduct(s)
 	return puo
 }
 
-// SetNillableSku sets the "sku" field if the given value is not nil.
-func (puo *PlanUpdateOne) SetNillableSku(s *string) *PlanUpdateOne {
+// SetNillableProduct sets the "product" field if the given value is not nil.
+func (puo *PlanUpdateOne) SetNillableProduct(s *string) *PlanUpdateOne {
 	if s != nil {
-		puo.SetSku(*s)
+		puo.SetProduct(*s)
 	}
 	return puo
 }
@@ -625,9 +625,9 @@ func (puo *PlanUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Plan.name": %w`, err)}
 		}
 	}
-	if v, ok := puo.mutation.Sku(); ok {
-		if err := plan.SkuValidator(v); err != nil {
-			return &ValidationError{Name: "sku", err: fmt.Errorf(`ent: validator failed for field "Plan.sku": %w`, err)}
+	if v, ok := puo.mutation.Product(); ok {
+		if err := plan.ProductValidator(v); err != nil {
+			return &ValidationError{Name: "product", err: fmt.Errorf(`ent: validator failed for field "Plan.product": %w`, err)}
 		}
 	}
 	return nil
@@ -707,8 +707,8 @@ func (puo *PlanUpdateOne) sqlSave(ctx context.Context) (_node *Plan, err error) 
 	if value, ok := puo.mutation.AddedDisplayOrder(); ok {
 		_spec.AddField(plan.FieldDisplayOrder, field.TypeInt, value)
 	}
-	if value, ok := puo.mutation.Sku(); ok {
-		_spec.SetField(plan.FieldSku, field.TypeString, value)
+	if value, ok := puo.mutation.Product(); ok {
+		_spec.SetField(plan.FieldProduct, field.TypeString, value)
 	}
 	if puo.mutation.CreditGrantsCleared() {
 		edge := &sqlgraph.EdgeSpec{

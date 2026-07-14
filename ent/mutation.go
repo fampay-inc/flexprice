@@ -44060,7 +44060,7 @@ type PlanMutation struct {
 	description          *string
 	display_order        *int
 	adddisplay_order     *int
-	sku                  *string
+	product              *string
 	clearedFields        map[string]struct{}
 	credit_grants        map[string]struct{}
 	removedcredit_grants map[string]struct{}
@@ -44704,40 +44704,40 @@ func (m *PlanMutation) ResetDisplayOrder() {
 	m.adddisplay_order = nil
 }
 
-// SetSku sets the "sku" field.
-func (m *PlanMutation) SetSku(s string) {
-	m.sku = &s
+// SetProduct sets the "product" field.
+func (m *PlanMutation) SetProduct(s string) {
+	m.product = &s
 }
 
-// Sku returns the value of the "sku" field in the mutation.
-func (m *PlanMutation) Sku() (r string, exists bool) {
-	v := m.sku
+// Product returns the value of the "product" field in the mutation.
+func (m *PlanMutation) Product() (r string, exists bool) {
+	v := m.product
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldSku returns the old "sku" field's value of the Plan entity.
+// OldProduct returns the old "product" field's value of the Plan entity.
 // If the Plan object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *PlanMutation) OldSku(ctx context.Context) (v string, err error) {
+func (m *PlanMutation) OldProduct(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSku is only allowed on UpdateOne operations")
+		return v, errors.New("OldProduct is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSku requires an ID field in the mutation")
+		return v, errors.New("OldProduct requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSku: %w", err)
+		return v, fmt.Errorf("querying old value for OldProduct: %w", err)
 	}
-	return oldValue.Sku, nil
+	return oldValue.Product, nil
 }
 
-// ResetSku resets all changes to the "sku" field.
-func (m *PlanMutation) ResetSku() {
-	m.sku = nil
+// ResetProduct resets all changes to the "product" field.
+func (m *PlanMutation) ResetProduct() {
+	m.product = nil
 }
 
 // AddCreditGrantIDs adds the "credit_grants" edge to the CreditGrant entity by ids.
@@ -44865,8 +44865,8 @@ func (m *PlanMutation) Fields() []string {
 	if m.display_order != nil {
 		fields = append(fields, plan.FieldDisplayOrder)
 	}
-	if m.sku != nil {
-		fields = append(fields, plan.FieldSku)
+	if m.product != nil {
+		fields = append(fields, plan.FieldProduct)
 	}
 	return fields
 }
@@ -44900,8 +44900,8 @@ func (m *PlanMutation) Field(name string) (ent.Value, bool) {
 		return m.Description()
 	case plan.FieldDisplayOrder:
 		return m.DisplayOrder()
-	case plan.FieldSku:
-		return m.Sku()
+	case plan.FieldProduct:
+		return m.Product()
 	}
 	return nil, false
 }
@@ -44935,8 +44935,8 @@ func (m *PlanMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldDescription(ctx)
 	case plan.FieldDisplayOrder:
 		return m.OldDisplayOrder(ctx)
-	case plan.FieldSku:
-		return m.OldSku(ctx)
+	case plan.FieldProduct:
+		return m.OldProduct(ctx)
 	}
 	return nil, fmt.Errorf("unknown Plan field %s", name)
 }
@@ -45030,12 +45030,12 @@ func (m *PlanMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetDisplayOrder(v)
 		return nil
-	case plan.FieldSku:
+	case plan.FieldProduct:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetSku(v)
+		m.SetProduct(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Plan field %s", name)
@@ -45176,8 +45176,8 @@ func (m *PlanMutation) ResetField(name string) error {
 	case plan.FieldDisplayOrder:
 		m.ResetDisplayOrder()
 		return nil
-	case plan.FieldSku:
-		m.ResetSku()
+	case plan.FieldProduct:
+		m.ResetProduct()
 		return nil
 	}
 	return fmt.Errorf("unknown Plan field %s", name)
@@ -54935,7 +54935,7 @@ type SubscriptionMutation struct {
 	auto_invoice_threshold     *decimal.Decimal
 	synced_price_sequence      *int64
 	addsynced_price_sequence   *int64
-	sku                        *string
+	product                    *string
 	clearedFields              map[string]struct{}
 	line_items                 map[string]struct{}
 	removedline_items          map[string]struct{}
@@ -56996,40 +56996,40 @@ func (m *SubscriptionMutation) ResetSyncedPriceSequence() {
 	m.addsynced_price_sequence = nil
 }
 
-// SetSku sets the "sku" field.
-func (m *SubscriptionMutation) SetSku(s string) {
-	m.sku = &s
+// SetProduct sets the "product" field.
+func (m *SubscriptionMutation) SetProduct(s string) {
+	m.product = &s
 }
 
-// Sku returns the value of the "sku" field in the mutation.
-func (m *SubscriptionMutation) Sku() (r string, exists bool) {
-	v := m.sku
+// Product returns the value of the "product" field in the mutation.
+func (m *SubscriptionMutation) Product() (r string, exists bool) {
+	v := m.product
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldSku returns the old "sku" field's value of the Subscription entity.
+// OldProduct returns the old "product" field's value of the Subscription entity.
 // If the Subscription object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SubscriptionMutation) OldSku(ctx context.Context) (v string, err error) {
+func (m *SubscriptionMutation) OldProduct(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldSku is only allowed on UpdateOne operations")
+		return v, errors.New("OldProduct is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldSku requires an ID field in the mutation")
+		return v, errors.New("OldProduct requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldSku: %w", err)
+		return v, fmt.Errorf("querying old value for OldProduct: %w", err)
 	}
-	return oldValue.Sku, nil
+	return oldValue.Product, nil
 }
 
-// ResetSku resets all changes to the "sku" field.
-func (m *SubscriptionMutation) ResetSku() {
-	m.sku = nil
+// ResetProduct resets all changes to the "product" field.
+func (m *SubscriptionMutation) ResetProduct() {
+	m.product = nil
 }
 
 // AddLineItemIDs adds the "line_items" edge to the SubscriptionLineItem entity by ids.
@@ -57607,8 +57607,8 @@ func (m *SubscriptionMutation) Fields() []string {
 	if m.synced_price_sequence != nil {
 		fields = append(fields, subscription.FieldSyncedPriceSequence)
 	}
-	if m.sku != nil {
-		fields = append(fields, subscription.FieldSku)
+	if m.product != nil {
+		fields = append(fields, subscription.FieldProduct)
 	}
 	return fields
 }
@@ -57708,8 +57708,8 @@ func (m *SubscriptionMutation) Field(name string) (ent.Value, bool) {
 		return m.AutoInvoiceThreshold()
 	case subscription.FieldSyncedPriceSequence:
 		return m.SyncedPriceSequence()
-	case subscription.FieldSku:
-		return m.Sku()
+	case subscription.FieldProduct:
+		return m.Product()
 	}
 	return nil, false
 }
@@ -57809,8 +57809,8 @@ func (m *SubscriptionMutation) OldField(ctx context.Context, name string) (ent.V
 		return m.OldAutoInvoiceThreshold(ctx)
 	case subscription.FieldSyncedPriceSequence:
 		return m.OldSyncedPriceSequence(ctx)
-	case subscription.FieldSku:
-		return m.OldSku(ctx)
+	case subscription.FieldProduct:
+		return m.OldProduct(ctx)
 	}
 	return nil, fmt.Errorf("unknown Subscription field %s", name)
 }
@@ -58135,12 +58135,12 @@ func (m *SubscriptionMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetSyncedPriceSequence(v)
 		return nil
-	case subscription.FieldSku:
+	case subscription.FieldProduct:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetSku(v)
+		m.SetProduct(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Subscription field %s", name)
@@ -58482,8 +58482,8 @@ func (m *SubscriptionMutation) ResetField(name string) error {
 	case subscription.FieldSyncedPriceSequence:
 		m.ResetSyncedPriceSequence()
 		return nil
-	case subscription.FieldSku:
-		m.ResetSku()
+	case subscription.FieldProduct:
+		m.ResetProduct()
 		return nil
 	}
 	return fmt.Errorf("unknown Subscription field %s", name)

@@ -1571,7 +1571,7 @@ var (
 		{Name: "name", Type: field.TypeString, SchemaType: map[string]string{"postgres": "varchar(255)"}},
 		{Name: "description", Type: field.TypeString, Nullable: true, Size: 2147483647},
 		{Name: "display_order", Type: field.TypeInt, Default: 0},
-		{Name: "sku", Type: field.TypeString, SchemaType: map[string]string{"postgres": "varchar(255)"}},
+		{Name: "product", Type: field.TypeString, SchemaType: map[string]string{"postgres": "varchar(255)"}},
 	}
 	// PlansTable holds the schema information for the "plans" table.
 	PlansTable = &schema.Table{
@@ -1938,7 +1938,7 @@ var (
 		{Name: "subscription_type", Type: field.TypeString, Default: "standalone", SchemaType: map[string]string{"postgres": "varchar(20)"}},
 		{Name: "auto_invoice_threshold", Type: field.TypeOther, Nullable: true, SchemaType: map[string]string{"postgres": "decimal(20,6)"}},
 		{Name: "synced_price_sequence", Type: field.TypeInt64, Default: "0"},
-		{Name: "sku", Type: field.TypeString, SchemaType: map[string]string{"postgres": "varchar(255)"}},
+		{Name: "product", Type: field.TypeString, SchemaType: map[string]string{"postgres": "varchar(255)"}},
 		{Name: "invoicing_customer_id", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "varchar(50)"}},
 	}
 	// SubscriptionsTable holds the schema information for the "subscriptions" table.
@@ -1987,11 +1987,11 @@ var (
 				},
 			},
 			{
-				Name:    "subscription_tenant_id_environment_id_customer_id_sku",
+				Name:    "subscription_tenant_id_environment_id_customer_id_product",
 				Unique:  true,
 				Columns: []*schema.Column{SubscriptionsColumns[1], SubscriptionsColumns[7], SubscriptionsColumns[9], SubscriptionsColumns[45]},
 				Annotation: &entsql.IndexAnnotation{
-					Where: "subscription_status = 'active' AND status = 'published' AND sku IS NOT NULL",
+					Where: "subscription_status = 'active' AND status = 'published' AND product IS NOT NULL",
 				},
 			},
 		},

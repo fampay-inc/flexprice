@@ -100,7 +100,7 @@ func (r *subscriptionRepository) Create(ctx context.Context, sub *domainSub.Subs
 		SetNillableParentSubscriptionID(sub.ParentSubscriptionID).
 		SetNillablePaymentTerms(sub.PaymentTerms).
 		SetSyncedPriceSequence(sub.SyncedPriceSequence).
-		SetSku(sub.Sku).
+		SetProduct(sub.Product).
 		Save(ctx)
 
 	if err != nil {
@@ -114,10 +114,10 @@ func (r *subscriptionRepository) Create(ctx context.Context, sub *domainSub.Subs
 						WithHint("A subscription with the provided ID already exists; use a different ID or omit it to auto-generate one").
 						WithReportableDetails(map[string]interface{}{"subscription_id": sub.ID}).
 						Mark(ierr.ErrAlreadyExists)
-				case "subscriptions_tenant_env_customer_sku_active_idx":
+				case "subscriptions_tenant_env_customer_product_active_idx":
 					return ierr.NewError("customer already has an active subscription for this plan").
-						WithHint("Only one active subscription per plan SKU is allowed per customer").
-						WithReportableDetails(map[string]interface{}{"customer_id": sub.CustomerID, "sku": sub.Sku}).
+						WithHint("Only one active subscription per plan product is allowed per customer").
+						WithReportableDetails(map[string]interface{}{"customer_id": sub.CustomerID, "product": sub.Product}).
 						Mark(ierr.ErrAlreadyExists)
 				}
 			}
@@ -697,8 +697,8 @@ func (o *SubscriptionQueryOptions) applyEntityQueryOptions(_ context.Context, f 
 		)
 	}
 
-	if f.Sku != nil {
-		query = query.Where(subscription.Sku(*f.Sku))
+	if f.Product != nil {
+		query = query.Where(subscription.Product(*f.Product))
 	}
 
 	if f.Filters != nil {

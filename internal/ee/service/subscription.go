@@ -110,8 +110,8 @@ func (s *subscriptionService) CreateSubscription(ctx context.Context, req dto.Cr
 	}
 	s.overRideSubscriptionBasedOnIntegration(ctx, sub, &req)
 
-	if plan.SKU != "" {
-		sub.Sku = plan.SKU
+	if plan.Product != "" {
+		sub.Product = plan.Product
 	}
 
 	// Validate and filter prices
