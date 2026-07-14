@@ -576,16 +576,16 @@ func (sc *SubscriptionCreate) SetNillableSubscriptionType(tt *types.Subscription
 	return sc
 }
 
-// SetSku sets the "sku" field.
-func (sc *SubscriptionCreate) SetSku(s string) *SubscriptionCreate {
-	sc.mutation.SetSku(s)
+// SetProduct sets the "product" field.
+func (sc *SubscriptionCreate) SetProduct(s string) *SubscriptionCreate {
+	sc.mutation.SetProduct(s)
 	return sc
 }
 
-// SetNillableSku sets the "sku" field if the given value is not nil.
-func (sc *SubscriptionCreate) SetNillableSku(s *string) *SubscriptionCreate {
+// SetNillableProduct sets the "product" field if the given value is not nil.
+func (sc *SubscriptionCreate) SetNillableProduct(s *string) *SubscriptionCreate {
 	if s != nil {
-		sc.SetSku(*s)
+		sc.SetProduct(*s)
 	}
 	return sc
 }
@@ -1182,9 +1182,9 @@ func (sc *SubscriptionCreate) createSpec() (*Subscription, *sqlgraph.CreateSpec)
 		_spec.SetField(subscription.FieldSubscriptionType, field.TypeString, value)
 		_node.SubscriptionType = value
 	}
-	if value, ok := sc.mutation.Sku(); ok {
-		_spec.SetField(subscription.FieldSku, field.TypeString, value)
-		_node.Sku = &value
+	if value, ok := sc.mutation.Product(); ok {
+		_spec.SetField(subscription.FieldProduct, field.TypeString, value)
+		_node.Product = &value
 	}
 	if nodes := sc.mutation.LineItemsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

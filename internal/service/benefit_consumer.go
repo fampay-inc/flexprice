@@ -214,7 +214,7 @@ func (s *benefitConsumptionService) validateEvent(ctx context.Context, ev *benef
 		return nil, drop("invoice payment is not succeeded")
 	}
 
-	return &eventValidation{Product: *sub.Sku, CustomerID: sub.CustomerID}, nil
+	return &eventValidation{Product: *sub.Product, CustomerID: sub.CustomerID}, nil
 }
 
 func (s *benefitConsumptionService) validateFeatureEntitlement(ctx context.Context, planID, featureID string) error {
