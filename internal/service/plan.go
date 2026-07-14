@@ -282,8 +282,8 @@ func (s *planService) UpdatePlan(ctx context.Context, id string, req dto.UpdateP
 	if req.DisplayOrder != nil {
 		plan.DisplayOrder = req.DisplayOrder
 	}
-	if req.SKU != nil {
-		plan.SKU = *req.SKU
+	if req.Product != nil {
+		plan.Product = *req.Product
 	}
 
 	// Start a transaction for updating plan
@@ -881,7 +881,7 @@ func (s *planService) ClonePlan(ctx context.Context, id string, req dto.ClonePla
 		Name:          req.Name,
 		LookupKey:     req.LookupKey,
 		Description:   description,
-		SKU:           sourcePlan.SKU,
+		Product:       sourcePlan.Product,
 		EnvironmentID: sourcePlan.EnvironmentID,
 		Metadata:      metadata,
 		DisplayOrder:  displayOrder,

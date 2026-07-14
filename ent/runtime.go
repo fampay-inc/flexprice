@@ -1325,10 +1325,10 @@ func init() {
 	planDescDisplayOrder := planFields[4].Descriptor()
 	// plan.DefaultDisplayOrder holds the default value on creation for the display_order field.
 	plan.DefaultDisplayOrder = planDescDisplayOrder.Default.(int)
-	// planDescSku is the schema descriptor for sku field.
-	planDescSku := planFields[5].Descriptor()
-	// plan.SkuValidator is a validator for the "sku" field. It is called by the builders before save.
-	plan.SkuValidator = planDescSku.Validators[0].(func(string) error)
+	// planDescProduct is the schema descriptor for product field.
+	planDescProduct := planFields[5].Descriptor()
+	// plan.ProductValidator is a validator for the "product" field. It is called by the builders before save.
+	plan.ProductValidator = planDescProduct.Validators[0].(func(string) error)
 	priceMixin := schema.Price{}.Mixin()
 	priceMixinFields0 := priceMixin[0].Fields()
 	_ = priceMixinFields0

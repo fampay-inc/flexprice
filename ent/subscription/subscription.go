@@ -102,8 +102,8 @@ const (
 	FieldPaymentTerms = "payment_terms"
 	// FieldSubscriptionType holds the string denoting the subscription_type field in the database.
 	FieldSubscriptionType = "subscription_type"
-	// FieldSku holds the string denoting the sku field in the database.
-	FieldSku = "sku"
+	// FieldProduct holds the string denoting the product field in the database.
+	FieldProduct = "product"
 	// EdgeLineItems holds the string denoting the line_items edge name in mutations.
 	EdgeLineItems = "line_items"
 	// EdgePauses holds the string denoting the pauses edge name in mutations.
@@ -226,7 +226,7 @@ var Columns = []string{
 	FieldParentSubscriptionID,
 	FieldPaymentTerms,
 	FieldSubscriptionType,
-	FieldSku,
+	FieldProduct,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -520,9 +520,9 @@ func BySubscriptionType(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldSubscriptionType, opts...).ToFunc()
 }
 
-// BySku orders the results by the sku field.
-func BySku(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldSku, opts...).ToFunc()
+// ByProduct orders the results by the product field.
+func ByProduct(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldProduct, opts...).ToFunc()
 }
 
 // ByLineItemsCount orders the results by line_items count.

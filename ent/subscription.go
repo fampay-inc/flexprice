@@ -107,8 +107,8 @@ type Subscription struct {
 	PaymentTerms *types.PaymentTerms `json:"payment_terms,omitempty"`
 	// Subscription type within a customer hierarchy (standalone, parent, inherited)
 	SubscriptionType types.SubscriptionType `json:"subscription_type,omitempty"`
-	// SKU denormalized from plan.sku at subscription creation time
-	Sku *string `json:"sku,omitempty"`
+	// Product denormalized from plan.product at subscription creation time
+	Product *string `json:"product,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the SubscriptionQuery when eager-loading is set.
 	Edges        SubscriptionEdges `json:"edges"`
@@ -225,7 +225,7 @@ func (*Subscription) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case subscription.FieldBillingPeriodCount, subscription.FieldVersion:
 			values[i] = new(sql.NullInt64)
-		case subscription.FieldID, subscription.FieldTenantID, subscription.FieldStatus, subscription.FieldCreatedBy, subscription.FieldUpdatedBy, subscription.FieldEnvironmentID, subscription.FieldLookupKey, subscription.FieldCustomerID, subscription.FieldPlanID, subscription.FieldSubscriptionStatus, subscription.FieldCurrency, subscription.FieldBillingCadence, subscription.FieldBillingPeriod, subscription.FieldPauseStatus, subscription.FieldActivePauseID, subscription.FieldBillingCycle, subscription.FieldCommitmentDuration, subscription.FieldPaymentBehavior, subscription.FieldCollectionMethod, subscription.FieldGatewayPaymentMethodID, subscription.FieldCustomerTimezone, subscription.FieldProrationBehavior, subscription.FieldInvoicingCustomerID, subscription.FieldParentSubscriptionID, subscription.FieldPaymentTerms, subscription.FieldSubscriptionType, subscription.FieldSku:
+		case subscription.FieldID, subscription.FieldTenantID, subscription.FieldStatus, subscription.FieldCreatedBy, subscription.FieldUpdatedBy, subscription.FieldEnvironmentID, subscription.FieldLookupKey, subscription.FieldCustomerID, subscription.FieldPlanID, subscription.FieldSubscriptionStatus, subscription.FieldCurrency, subscription.FieldBillingCadence, subscription.FieldBillingPeriod, subscription.FieldPauseStatus, subscription.FieldActivePauseID, subscription.FieldBillingCycle, subscription.FieldCommitmentDuration, subscription.FieldPaymentBehavior, subscription.FieldCollectionMethod, subscription.FieldGatewayPaymentMethodID, subscription.FieldCustomerTimezone, subscription.FieldProrationBehavior, subscription.FieldInvoicingCustomerID, subscription.FieldParentSubscriptionID, subscription.FieldPaymentTerms, subscription.FieldSubscriptionType, subscription.FieldProduct:
 			values[i] = new(sql.NullString)
 		case subscription.FieldCreatedAt, subscription.FieldUpdatedAt, subscription.FieldBillingAnchor, subscription.FieldStartDate, subscription.FieldEndDate, subscription.FieldCurrentPeriodStart, subscription.FieldCurrentPeriodEnd, subscription.FieldCancelledAt, subscription.FieldCancelAt, subscription.FieldTrialStart, subscription.FieldTrialEnd:
 			values[i] = new(sql.NullTime)
@@ -522,12 +522,12 @@ func (s *Subscription) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				s.SubscriptionType = types.SubscriptionType(value.String)
 			}
-		case subscription.FieldSku:
+		case subscription.FieldProduct:
 			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field sku", values[i])
+				return fmt.Errorf("unexpected type %T for field product", values[i])
 			} else if value.Valid {
-				s.Sku = new(string)
-				*s.Sku = value.String
+				s.Product = new(string)
+				*s.Product = value.String
 			}
 		default:
 			s.selectValues.Set(columns[i], values[i])
@@ -758,8 +758,8 @@ func (s *Subscription) String() string {
 	builder.WriteString("subscription_type=")
 	builder.WriteString(fmt.Sprintf("%v", s.SubscriptionType))
 	builder.WriteString(", ")
-	if v := s.Sku; v != nil {
-		builder.WriteString("sku=")
+	if v := s.Product; v != nil {
+		builder.WriteString("product=")
 		builder.WriteString(*v)
 	}
 	builder.WriteByte(')')

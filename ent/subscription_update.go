@@ -559,23 +559,23 @@ func (su *SubscriptionUpdate) SetNillableSubscriptionType(tt *types.Subscription
 	return su
 }
 
-// SetSku sets the "sku" field.
-func (su *SubscriptionUpdate) SetSku(s string) *SubscriptionUpdate {
-	su.mutation.SetSku(s)
+// SetProduct sets the "product" field.
+func (su *SubscriptionUpdate) SetProduct(s string) *SubscriptionUpdate {
+	su.mutation.SetProduct(s)
 	return su
 }
 
-// SetNillableSku sets the "sku" field if the given value is not nil.
-func (su *SubscriptionUpdate) SetNillableSku(s *string) *SubscriptionUpdate {
+// SetNillableProduct sets the "product" field if the given value is not nil.
+func (su *SubscriptionUpdate) SetNillableProduct(s *string) *SubscriptionUpdate {
 	if s != nil {
-		su.SetSku(*s)
+		su.SetProduct(*s)
 	}
 	return su
 }
 
-// ClearSku clears the value of the "sku" field.
-func (su *SubscriptionUpdate) ClearSku() *SubscriptionUpdate {
-	su.mutation.ClearSku()
+// ClearProduct clears the value of the "product" field.
+func (su *SubscriptionUpdate) ClearProduct() *SubscriptionUpdate {
+	su.mutation.ClearProduct()
 	return su
 }
 
@@ -1036,11 +1036,11 @@ func (su *SubscriptionUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := su.mutation.SubscriptionType(); ok {
 		_spec.SetField(subscription.FieldSubscriptionType, field.TypeString, value)
 	}
-	if value, ok := su.mutation.Sku(); ok {
-		_spec.SetField(subscription.FieldSku, field.TypeString, value)
+	if value, ok := su.mutation.Product(); ok {
+		_spec.SetField(subscription.FieldProduct, field.TypeString, value)
 	}
-	if su.mutation.SkuCleared() {
-		_spec.ClearField(subscription.FieldSku, field.TypeString)
+	if su.mutation.ProductCleared() {
+		_spec.ClearField(subscription.FieldProduct, field.TypeString)
 	}
 	if su.mutation.LineItemsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -1927,23 +1927,23 @@ func (suo *SubscriptionUpdateOne) SetNillableSubscriptionType(tt *types.Subscrip
 	return suo
 }
 
-// SetSku sets the "sku" field.
-func (suo *SubscriptionUpdateOne) SetSku(s string) *SubscriptionUpdateOne {
-	suo.mutation.SetSku(s)
+// SetProduct sets the "product" field.
+func (suo *SubscriptionUpdateOne) SetProduct(s string) *SubscriptionUpdateOne {
+	suo.mutation.SetProduct(s)
 	return suo
 }
 
-// SetNillableSku sets the "sku" field if the given value is not nil.
-func (suo *SubscriptionUpdateOne) SetNillableSku(s *string) *SubscriptionUpdateOne {
+// SetNillableProduct sets the "product" field if the given value is not nil.
+func (suo *SubscriptionUpdateOne) SetNillableProduct(s *string) *SubscriptionUpdateOne {
 	if s != nil {
-		suo.SetSku(*s)
+		suo.SetProduct(*s)
 	}
 	return suo
 }
 
-// ClearSku clears the value of the "sku" field.
-func (suo *SubscriptionUpdateOne) ClearSku() *SubscriptionUpdateOne {
-	suo.mutation.ClearSku()
+// ClearProduct clears the value of the "product" field.
+func (suo *SubscriptionUpdateOne) ClearProduct() *SubscriptionUpdateOne {
+	suo.mutation.ClearProduct()
 	return suo
 }
 
@@ -2434,11 +2434,11 @@ func (suo *SubscriptionUpdateOne) sqlSave(ctx context.Context) (_node *Subscript
 	if value, ok := suo.mutation.SubscriptionType(); ok {
 		_spec.SetField(subscription.FieldSubscriptionType, field.TypeString, value)
 	}
-	if value, ok := suo.mutation.Sku(); ok {
-		_spec.SetField(subscription.FieldSku, field.TypeString, value)
+	if value, ok := suo.mutation.Product(); ok {
+		_spec.SetField(subscription.FieldProduct, field.TypeString, value)
 	}
-	if suo.mutation.SkuCleared() {
-		_spec.ClearField(subscription.FieldSku, field.TypeString)
+	if suo.mutation.ProductCleared() {
+		_spec.ClearField(subscription.FieldProduct, field.TypeString)
 	}
 	if suo.mutation.LineItemsCleared() {
 		edge := &sqlgraph.EdgeSpec{
