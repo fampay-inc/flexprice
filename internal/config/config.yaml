@@ -13,10 +13,10 @@ auth:
   api_key:
     header: "x-api-key"
     keys:
-      "6ab2d4bbbac2111edee4a0bca86de6c01bac4f1af8a1a3ca95964d184fd92e57":
-        tenant_id: "tenant_01KTTQFGTJ8FN68J1G1DH7S6F5"
+      "0cfd568f22158887f8b77bc019fb245b1f14077b80936342b052985efa7de46c":
+        tenant_id: "00000000-0000-0000-0000-000000000000"
         user_id: "00000000-0000-0000-0000-000000000000"
-        name: "Local Dev API Key (Fam)"
+        name: "Local Dev API Key"
         is_active: true
 
 kafka:
@@ -109,13 +109,6 @@ webhook:
       endpoint: "http://localhost:8080/health"
       headers:
         "X-Api-Key": "api-key-provided-by-tenant"
-      excluded_events:
-        - "tenant.created"
-        - "tenant.updated"
-    "tenant_01KTTQFGTJ8FN68J1G1DH7S6F5":
-      enabled: true
-      endpoint: "http://localhost:3000/webhook/flexprice"
-      headers: { }
       excluded_events:
         - "tenant.created"
         - "tenant.updated"
