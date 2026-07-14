@@ -6,8 +6,8 @@ option go_package = "gitlab.famapp.in/backend/flexprice/protos/pb/v1;benefitsv1"
 
 message BenefitEvent {
   string event_id = 1;
-  string subscription_id = 2;
-  string cycle_id = 3;
+  string username = 2;
+  string subscription_id = 3;
   string feature_id = 4;
   string category = 5;
   int64 value = 6;

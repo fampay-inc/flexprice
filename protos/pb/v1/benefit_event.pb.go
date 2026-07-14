@@ -24,8 +24,8 @@ const (
 type BenefitEvent struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
 	EventId        string                 `protobuf:"bytes,1,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
-	SubscriptionId string                 `protobuf:"bytes,2,opt,name=subscription_id,json=subscriptionId,proto3" json:"subscription_id,omitempty"`
-	CycleId        string                 `protobuf:"bytes,3,opt,name=cycle_id,json=cycleId,proto3" json:"cycle_id,omitempty"`
+	Username       string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	SubscriptionId string                 `protobuf:"bytes,3,opt,name=subscription_id,json=subscriptionId,proto3" json:"subscription_id,omitempty"`
 	FeatureId      string                 `protobuf:"bytes,4,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
 	Category       string                 `protobuf:"bytes,5,opt,name=category,proto3" json:"category,omitempty"`
 	Value          int64                  `protobuf:"varint,6,opt,name=value,proto3" json:"value,omitempty"`
@@ -71,16 +71,16 @@ func (x *BenefitEvent) GetEventId() string {
 	return ""
 }
 
-func (x *BenefitEvent) GetSubscriptionId() string {
+func (x *BenefitEvent) GetUsername() string {
 	if x != nil {
-		return x.SubscriptionId
+		return x.Username
 	}
 	return ""
 }
 
-func (x *BenefitEvent) GetCycleId() string {
+func (x *BenefitEvent) GetSubscriptionId() string {
 	if x != nil {
-		return x.CycleId
+		return x.SubscriptionId
 	}
 	return ""
 }
@@ -118,11 +118,11 @@ var File_v1_benefit_event_proto protoreflect.FileDescriptor
 const file_v1_benefit_event_proto_rawDesc = "" +
 	"\n" +
 	"\x16v1/benefit_event.proto\x12\n" +
-	"benefitsv1\"\xdc\x01\n" +
+	"benefitsv1\"\xdd\x01\n" +
 	"\fBenefitEvent\x12\x19\n" +
-	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12'\n" +
-	"\x0fsubscription_id\x18\x02 \x01(\tR\x0esubscriptionId\x12\x19\n" +
-	"\bcycle_id\x18\x03 \x01(\tR\acycleId\x12\x1d\n" +
+	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12\x1a\n" +
+	"\busername\x18\x02 \x01(\tR\busername\x12'\n" +
+	"\x0fsubscription_id\x18\x03 \x01(\tR\x0esubscriptionId\x12\x1d\n" +
 	"\n" +
 	"feature_id\x18\x04 \x01(\tR\tfeatureId\x12\x1a\n" +
 	"\bcategory\x18\x05 \x01(\tR\bcategory\x12\x14\n" +
