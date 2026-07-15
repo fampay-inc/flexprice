@@ -8,7 +8,9 @@ import (
 
 	"entgo.io/ent/dialect"
 	entsql "entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/schema"
 	"github.com/flexprice/flexprice/ent"
+	entmigrate "github.com/flexprice/flexprice/ent/migrate"
 	"github.com/flexprice/flexprice/internal/config"
 	"github.com/flexprice/flexprice/internal/logger"
 	"github.com/flexprice/flexprice/internal/tracing"
@@ -168,8 +170,21 @@ func NewEntClients(config *config.Configuration, logger *logger.Logger) (*EntCli
 
 	// Run the auto migration tool if enabled (only on writer)
 	if config.Postgres.AutoMigrate {
-		logger.Debug(context.Background(), "running auto migration")
-		if err := writerClient.Schema.Create(context.Background()); err != nil {
+		logger.Debugw("running auto migration")
+		// Tables managed by raw SQL migrations (e.g. partitioned tables) must be
+		// excluded so Ent does not attempt to reconcile them and fail on constructs
+		// it cannot model (partition keys, composite PKs, child partitions).
+		// Keep this list in sync with cmd/migrate/main.go.
+		rawSQLManagedTables := map[string]bool{
+			"benefit_ledgers": true,
+		}
+		filteredTables := make([]*schema.Table, 0, len(entmigrate.Tables))
+		for _, t := range entmigrate.Tables {
+			if !rawSQLManagedTables[t.Name] {
+				filteredTables = append(filteredTables, t)
+			}
+		}
+		if err := entmigrate.Create(context.Background(), writerClient.Schema, filteredTables); err != nil {
 			return nil, fmt.Errorf("failed creating schema resources: %w", err)
 		}
 	}
