@@ -5548,7 +5548,6 @@ type BenefitLedgerMutation struct {
 	subscription_id *string
 	customer_id     *string
 	product         *string
-	cycle_id        *string
 	category        *string
 	feature_id      *string
 	value           *int
@@ -6099,42 +6098,6 @@ func (m *BenefitLedgerMutation) ResetProduct() {
 	m.product = nil
 }
 
-// SetCycleID sets the "cycle_id" field.
-func (m *BenefitLedgerMutation) SetCycleID(s string) {
-	m.cycle_id = &s
-}
-
-// CycleID returns the value of the "cycle_id" field in the mutation.
-func (m *BenefitLedgerMutation) CycleID() (r string, exists bool) {
-	v := m.cycle_id
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldCycleID returns the old "cycle_id" field's value of the BenefitLedger entity.
-// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *BenefitLedgerMutation) OldCycleID(ctx context.Context) (v string, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCycleID is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCycleID requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCycleID: %w", err)
-	}
-	return oldValue.CycleID, nil
-}
-
-// ResetCycleID resets all changes to the "cycle_id" field.
-func (m *BenefitLedgerMutation) ResetCycleID() {
-	m.cycle_id = nil
-}
-
 // SetCategory sets the "category" field.
 func (m *BenefitLedgerMutation) SetCategory(s string) {
 	m.category = &s
@@ -6346,7 +6309,7 @@ func (m *BenefitLedgerMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *BenefitLedgerMutation) Fields() []string {
-	fields := make([]string, 0, 16)
+	fields := make([]string, 0, 15)
 	if m.tenant_id != nil {
 		fields = append(fields, benefitledger.FieldTenantID)
 	}
@@ -6379,9 +6342,6 @@ func (m *BenefitLedgerMutation) Fields() []string {
 	}
 	if m.product != nil {
 		fields = append(fields, benefitledger.FieldProduct)
-	}
-	if m.cycle_id != nil {
-		fields = append(fields, benefitledger.FieldCycleID)
 	}
 	if m.category != nil {
 		fields = append(fields, benefitledger.FieldCategory)
@@ -6425,8 +6385,6 @@ func (m *BenefitLedgerMutation) Field(name string) (ent.Value, bool) {
 		return m.CustomerID()
 	case benefitledger.FieldProduct:
 		return m.Product()
-	case benefitledger.FieldCycleID:
-		return m.CycleID()
 	case benefitledger.FieldCategory:
 		return m.Category()
 	case benefitledger.FieldFeatureID:
@@ -6466,8 +6424,6 @@ func (m *BenefitLedgerMutation) OldField(ctx context.Context, name string) (ent.
 		return m.OldCustomerID(ctx)
 	case benefitledger.FieldProduct:
 		return m.OldProduct(ctx)
-	case benefitledger.FieldCycleID:
-		return m.OldCycleID(ctx)
 	case benefitledger.FieldCategory:
 		return m.OldCategory(ctx)
 	case benefitledger.FieldFeatureID:
@@ -6561,13 +6517,6 @@ func (m *BenefitLedgerMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetProduct(v)
-		return nil
-	case benefitledger.FieldCycleID:
-		v, ok := value.(string)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetCycleID(v)
 		return nil
 	case benefitledger.FieldCategory:
 		v, ok := value.(string)
@@ -6720,9 +6669,6 @@ func (m *BenefitLedgerMutation) ResetField(name string) error {
 		return nil
 	case benefitledger.FieldProduct:
 		m.ResetProduct()
-		return nil
-	case benefitledger.FieldCycleID:
-		m.ResetCycleID()
 		return nil
 	case benefitledger.FieldCategory:
 		m.ResetCategory()

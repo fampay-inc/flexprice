@@ -39,8 +39,6 @@ type BenefitLedger struct {
 	CustomerID string `json:"customer_id,omitempty"`
 	// Product holds the value of the "product" field.
 	Product string `json:"product,omitempty"`
-	// CycleID holds the value of the "cycle_id" field.
-	CycleID string `json:"cycle_id,omitempty"`
 	// Category holds the value of the "category" field.
 	Category string `json:"category,omitempty"`
 	// FeatureID holds the value of the "feature_id" field.
@@ -59,7 +57,7 @@ func (*BenefitLedger) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case benefitledger.FieldValue:
 			values[i] = new(sql.NullInt64)
-		case benefitledger.FieldID, benefitledger.FieldTenantID, benefitledger.FieldStatus, benefitledger.FieldCreatedBy, benefitledger.FieldUpdatedBy, benefitledger.FieldEnvironmentID, benefitledger.FieldEventID, benefitledger.FieldSubscriptionID, benefitledger.FieldCustomerID, benefitledger.FieldProduct, benefitledger.FieldCycleID, benefitledger.FieldCategory, benefitledger.FieldFeatureID:
+		case benefitledger.FieldID, benefitledger.FieldTenantID, benefitledger.FieldStatus, benefitledger.FieldCreatedBy, benefitledger.FieldUpdatedBy, benefitledger.FieldEnvironmentID, benefitledger.FieldEventID, benefitledger.FieldSubscriptionID, benefitledger.FieldCustomerID, benefitledger.FieldProduct, benefitledger.FieldCategory, benefitledger.FieldFeatureID:
 			values[i] = new(sql.NullString)
 		case benefitledger.FieldCreatedAt, benefitledger.FieldUpdatedAt, benefitledger.FieldEventTimestamp:
 			values[i] = new(sql.NullTime)
@@ -149,12 +147,6 @@ func (bl *BenefitLedger) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field product", values[i])
 			} else if value.Valid {
 				bl.Product = value.String
-			}
-		case benefitledger.FieldCycleID:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field cycle_id", values[i])
-			} else if value.Valid {
-				bl.CycleID = value.String
 			}
 		case benefitledger.FieldCategory:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -248,9 +240,6 @@ func (bl *BenefitLedger) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("product=")
 	builder.WriteString(bl.Product)
-	builder.WriteString(", ")
-	builder.WriteString("cycle_id=")
-	builder.WriteString(bl.CycleID)
 	builder.WriteString(", ")
 	builder.WriteString("category=")
 	builder.WriteString(bl.Category)

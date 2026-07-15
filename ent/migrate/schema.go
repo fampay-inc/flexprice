@@ -221,7 +221,6 @@ var (
 		{Name: "subscription_id", Type: field.TypeString, SchemaType: map[string]string{"postgres": "uuid"}},
 		{Name: "customer_id", Type: field.TypeString, SchemaType: map[string]string{"postgres": "uuid"}},
 		{Name: "product", Type: field.TypeString, SchemaType: map[string]string{"postgres": "varchar(50)"}},
-		{Name: "cycle_id", Type: field.TypeString, SchemaType: map[string]string{"postgres": "uuid"}},
 		{Name: "category", Type: field.TypeString, SchemaType: map[string]string{"postgres": "varchar(50)"}},
 		{Name: "feature_id", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "uuid"}},
 		{Name: "value", Type: field.TypeInt},
@@ -239,9 +238,9 @@ var (
 				Columns: []*schema.Column{BenefitLedgersColumns[11], BenefitLedgersColumns[8]},
 			},
 			{
-				Name:    "idx_benefit_ledger_customer_cycle",
+				Name:    "idx_benefit_ledger_customer",
 				Unique:  false,
-				Columns: []*schema.Column{BenefitLedgersColumns[1], BenefitLedgersColumns[7], BenefitLedgersColumns[10], BenefitLedgersColumns[12]},
+				Columns: []*schema.Column{BenefitLedgersColumns[1], BenefitLedgersColumns[7], BenefitLedgersColumns[10]},
 			},
 		},
 	}

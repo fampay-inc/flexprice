@@ -35,8 +35,6 @@ const (
 	FieldCustomerID = "customer_id"
 	// FieldProduct holds the string denoting the product field in the database.
 	FieldProduct = "product"
-	// FieldCycleID holds the string denoting the cycle_id field in the database.
-	FieldCycleID = "cycle_id"
 	// FieldCategory holds the string denoting the category field in the database.
 	FieldCategory = "category"
 	// FieldFeatureID holds the string denoting the feature_id field in the database.
@@ -63,7 +61,6 @@ var Columns = []string{
 	FieldSubscriptionID,
 	FieldCustomerID,
 	FieldProduct,
-	FieldCycleID,
 	FieldCategory,
 	FieldFeatureID,
 	FieldValue,
@@ -101,8 +98,6 @@ var (
 	CustomerIDValidator func(string) error
 	// ProductValidator is a validator for the "product" field. It is called by the builders before save.
 	ProductValidator func(string) error
-	// CycleIDValidator is a validator for the "cycle_id" field. It is called by the builders before save.
-	CycleIDValidator func(string) error
 )
 
 // OrderOption defines the ordering options for the BenefitLedger queries.
@@ -166,11 +161,6 @@ func ByCustomerID(opts ...sql.OrderTermOption) OrderOption {
 // ByProduct orders the results by the product field.
 func ByProduct(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldProduct, opts...).ToFunc()
-}
-
-// ByCycleID orders the results by the cycle_id field.
-func ByCycleID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCycleID, opts...).ToFunc()
 }
 
 // ByCategory orders the results by the category field.

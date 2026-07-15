@@ -11,7 +11,6 @@ CREATE TABLE benefit_ledgers (
     subscription_id uuid         NOT NULL,
     customer_id     uuid         NOT NULL,
     product         varchar(50)  NOT NULL,
-    cycle_id        uuid         NOT NULL,
     category        varchar(50),
     feature_id      uuid         NOT NULL,
     value           bigint       NOT NULL,
@@ -23,4 +22,4 @@ CREATE TABLE benefit_ledgers (
 CREATE TABLE benefit_ledgers_limitless PARTITION OF benefit_ledgers FOR VALUES IN ('limitless');
 CREATE TABLE benefit_ledgers_default   PARTITION OF benefit_ledgers DEFAULT;
 
-CREATE INDEX idx_benefit_ledger_customer_cycle ON benefit_ledgers (tenant_id, environment_id, customer_id, cycle_id);
+CREATE INDEX idx_benefit_ledger_customer ON benefit_ledgers (tenant_id, environment_id, customer_id);

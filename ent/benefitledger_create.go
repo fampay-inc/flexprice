@@ -134,12 +134,6 @@ func (blc *BenefitLedgerCreate) SetProduct(s string) *BenefitLedgerCreate {
 	return blc
 }
 
-// SetCycleID sets the "cycle_id" field.
-func (blc *BenefitLedgerCreate) SetCycleID(s string) *BenefitLedgerCreate {
-	blc.mutation.SetCycleID(s)
-	return blc
-}
-
 // SetCategory sets the "category" field.
 func (blc *BenefitLedgerCreate) SetCategory(s string) *BenefitLedgerCreate {
 	blc.mutation.SetCategory(s)
@@ -282,14 +276,6 @@ func (blc *BenefitLedgerCreate) check() error {
 			return &ValidationError{Name: "product", err: fmt.Errorf(`ent: validator failed for field "BenefitLedger.product": %w`, err)}
 		}
 	}
-	if _, ok := blc.mutation.CycleID(); !ok {
-		return &ValidationError{Name: "cycle_id", err: errors.New(`ent: missing required field "BenefitLedger.cycle_id"`)}
-	}
-	if v, ok := blc.mutation.CycleID(); ok {
-		if err := benefitledger.CycleIDValidator(v); err != nil {
-			return &ValidationError{Name: "cycle_id", err: fmt.Errorf(`ent: validator failed for field "BenefitLedger.cycle_id": %w`, err)}
-		}
-	}
 	if _, ok := blc.mutation.Category(); !ok {
 		return &ValidationError{Name: "category", err: errors.New(`ent: missing required field "BenefitLedger.category"`)}
 	}
@@ -377,10 +363,6 @@ func (blc *BenefitLedgerCreate) createSpec() (*BenefitLedger, *sqlgraph.CreateSp
 	if value, ok := blc.mutation.Product(); ok {
 		_spec.SetField(benefitledger.FieldProduct, field.TypeString, value)
 		_node.Product = value
-	}
-	if value, ok := blc.mutation.CycleID(); ok {
-		_spec.SetField(benefitledger.FieldCycleID, field.TypeString, value)
-		_node.CycleID = value
 	}
 	if value, ok := blc.mutation.Category(); ok {
 		_spec.SetField(benefitledger.FieldCategory, field.TypeString, value)

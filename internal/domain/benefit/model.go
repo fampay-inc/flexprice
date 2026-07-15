@@ -11,7 +11,6 @@ type BenefitLedger struct {
 	SubscriptionID string    `db:"subscription_id" json:"subscription_id"`
 	CustomerID     string    `db:"customer_id" json:"customer_id"`
 	Product        string    `db:"product" json:"product"`
-	CycleID        string    `db:"cycle_id" json:"cycle_id"`
 	Category       string    `db:"category" json:"category"`
 	FeatureID      string    `db:"feature_id" json:"feature_id"`
 	Value          int       `db:"value" json:"value"`

@@ -48,7 +48,6 @@ func (r *benefitLedgerRepository) Create(ctx context.Context, b *domainBenefit.B
 		SetSubscriptionID(b.SubscriptionID).
 		SetCustomerID(b.CustomerID).
 		SetProduct(b.Product).
-		SetCycleID(b.CycleID).
 		SetCategory(b.Category).
 		SetFeatureID(b.FeatureID).
 		SetValue(b.Value).

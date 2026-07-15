@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -46,6 +47,7 @@ type benefitConsumptionService struct {
 	ServiceParams
 	pubSub        pubsub.PubSub
 	sentryService *tracing.Service
+	subscriptionService SubscriptionService
 }
 
 func NewBenefitConsumptionService(
@@ -53,8 +55,9 @@ func NewBenefitConsumptionService(
 	sentryService *tracing.Service,
 ) BenefitConsumptionService {
 	s := &benefitConsumptionService{
-		ServiceParams: params,
-		sentryService: sentryService,
+		ServiceParams:       params,
+		sentryService:       sentryService,
+		subscriptionService: NewSubscriptionService(params),
 	}
 
 	ps, err := kafka.NewPubSubFromConfig(
@@ -107,14 +110,22 @@ func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
 		s.Logger.Warnw("dropping invalid benefit event",
 			"reason", err.Error(),
 			"event_id", ev.GetEventId(),
+			"username", ev.GetUsername(),
 		)
 		return nil
 	}
 
+	s.Logger.Infow("benefit event with this username is being processed",
+		"event_id", ev.GetEventId(),
+		"username", ev.GetUsername(),
+	)
+
 	tenantID := s.Config.Billing.TenantID
 	if tenantID == "" {
 		s.Logger.Errorw("billing.tenant_id is not configured; cannot process benefit events",
-			"event_id", ev.GetEventId())
+			"event_id", ev.GetEventId(),
+			"username", ev.GetUsername(),
+		)
 		return nil
 	}
 
@@ -129,6 +140,7 @@ func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
 			s.Logger.Warnw("dropping invalid benefit event",
 				"reason", err.Error(),
 				"event_id", ev.GetEventId(),
+				"username", ev.GetUsername(),
 				"subscription_id", ev.GetSubscriptionId(),
 			)
 			return nil
@@ -136,6 +148,7 @@ func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
 		s.Logger.Errorw("benefit event validation errored, will retry",
 			"error", err,
 			"event_id", ev.GetEventId(),
+			"username", ev.GetUsername(),
 		)
 		return ierr.WithError(err).
 			WithHint("Failed to validate benefit event").
@@ -146,12 +159,16 @@ func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
 
 	if err := s.BenefitLedgerRepo.Create(ctx, row); err != nil {
 		if ierr.IsAlreadyExists(err) {
-			s.Logger.Debugw("duplicate benefit event ignored", "event_id", ev.GetEventId())
+			s.Logger.Debugw("duplicate benefit event ignored",
+				"event_id", ev.GetEventId(),
+				"username", ev.GetUsername(),
+			)
 			return nil
 		}
 		s.Logger.Errorw("failed to store benefit event",
 			"error", err,
 			"event_id", ev.GetEventId(),
+			"username", ev.GetUsername(),
 		)
 		if !s.shouldRetryError(err) {
 			return nil
@@ -163,18 +180,22 @@ func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
 
 	s.Logger.Debugw("stored benefit event",
 		"event_id", row.EventID,
+		"username", ev.GetUsername(),
 	)
 	return nil
 }
 
 func validateProtoFields(ev *benefitsv1.BenefitEvent) error {
-	if ev.GetEventId() == "" || ev.GetSubscriptionId() == "" || ev.GetCycleId() == "" || ev.GetFeatureId() == "" {
+	if ev.GetEventId() == "" || ev.GetSubscriptionId() == "" || ev.GetUsername() == "" || ev.GetFeatureId() == "" {
 		return drop("missing required fields or fields empty")
+	}
+
+	if ev.GetValue() <= 0 {
+		return drop("value must be greater than 0")
 	}
 
 	for name, val := range map[string]string{
 		"subscription_id": ev.GetSubscriptionId(),
-		"cycle_id":        ev.GetCycleId(),
 		"feature_id":      ev.GetFeatureId(),
 	} {
 		if _, err := uuid.Parse(val); err != nil {
@@ -185,6 +206,14 @@ func validateProtoFields(ev *benefitsv1.BenefitEvent) error {
 }
 
 func (s *benefitConsumptionService) validateEvent(ctx context.Context, ev *benefitsv1.BenefitEvent) (*eventValidation, error) {
+	cust, err := s.CustomerRepo.GetByLookupKey(ctx, ev.GetUsername())
+	if err != nil {
+		if ierr.IsNotFound(err) {
+			return nil, drop("customer not found for username")
+		}
+		return nil, ierr.WithError(err).WithHint("customer lookup failed").Mark(ierr.ErrDatabase)
+	}
+
 	sub, err := s.SubRepo.Get(ctx, ev.GetSubscriptionId())
 	if err != nil {
 		if ierr.IsNotFound(err) {
@@ -193,41 +222,31 @@ func (s *benefitConsumptionService) validateEvent(ctx context.Context, ev *benef
 		return nil, ierr.WithError(err).WithHint("subscription lookup failed").Mark(ierr.ErrDatabase)
 	}
 
-	if err := s.validateFeatureEntitlement(ctx, sub.PlanID, ev.GetFeatureId()); err != nil {
-		return nil, err
+	if sub.CustomerID != cust.ID {
+		return nil, drop("subscription does not belong to customer")
 	}
 
-	inv, err := s.InvoiceRepo.Get(ctx, ev.GetCycleId())
-	if err != nil {
-		if ierr.IsNotFound(err) {
-			return nil, drop("invoice (cycle_id) not found")
-		}
-		return nil, ierr.WithError(err).WithHint("invoice lookup failed").Mark(ierr.ErrDatabase)
-	}
-	if inv.SubscriptionID == nil || *inv.SubscriptionID != ev.GetSubscriptionId() {
-		return nil, drop("invoice does not belong to subscription")
-	}
-	if inv.InvoiceStatus != types.InvoiceStatusFinalized {
-		return nil, drop("invoice is not finalized")
-	}
-	if inv.PaymentStatus != types.PaymentStatusSucceeded {
-		return nil, drop("invoice payment is not succeeded")
+	if err := s.validateFeatureEntitlement(ctx, sub.ID, ev.GetFeatureId()); err != nil {
+		return nil, err
 	}
 
 	return &eventValidation{Product: *sub.Sku, CustomerID: sub.CustomerID}, nil
 }
 
-func (s *benefitConsumptionService) validateFeatureEntitlement(ctx context.Context, planID, featureID string) error {
-	planEnts, err := s.EntitlementRepo.ListByPlanIDs(ctx, []string{planID})
+func (s *benefitConsumptionService) validateFeatureEntitlement(ctx context.Context, subscriptionID, featureID string) error {
+	ents, err := s.subscriptionService.GetSubscriptionEntitlements(ctx, subscriptionID)
 	if err != nil {
-		return ierr.WithError(err).WithHint("plan entitlement lookup failed").Mark(ierr.ErrDatabase)
+		if ierr.IsNotFound(err) {
+			return drop("subscription not found for entitlement lookup")
+		}
+		return ierr.WithError(err).WithHint("subscription entitlement lookup failed").Mark(ierr.ErrDatabase)
 	}
-	for _, e := range planEnts {
+	for _, e := range ents {
 		if e != nil && e.FeatureID == featureID && e.IsEnabled {
 			return nil
 		}
 	}
-	return drop("plan does not grant this feature")
+	return drop("subscription does not grant this feature")
 }
 
 func toLedgerRow(
@@ -244,8 +263,7 @@ func toLedgerRow(
 		SKU:            sku,
 		CustomerID:     v.CustomerID,
 		Product:        v.Product,
-		CycleID:        ev.GetCycleId(),
-		Category:       ev.GetCategory(),
+		Category:       strings.ToLower(ev.GetCategory()),
 		FeatureID:      ev.GetFeatureId(),
 		Value:          int(ev.GetValue()),
 		EventTimestamp: time.Unix(ev.GetTimestamp(), 0).UTC(),

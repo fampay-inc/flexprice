@@ -119,11 +119,6 @@ func Product(v string) predicate.BenefitLedger {
 	return predicate.BenefitLedger(sql.FieldEQ(FieldProduct, v))
 }
 
-// CycleID applies equality check predicate on the "cycle_id" field. It's identical to CycleIDEQ.
-func CycleID(v string) predicate.BenefitLedger {
-	return predicate.BenefitLedger(sql.FieldEQ(FieldCycleID, v))
-}
-
 // Category applies equality check predicate on the "category" field. It's identical to CategoryEQ.
 func Category(v string) predicate.BenefitLedger {
 	return predicate.BenefitLedger(sql.FieldEQ(FieldCategory, v))
@@ -837,71 +832,6 @@ func ProductEqualFold(v string) predicate.BenefitLedger {
 // ProductContainsFold applies the ContainsFold predicate on the "product" field.
 func ProductContainsFold(v string) predicate.BenefitLedger {
 	return predicate.BenefitLedger(sql.FieldContainsFold(FieldProduct, v))
-}
-
-// CycleIDEQ applies the EQ predicate on the "cycle_id" field.
-func CycleIDEQ(v string) predicate.BenefitLedger {
-	return predicate.BenefitLedger(sql.FieldEQ(FieldCycleID, v))
-}
-
-// CycleIDNEQ applies the NEQ predicate on the "cycle_id" field.
-func CycleIDNEQ(v string) predicate.BenefitLedger {
-	return predicate.BenefitLedger(sql.FieldNEQ(FieldCycleID, v))
-}
-
-// CycleIDIn applies the In predicate on the "cycle_id" field.
-func CycleIDIn(vs ...string) predicate.BenefitLedger {
-	return predicate.BenefitLedger(sql.FieldIn(FieldCycleID, vs...))
-}
-
-// CycleIDNotIn applies the NotIn predicate on the "cycle_id" field.
-func CycleIDNotIn(vs ...string) predicate.BenefitLedger {
-	return predicate.BenefitLedger(sql.FieldNotIn(FieldCycleID, vs...))
-}
-
-// CycleIDGT applies the GT predicate on the "cycle_id" field.
-func CycleIDGT(v string) predicate.BenefitLedger {
-	return predicate.BenefitLedger(sql.FieldGT(FieldCycleID, v))
-}
-
-// CycleIDGTE applies the GTE predicate on the "cycle_id" field.
-func CycleIDGTE(v string) predicate.BenefitLedger {
-	return predicate.BenefitLedger(sql.FieldGTE(FieldCycleID, v))
-}
-
-// CycleIDLT applies the LT predicate on the "cycle_id" field.
-func CycleIDLT(v string) predicate.BenefitLedger {
-	return predicate.BenefitLedger(sql.FieldLT(FieldCycleID, v))
-}
-
-// CycleIDLTE applies the LTE predicate on the "cycle_id" field.
-func CycleIDLTE(v string) predicate.BenefitLedger {
-	return predicate.BenefitLedger(sql.FieldLTE(FieldCycleID, v))
-}
-
-// CycleIDContains applies the Contains predicate on the "cycle_id" field.
-func CycleIDContains(v string) predicate.BenefitLedger {
-	return predicate.BenefitLedger(sql.FieldContains(FieldCycleID, v))
-}
-
-// CycleIDHasPrefix applies the HasPrefix predicate on the "cycle_id" field.
-func CycleIDHasPrefix(v string) predicate.BenefitLedger {
-	return predicate.BenefitLedger(sql.FieldHasPrefix(FieldCycleID, v))
-}
-
-// CycleIDHasSuffix applies the HasSuffix predicate on the "cycle_id" field.
-func CycleIDHasSuffix(v string) predicate.BenefitLedger {
-	return predicate.BenefitLedger(sql.FieldHasSuffix(FieldCycleID, v))
-}
-
-// CycleIDEqualFold applies the EqualFold predicate on the "cycle_id" field.
-func CycleIDEqualFold(v string) predicate.BenefitLedger {
-	return predicate.BenefitLedger(sql.FieldEqualFold(FieldCycleID, v))
-}
-
-// CycleIDContainsFold applies the ContainsFold predicate on the "cycle_id" field.
-func CycleIDContainsFold(v string) predicate.BenefitLedger {
-	return predicate.BenefitLedger(sql.FieldContainsFold(FieldCycleID, v))
 }
 
 // CategoryEQ applies the EQ predicate on the "category" field.
