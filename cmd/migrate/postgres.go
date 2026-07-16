@@ -6,8 +6,10 @@ import (
 	"os"
 	"time"
 
+	entsql "entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/schema"
 	"github.com/flexprice/flexprice/ent"
+	entmigrate "github.com/flexprice/flexprice/ent/migrate"
 	"github.com/flexprice/flexprice/internal/config"
 	"github.com/flexprice/flexprice/internal/logger"
 	_ "github.com/lib/pq"
@@ -73,13 +75,32 @@ func runPostgresMigration(dryRun bool, timeout int) error {
 		schema.WithSkipChanges(schema.DropIndex | schema.DropColumn | schema.ModifyIndex),
 	}
 
+	// Tables managed by raw SQL migrations (e.g. partitioned tables) must be
+	// excluded here so Ent does not try to auto-migrate DDL (e.g. dropping and
+	// re-adding a partition key) that conflicts with migrations/postgres/*.sql.
+	rawSQLManagedTables := map[string]bool{
+		"benefit_ledgers": true,
+	}
+	filteredTables := make([]*schema.Table, 0, len(entmigrate.Tables))
+	for _, t := range entmigrate.Tables {
+		if !rawSQLManagedTables[t.Name] {
+			filteredTables = append(filteredTables, t)
+		}
+	}
+
 	if dryRun {
 		l.Info(ctx, "Dry run mode - printing migration SQL without executing")
-		if err := client.Schema.WriteTo(ctx, os.Stdout, migrateOpts...); err != nil {
+		drv, err := entsql.Open("postgres", dsn)
+		if err != nil {
+			return fmt.Errorf("failed to open driver for dry run: %w", err)
+		}
+		defer drv.Close()
+		writeSchema := entmigrate.NewSchema(&schema.WriteDriver{Writer: os.Stdout, Driver: drv})
+		if err := entmigrate.Create(ctx, writeSchema, filteredTables, migrateOpts...); err != nil {
 			return fmt.Errorf("failed to generate migration SQL: %w", err)
 		}
 	} else {
-		if err := client.Schema.Create(ctx, migrateOpts...); err != nil {
+		if err := entmigrate.Create(ctx, client.Schema, filteredTables, migrateOpts...); err != nil {
 			return fmt.Errorf("failed to create schema resources: %w", err)
 		}
 		l.Info(ctx, "Migration completed successfully")
