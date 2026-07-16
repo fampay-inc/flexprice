@@ -84,6 +84,7 @@ func (s *benefitConsumptionService) RegisterHandler(router *pubsubRouter.Router,
 	router.AddNoPublishHandler(
 		"benefit_consumption_handler",
 		cfg.BenefitEvents.Topic,
+		"",
 		s.pubSub,
 		s.processMessage,
 		throttle.Middleware,
@@ -95,14 +96,14 @@ func (s *benefitConsumptionService) RegisterHandler(router *pubsubRouter.Router,
 	)
 }
 
-func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
+func (s *benefitConsumptionService) processMessage(ctx context.Context, msg *message.Message) error {
 	var ev benefitsv1.BenefitEvent
 	if err := proto.Unmarshal(msg.Payload, &ev); err != nil {
 		s.Logger.Errorw("failed to unmarshal benefit event proto",
 			"error", err,
 			"payload_len", len(msg.Payload),
 		)
-		s.sentryService.CaptureException(err)
+		s.sentryService.CaptureException(ctx, err)
 		return nil
 	}
 
@@ -129,7 +130,7 @@ func (s *benefitConsumptionService) processMessage(msg *message.Message) error {
 		return nil
 	}
 
-	ctx := context.WithValue(context.Background(), types.CtxTenantID, tenantID)
+	ctx = context.WithValue(ctx, types.CtxTenantID, tenantID)
 	if environmentID := s.Config.Billing.EnvironmentID; environmentID != "" {
 		ctx = context.WithValue(ctx, types.CtxEnvironmentID, environmentID)
 	}
@@ -230,7 +231,7 @@ func (s *benefitConsumptionService) validateEvent(ctx context.Context, ev *benef
 		return nil, err
 	}
 
-	return &eventValidation{Product: *sub.Product, CustomerID: sub.CustomerID}, nil
+	return &eventValidation{Product: sub.Product, CustomerID: sub.CustomerID}, nil
 }
 
 func (s *benefitConsumptionService) validateFeatureEntitlement(ctx context.Context, subscriptionID, featureID string) error {
@@ -260,7 +261,6 @@ func toLedgerRow(
 		ID:             types.GenerateUUID(),
 		EventID:        ev.GetEventId(),
 		SubscriptionID: ev.GetSubscriptionId(),
-		SKU:            sku,
 		CustomerID:     v.CustomerID,
 		Product:        v.Product,
 		Category:       strings.ToLower(ev.GetCategory()),
@@ -274,44 +274,6 @@ func toLedgerRow(
 	row.CreatedAt = now
 	row.UpdatedAt = now
 	return row
-}
-
-func (s *benefitConsumptionService) validateEvent(
-	ctx context.Context,
-	ev *benefitsv1.BenefitEvent,
-) (sku string, customerID string, dropReason string, retryErr error) {
-	sub, err := s.SubRepo.Get(ctx, ev.GetSubscriptionId())
-	if err != nil {
-		if ierr.IsNotFound(err) {
-			return "", "", "subscription not found", nil
-		}
-		return "", "", "", ierr.WithError(err).WithHint("subscription lookup failed").Mark(ierr.ErrDatabase)
-	}
-
-	if reason, rErr := s.validateFeatureId(ctx, sub.PlanID, ev.GetFeatureId()); rErr != nil {
-		return "", "", "", rErr
-	} else if reason != "" {
-		return "", "", reason, nil
-	}
-
-	inv, err := s.InvoiceRepo.Get(ctx, ev.GetCycleId())
-	if err != nil {
-		if ierr.IsNotFound(err) {
-			return "", "", "invoice (cycle_id) not found", nil
-		}
-		return "", "", "", ierr.WithError(err).WithHint("invoice lookup failed").Mark(ierr.ErrDatabase)
-	}
-	if inv.SubscriptionID == nil || *inv.SubscriptionID != ev.GetSubscriptionId() {
-		return "", "", "invoice does not belong to subscription", nil
-	}
-	if inv.InvoiceStatus != types.InvoiceStatusFinalized {
-		return "", "", "invoice is not finalized", nil
-	}
-	if inv.PaymentStatus != types.PaymentStatusSucceeded {
-		return "", "", "invoice payment is not succeeded", nil
-	}
-
-	return sub.Sku, customerID, "", nil
 }
 
 func (s *benefitConsumptionService) validateFeatureId(

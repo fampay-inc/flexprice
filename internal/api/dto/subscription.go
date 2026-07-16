@@ -404,12 +404,9 @@ type CreateSubscriptionRequest struct {
 	// before the subscription row is written, so both share the same transaction.
 	// TODO: Remove once plan-change integration carryover is handled generically.
 	// Never populated from external JSON.
-	ID string `json:"-"`
 
-	// id is an optional custom subscription ID. If not provided, one will be generated.
-	ID string `json:"id,omitempty"`
-
-	// id is an optional custom subscription ID. If not provided, one will be generated.
+	// NOTE(Mayank - FamApp): Currently populated from external JSON due to internal migrations process
+	// TODO(Mayank - FamApp): make it non populable from external JSON entities post migration
 	ID string `json:"id,omitempty"`
 
 	// customer_id is the flexprice customer id

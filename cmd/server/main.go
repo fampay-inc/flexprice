@@ -370,7 +370,7 @@ func provideHandlers(
 	geminiPricingService service.GeminiPricingService,
 	webhookService *webhook.WebhookService,
 	usageBenchmarkService service.UsageBenchmarkService,
-	benefitService service.BenefitConsumptionService,
+	benefitService service.BenefitService,
 ) api.Handlers {
 	return api.Handlers{
 		Events:                   v1.NewEventsHandler(eventService, eventPostProcessingService, featureUsageTrackingService, rawEventsReprocessingService, rawEventConsumptionService, meterUsageService, usageBenchmarkService, cfg, logger),

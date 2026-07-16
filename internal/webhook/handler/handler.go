@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"encoding/json"
-	"strings"
 	"time"
 
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -70,12 +69,20 @@ func NewHandler(
 
 func (h *handler) RegisterHandler(router *pubsubRouter.Router) {
 	if !h.config.Enabled {
-		h.logger.Info(context.Background(), "webhook handler disabled by configuration, skipping registration")
+		h.logger.Info(
+			context.Background(),
+			"webhook handler disabled by configuration, skipping registration",
+		)
 		return
 	}
 	rateLimit := h.config.RateLimit
 	if rateLimit <= 0 {
-		h.logger.Info(context.Background(), "webhook rate limit is invalid", "rate_limit", rateLimit)
+		h.logger.Info(
+			context.Background(),
+			"webhook rate limit is invalid",
+			"rate_limit",
+			rateLimit,
+		)
 		return
 	}
 	throttle := middleware.NewThrottle(rateLimit, time.Second)
@@ -133,7 +140,11 @@ func (h *handler) DeliverWebhook(ctx context.Context, event *types.WebhookEvent)
 			"message_uuid", messageUUID,
 		)
 		if h.systemEventRepo != nil && event.ID != "" {
-			if dbErr := h.systemEventRepo.OnFailed(ctx, event.ID, deliveryErr.Error()); dbErr != nil {
+			if dbErr := h.systemEventRepo.OnFailed(
+				ctx,
+				event.ID,
+				deliveryErr.Error(),
+			); dbErr != nil {
 				h.logger.Info(ctx, "failed to persist webhook failure_reason",
 					"error", dbErr,
 					"event_id", event.ID,
@@ -155,7 +166,13 @@ func webhookMissingDataError(err error) bool {
 
 // absorbDeliveryError logs delivery failures for the Kafka consumer path and always acks.
 // It also persists the failure reason on the system_events row so it is never silently dropped.
-func (h *handler) absorbDeliveryError(ctx context.Context, transport string, err error, event *types.WebhookEvent, messageUUID string) {
+func (h *handler) absorbDeliveryError(
+	ctx context.Context,
+	transport string,
+	err error,
+	event *types.WebhookEvent,
+	messageUUID string,
+) {
 	if err == nil {
 		return
 	}
@@ -204,7 +221,11 @@ func (h *handler) processMessage(ctx context.Context, msg *message.Message) erro
 		// (published_at=NULL, failure_count=0) forever. msg.UUID equals the
 		// system_event ID because the publisher sets it from event.ID.
 		if h.systemEventRepo != nil && msg.UUID != "" {
-			if dbErr := h.systemEventRepo.OnFailed(ctx, msg.UUID, "unmarshal failed: "+err.Error()); dbErr != nil {
+			if dbErr := h.systemEventRepo.OnFailed(
+				ctx,
+				msg.UUID,
+				"unmarshal failed: "+err.Error(),
+			); dbErr != nil {
 				h.logger.Info(ctx, "failed to persist webhook failure_reason on unmarshal error",
 					"error", dbErr,
 					"message_uuid", msg.UUID,
@@ -235,7 +256,11 @@ func (h *handler) processMessage(ctx context.Context, msg *message.Message) erro
 }
 
 // deliverSvix sends a webhook via Svix.
-func (h *handler) deliverSvix(ctx context.Context, event *types.WebhookEvent, messageUUID string) error {
+func (h *handler) deliverSvix(
+	ctx context.Context,
+	event *types.WebhookEvent,
+	messageUUID string,
+) error {
 	appID, err := h.svixClient.GetOrCreateApplication(ctx, event.TenantID, event.EnvironmentID)
 	if err != nil {
 		if err.Error() == "application not found" {
@@ -261,7 +286,12 @@ func (h *handler) deliverSvix(ctx context.Context, event *types.WebhookEvent, me
 		return err
 	}
 
-	svixOut, err := h.svixClient.SendMessage(ctx, appID, event.EventName, json.RawMessage(webHookPayload))
+	svixOut, err := h.svixClient.SendMessage(
+		ctx,
+		appID,
+		event.EventName,
+		json.RawMessage(webHookPayload),
+	)
 	if err != nil {
 		return err
 	}
@@ -291,7 +321,11 @@ func (h *handler) deliverSvix(ctx context.Context, event *types.WebhookEvent, me
 }
 
 // deliverNative sends a webhook to the configured HTTP endpoint.
-func (h *handler) deliverNative(ctx context.Context, event *types.WebhookEvent, messageUUID string) error {
+func (h *handler) deliverNative(
+	ctx context.Context,
+	event *types.WebhookEvent,
+	messageUUID string,
+) error {
 	tenantCfg, ok := h.config.TenantConfig(event.TenantID)
 	if !ok {
 		return ierr.NewError("native webhook is not configured for this tenant").

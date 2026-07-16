@@ -3,9 +3,9 @@ package v1
 import (
 	"net/http"
 
+	"github.com/flexprice/flexprice/internal/ee/service"
 	ierr "github.com/flexprice/flexprice/internal/errors"
 	"github.com/flexprice/flexprice/internal/logger"
-	"github.com/flexprice/flexprice/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
@@ -48,7 +48,12 @@ func (h *BenefitHandler) GetBenefits(c *gin.Context) {
 		return
 	}
 
-	benefits, err := h.benefitService.GetBenefits(c.Request.Context(), externalCustomerID, product, groupBy)
+	benefits, err := h.benefitService.GetBenefits(
+		c.Request.Context(),
+		externalCustomerID,
+		product,
+		groupBy,
+	)
 	if err != nil {
 		c.Error(err)
 		return
