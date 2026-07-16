@@ -499,10 +499,9 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-<<<<<<< HEAD
 		c.Addon, c.AddonAssociation, c.AlertLogs, c.AlertSettings, c.Auth,
-		c.BillingSequence, c.CheckoutSession, c.Connection, c.Costsheet, c.Coupon,
-		c.CouponApplication, c.CouponAssociation, c.CreditGrant,
+		c.BenefitLedger, c.BillingSequence, c.CheckoutSession, c.Connection,
+		c.Costsheet, c.Coupon, c.CouponApplication, c.CouponAssociation, c.CreditGrant,
 		c.CreditGrantApplication, c.CreditNote, c.CreditNoteLineItem, c.Customer,
 		c.Entitlement, c.EntityIntegrationMapping, c.Environment, c.Feature, c.Group,
 		c.IncomingWebhookEvent, c.Invoice, c.InvoiceLineItem, c.InvoiceSequence,
@@ -511,29 +510,6 @@ func (c *Client) Use(hooks ...Hook) {
 		c.SubscriptionLineItem, c.SubscriptionPause, c.SubscriptionPhase,
 		c.SubscriptionSchedule, c.SystemEvent, c.Task, c.TaxApplied, c.TaxAssociation,
 		c.TaxRate, c.Tenant, c.UsageRecord, c.User, c.Wallet, c.WalletTransaction,
-||||||| parent of 06194bf2 (WIP: benefits consumer and benefits tracking)
-		c.Addon, c.AddonAssociation, c.AlertLogs, c.Auth, c.BillingSequence,
-		c.Connection, c.Costsheet, c.Coupon, c.CouponApplication, c.CouponAssociation,
-		c.CreditGrant, c.CreditGrantApplication, c.CreditNote, c.CreditNoteLineItem,
-		c.Customer, c.Entitlement, c.EntityIntegrationMapping, c.Environment,
-		c.Feature, c.Group, c.Invoice, c.InvoiceLineItem, c.InvoiceSequence, c.Meter,
-		c.Payment, c.PaymentAttempt, c.Plan, c.Price, c.PriceUnit, c.ScheduledTask,
-		c.Secret, c.Settings, c.Subscription, c.SubscriptionLineItem,
-		c.SubscriptionPause, c.SubscriptionPhase, c.SubscriptionSchedule,
-		c.SystemEvent, c.Task, c.TaxApplied, c.TaxAssociation, c.TaxRate, c.Tenant,
-		c.User, c.Wallet, c.WalletTransaction, c.WorkflowExecution,
-=======
-		c.Addon, c.AddonAssociation, c.AlertLogs, c.Auth, c.BenefitLedger,
-		c.BillingSequence, c.Connection, c.Costsheet, c.Coupon, c.CouponApplication,
-		c.CouponAssociation, c.CreditGrant, c.CreditGrantApplication, c.CreditNote,
-		c.CreditNoteLineItem, c.Customer, c.Entitlement, c.EntityIntegrationMapping,
-		c.Environment, c.Feature, c.Group, c.Invoice, c.InvoiceLineItem,
-		c.InvoiceSequence, c.Meter, c.Payment, c.PaymentAttempt, c.Plan, c.Price,
-		c.PriceUnit, c.ScheduledTask, c.Secret, c.Settings, c.Subscription,
-		c.SubscriptionLineItem, c.SubscriptionPause, c.SubscriptionPhase,
-		c.SubscriptionSchedule, c.SystemEvent, c.Task, c.TaxApplied, c.TaxAssociation,
-		c.TaxRate, c.Tenant, c.User, c.Wallet, c.WalletTransaction,
->>>>>>> 06194bf2 (WIP: benefits consumer and benefits tracking)
 		c.WorkflowExecution,
 	} {
 		n.Use(hooks...)
@@ -544,10 +520,9 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-<<<<<<< HEAD
 		c.Addon, c.AddonAssociation, c.AlertLogs, c.AlertSettings, c.Auth,
-		c.BillingSequence, c.CheckoutSession, c.Connection, c.Costsheet, c.Coupon,
-		c.CouponApplication, c.CouponAssociation, c.CreditGrant,
+		c.BenefitLedger, c.BillingSequence, c.CheckoutSession, c.Connection,
+		c.Costsheet, c.Coupon, c.CouponApplication, c.CouponAssociation, c.CreditGrant,
 		c.CreditGrantApplication, c.CreditNote, c.CreditNoteLineItem, c.Customer,
 		c.Entitlement, c.EntityIntegrationMapping, c.Environment, c.Feature, c.Group,
 		c.IncomingWebhookEvent, c.Invoice, c.InvoiceLineItem, c.InvoiceSequence,
@@ -556,29 +531,6 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 		c.SubscriptionLineItem, c.SubscriptionPause, c.SubscriptionPhase,
 		c.SubscriptionSchedule, c.SystemEvent, c.Task, c.TaxApplied, c.TaxAssociation,
 		c.TaxRate, c.Tenant, c.UsageRecord, c.User, c.Wallet, c.WalletTransaction,
-||||||| parent of 06194bf2 (WIP: benefits consumer and benefits tracking)
-		c.Addon, c.AddonAssociation, c.AlertLogs, c.Auth, c.BillingSequence,
-		c.Connection, c.Costsheet, c.Coupon, c.CouponApplication, c.CouponAssociation,
-		c.CreditGrant, c.CreditGrantApplication, c.CreditNote, c.CreditNoteLineItem,
-		c.Customer, c.Entitlement, c.EntityIntegrationMapping, c.Environment,
-		c.Feature, c.Group, c.Invoice, c.InvoiceLineItem, c.InvoiceSequence, c.Meter,
-		c.Payment, c.PaymentAttempt, c.Plan, c.Price, c.PriceUnit, c.ScheduledTask,
-		c.Secret, c.Settings, c.Subscription, c.SubscriptionLineItem,
-		c.SubscriptionPause, c.SubscriptionPhase, c.SubscriptionSchedule,
-		c.SystemEvent, c.Task, c.TaxApplied, c.TaxAssociation, c.TaxRate, c.Tenant,
-		c.User, c.Wallet, c.WalletTransaction, c.WorkflowExecution,
-=======
-		c.Addon, c.AddonAssociation, c.AlertLogs, c.Auth, c.BenefitLedger,
-		c.BillingSequence, c.Connection, c.Costsheet, c.Coupon, c.CouponApplication,
-		c.CouponAssociation, c.CreditGrant, c.CreditGrantApplication, c.CreditNote,
-		c.CreditNoteLineItem, c.Customer, c.Entitlement, c.EntityIntegrationMapping,
-		c.Environment, c.Feature, c.Group, c.Invoice, c.InvoiceLineItem,
-		c.InvoiceSequence, c.Meter, c.Payment, c.PaymentAttempt, c.Plan, c.Price,
-		c.PriceUnit, c.ScheduledTask, c.Secret, c.Settings, c.Subscription,
-		c.SubscriptionLineItem, c.SubscriptionPause, c.SubscriptionPhase,
-		c.SubscriptionSchedule, c.SystemEvent, c.Task, c.TaxApplied, c.TaxAssociation,
-		c.TaxRate, c.Tenant, c.User, c.Wallet, c.WalletTransaction,
->>>>>>> 06194bf2 (WIP: benefits consumer and benefits tracking)
 		c.WorkflowExecution,
 	} {
 		n.Intercept(interceptors...)
@@ -8542,69 +8494,29 @@ func (c *WorkflowExecutionClient) mutate(ctx context.Context, m *WorkflowExecuti
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-<<<<<<< HEAD
-		Addon, AddonAssociation, AlertLogs, AlertSettings, Auth, BillingSequence,
-		CheckoutSession, Connection, Costsheet, Coupon, CouponApplication,
-		CouponAssociation, CreditGrant, CreditGrantApplication, CreditNote,
-		CreditNoteLineItem, Customer, Entitlement, EntityIntegrationMapping,
-		Environment, Feature, Group, IncomingWebhookEvent, Invoice, InvoiceLineItem,
-		InvoiceSequence, Meter, Payment, PaymentAttempt, PaymentMethod, Plan, Price,
-		PriceUnit, Refund, ScheduledTask, Secret, Settings, Subscription,
-		SubscriptionLineItem, SubscriptionPause, SubscriptionPhase,
+		Addon, AddonAssociation, AlertLogs, AlertSettings, Auth, BenefitLedger,
+		BillingSequence, CheckoutSession, Connection, Costsheet, Coupon,
+		CouponApplication, CouponAssociation, CreditGrant, CreditGrantApplication,
+		CreditNote, CreditNoteLineItem, Customer, Entitlement,
+		EntityIntegrationMapping, Environment, Feature, Group, IncomingWebhookEvent,
+		Invoice, InvoiceLineItem, InvoiceSequence, Meter, Payment, PaymentAttempt,
+		PaymentMethod, Plan, Price, PriceUnit, Refund, ScheduledTask, Secret, Settings,
+		Subscription, SubscriptionLineItem, SubscriptionPause, SubscriptionPhase,
 		SubscriptionSchedule, SystemEvent, Task, TaxApplied, TaxAssociation, TaxRate,
 		Tenant, UsageRecord, User, Wallet, WalletTransaction,
-||||||| parent of 06194bf2 (WIP: benefits consumer and benefits tracking)
-		Addon, AddonAssociation, AlertLogs, Auth, BillingSequence, Connection,
-		Costsheet, Coupon, CouponApplication, CouponAssociation, CreditGrant,
-		CreditGrantApplication, CreditNote, CreditNoteLineItem, Customer, Entitlement,
-		EntityIntegrationMapping, Environment, Feature, Group, Invoice,
-		InvoiceLineItem, InvoiceSequence, Meter, Payment, PaymentAttempt, Plan, Price,
-		PriceUnit, ScheduledTask, Secret, Settings, Subscription, SubscriptionLineItem,
-		SubscriptionPause, SubscriptionPhase, SubscriptionSchedule, SystemEvent, Task,
-		TaxApplied, TaxAssociation, TaxRate, Tenant, User, Wallet, WalletTransaction,
-=======
-		Addon, AddonAssociation, AlertLogs, Auth, BenefitLedger, BillingSequence,
-		Connection, Costsheet, Coupon, CouponApplication, CouponAssociation,
-		CreditGrant, CreditGrantApplication, CreditNote, CreditNoteLineItem, Customer,
-		Entitlement, EntityIntegrationMapping, Environment, Feature, Group, Invoice,
-		InvoiceLineItem, InvoiceSequence, Meter, Payment, PaymentAttempt, Plan, Price,
-		PriceUnit, ScheduledTask, Secret, Settings, Subscription, SubscriptionLineItem,
-		SubscriptionPause, SubscriptionPhase, SubscriptionSchedule, SystemEvent, Task,
-		TaxApplied, TaxAssociation, TaxRate, Tenant, User, Wallet, WalletTransaction,
->>>>>>> 06194bf2 (WIP: benefits consumer and benefits tracking)
 		WorkflowExecution []ent.Hook
 	}
 	inters struct {
-<<<<<<< HEAD
-		Addon, AddonAssociation, AlertLogs, AlertSettings, Auth, BillingSequence,
-		CheckoutSession, Connection, Costsheet, Coupon, CouponApplication,
-		CouponAssociation, CreditGrant, CreditGrantApplication, CreditNote,
-		CreditNoteLineItem, Customer, Entitlement, EntityIntegrationMapping,
-		Environment, Feature, Group, IncomingWebhookEvent, Invoice, InvoiceLineItem,
-		InvoiceSequence, Meter, Payment, PaymentAttempt, PaymentMethod, Plan, Price,
-		PriceUnit, Refund, ScheduledTask, Secret, Settings, Subscription,
-		SubscriptionLineItem, SubscriptionPause, SubscriptionPhase,
+		Addon, AddonAssociation, AlertLogs, AlertSettings, Auth, BenefitLedger,
+		BillingSequence, CheckoutSession, Connection, Costsheet, Coupon,
+		CouponApplication, CouponAssociation, CreditGrant, CreditGrantApplication,
+		CreditNote, CreditNoteLineItem, Customer, Entitlement,
+		EntityIntegrationMapping, Environment, Feature, Group, IncomingWebhookEvent,
+		Invoice, InvoiceLineItem, InvoiceSequence, Meter, Payment, PaymentAttempt,
+		PaymentMethod, Plan, Price, PriceUnit, Refund, ScheduledTask, Secret, Settings,
+		Subscription, SubscriptionLineItem, SubscriptionPause, SubscriptionPhase,
 		SubscriptionSchedule, SystemEvent, Task, TaxApplied, TaxAssociation, TaxRate,
 		Tenant, UsageRecord, User, Wallet, WalletTransaction,
-||||||| parent of 06194bf2 (WIP: benefits consumer and benefits tracking)
-		Addon, AddonAssociation, AlertLogs, Auth, BillingSequence, Connection,
-		Costsheet, Coupon, CouponApplication, CouponAssociation, CreditGrant,
-		CreditGrantApplication, CreditNote, CreditNoteLineItem, Customer, Entitlement,
-		EntityIntegrationMapping, Environment, Feature, Group, Invoice,
-		InvoiceLineItem, InvoiceSequence, Meter, Payment, PaymentAttempt, Plan, Price,
-		PriceUnit, ScheduledTask, Secret, Settings, Subscription, SubscriptionLineItem,
-		SubscriptionPause, SubscriptionPhase, SubscriptionSchedule, SystemEvent, Task,
-		TaxApplied, TaxAssociation, TaxRate, Tenant, User, Wallet, WalletTransaction,
-=======
-		Addon, AddonAssociation, AlertLogs, Auth, BenefitLedger, BillingSequence,
-		Connection, Costsheet, Coupon, CouponApplication, CouponAssociation,
-		CreditGrant, CreditGrantApplication, CreditNote, CreditNoteLineItem, Customer,
-		Entitlement, EntityIntegrationMapping, Environment, Feature, Group, Invoice,
-		InvoiceLineItem, InvoiceSequence, Meter, Payment, PaymentAttempt, Plan, Price,
-		PriceUnit, ScheduledTask, Secret, Settings, Subscription, SubscriptionLineItem,
-		SubscriptionPause, SubscriptionPhase, SubscriptionSchedule, SystemEvent, Task,
-		TaxApplied, TaxAssociation, TaxRate, Tenant, User, Wallet, WalletTransaction,
->>>>>>> 06194bf2 (WIP: benefits consumer and benefits tracking)
 		WorkflowExecution []ent.Interceptor
 	}
 )

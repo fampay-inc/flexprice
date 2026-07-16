@@ -286,29 +286,7 @@ func main() {
 			service.NewDashboardService,
 			service.NewWorkflowExecutionService,
 			service.NewWorkflowService,
-<<<<<<< HEAD
-||||||| parent of 06194bf2 (WIP: benefits consumer and benefits tracking)
-
-			// Enterprise (ee) services
-			ee.NewEnterpriseParams,
-			ee.NewCreditNoteService,
-			ee.NewCreditGrantService,
-			ee.NewWalletService,
-			ee.NewPrepaidCreditsService,
-			ee.NewBillingTimezoneService,
-			ee.NewInvoiceGracePeriodService,
-=======
 			service.NewBenefitConsumptionService,
-
-			// Enterprise (ee) services
-			ee.NewEnterpriseParams,
-			ee.NewCreditNoteService,
-			ee.NewCreditGrantService,
-			ee.NewWalletService,
-			ee.NewPrepaidCreditsService,
-			ee.NewBillingTimezoneService,
-			ee.NewInvoiceGracePeriodService,
->>>>>>> 06194bf2 (WIP: benefits consumer and benefits tracking)
 		),
 	)
 
