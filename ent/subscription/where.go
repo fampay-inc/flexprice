@@ -3082,16 +3082,6 @@ func SkuHasSuffix(v string) predicate.Subscription {
 	return predicate.Subscription(sql.FieldHasSuffix(FieldSku, v))
 }
 
-// SkuIsNil applies the IsNil predicate on the "sku" field.
-func SkuIsNil() predicate.Subscription {
-	return predicate.Subscription(sql.FieldIsNull(FieldSku))
-}
-
-// SkuNotNil applies the NotNil predicate on the "sku" field.
-func SkuNotNil() predicate.Subscription {
-	return predicate.Subscription(sql.FieldNotNull(FieldSku))
-}
-
 // SkuEqualFold applies the EqualFold predicate on the "sku" field.
 func SkuEqualFold(v string) predicate.Subscription {
 	return predicate.Subscription(sql.FieldEqualFold(FieldSku, v))

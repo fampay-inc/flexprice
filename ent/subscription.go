@@ -112,7 +112,7 @@ type Subscription struct {
 	// SyncedPriceSequence holds the value of the "synced_price_sequence" field.
 	SyncedPriceSequence int64 `json:"synced_price_sequence,omitempty"`
 	// SKU denormalized from plan.sku at subscription creation time
-	Sku *string `json:"sku,omitempty"`
+	Sku string `json:"sku,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the SubscriptionQuery when eager-loading is set.
 	Edges        SubscriptionEdges `json:"edges"`
@@ -543,8 +543,7 @@ func (s *Subscription) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field sku", values[i])
 			} else if value.Valid {
-				s.Sku = new(string)
-				*s.Sku = value.String
+				s.Sku = value.String
 			}
 		default:
 			s.selectValues.Set(columns[i], values[i])
@@ -783,10 +782,8 @@ func (s *Subscription) String() string {
 	builder.WriteString("synced_price_sequence=")
 	builder.WriteString(fmt.Sprintf("%v", s.SyncedPriceSequence))
 	builder.WriteString(", ")
-	if v := s.Sku; v != nil {
-		builder.WriteString("sku=")
-		builder.WriteString(*v)
-	}
+	builder.WriteString("sku=")
+	builder.WriteString(s.Sku)
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -55808,7 +55808,7 @@ func (m *SubscriptionMutation) Sku() (r string, exists bool) {
 // OldSku returns the old "sku" field's value of the Subscription entity.
 // If the Subscription object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *SubscriptionMutation) OldSku(ctx context.Context) (v *string, err error) {
+func (m *SubscriptionMutation) OldSku(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldSku is only allowed on UpdateOne operations")
 	}
@@ -55822,22 +55822,9 @@ func (m *SubscriptionMutation) OldSku(ctx context.Context) (v *string, err error
 	return oldValue.Sku, nil
 }
 
-// ClearSku clears the value of the "sku" field.
-func (m *SubscriptionMutation) ClearSku() {
-	m.sku = nil
-	m.clearedFields[subscription.FieldSku] = struct{}{}
-}
-
-// SkuCleared returns if the "sku" field was cleared in this mutation.
-func (m *SubscriptionMutation) SkuCleared() bool {
-	_, ok := m.clearedFields[subscription.FieldSku]
-	return ok
-}
-
 // ResetSku resets all changes to the "sku" field.
 func (m *SubscriptionMutation) ResetSku() {
 	m.sku = nil
-	delete(m.clearedFields, subscription.FieldSku)
 }
 
 // AddLineItemIDs adds the "line_items" edge to the SubscriptionLineItem entity by ids.
@@ -57076,9 +57063,6 @@ func (m *SubscriptionMutation) ClearedFields() []string {
 	if m.FieldCleared(subscription.FieldAutoInvoiceThreshold) {
 		fields = append(fields, subscription.FieldAutoInvoiceThreshold)
 	}
-	if m.FieldCleared(subscription.FieldSku) {
-		fields = append(fields, subscription.FieldSku)
-	}
 	return fields
 }
 
@@ -57149,9 +57133,6 @@ func (m *SubscriptionMutation) ClearField(name string) error {
 		return nil
 	case subscription.FieldAutoInvoiceThreshold:
 		m.ClearAutoInvoiceThreshold()
-		return nil
-	case subscription.FieldSku:
-		m.ClearSku()
 		return nil
 	}
 	return fmt.Errorf("unknown Subscription nullable field %s", name)

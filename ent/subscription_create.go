@@ -610,14 +610,6 @@ func (sc *SubscriptionCreate) SetSku(s string) *SubscriptionCreate {
 	return sc
 }
 
-// SetNillableSku sets the "sku" field if the given value is not nil.
-func (sc *SubscriptionCreate) SetNillableSku(s *string) *SubscriptionCreate {
-	if s != nil {
-		sc.SetSku(*s)
-	}
-	return sc
-}
-
 // SetID sets the "id" field.
 func (sc *SubscriptionCreate) SetID(s string) *SubscriptionCreate {
 	sc.mutation.SetID(s)
@@ -1014,6 +1006,9 @@ func (sc *SubscriptionCreate) check() error {
 	if _, ok := sc.mutation.SyncedPriceSequence(); !ok {
 		return &ValidationError{Name: "synced_price_sequence", err: errors.New(`ent: missing required field "Subscription.synced_price_sequence"`)}
 	}
+	if _, ok := sc.mutation.Sku(); !ok {
+		return &ValidationError{Name: "sku", err: errors.New(`ent: missing required field "Subscription.sku"`)}
+	}
 	return nil
 }
 
@@ -1227,7 +1222,7 @@ func (sc *SubscriptionCreate) createSpec() (*Subscription, *sqlgraph.CreateSpec)
 	}
 	if value, ok := sc.mutation.Sku(); ok {
 		_spec.SetField(subscription.FieldSku, field.TypeString, value)
-		_node.Sku = &value
+		_node.Sku = value
 	}
 	if nodes := sc.mutation.LineItemsIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

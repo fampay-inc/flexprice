@@ -221,8 +221,6 @@ func (Subscription) Fields() []ent.Field {
 			SchemaType(map[string]string{
 				"postgres": "varchar(255)",
 			}).
-			Optional().
-			Nillable().
 			Comment("SKU denormalized from plan.sku at subscription creation time"),
 	}
 }
