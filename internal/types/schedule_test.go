@@ -39,22 +39,23 @@ func TestAllTemporalServerScheduleIDs_covers_all_consts(t *testing.T) {
 		seen[id] = struct{}{}
 	}
 	for _, c := range []ScheduleID{
-		ScheduleIDCreditGrantProcessing,
+		// ScheduleIDCreditGrantProcessing,
 		ScheduleIDSubscriptionAutoCancellation,
-		ScheduleIDWalletCreditExpiry,
-		ScheduleIDSubscriptionBilling,
+		// ScheduleIDWalletCreditExpiry,
+		// ScheduleIDSubscriptionBilling,
 		ScheduleIDSubscriptionRenewalAlerts,
-		ScheduleIDSubscriptionTrialEndDue,
-		ScheduleIDSubscriptionAutoInvoiceThresholdBilling,
-		ScheduleIDOutboundWebhookStaleRetry,
-		ScheduleIDPaddleInvoicePullSync,
-		ScheduleIDMoyasarAuthPaymentSettlement,
-		ScheduleIDCheckoutSessionExpiry,
-		ScheduleIDMarketplaceUsageReport,
-		ScheduleIDMarketplaceUsageSnapshot,
+		// ScheduleIDSubscriptionTrialEndDue,
+		// ScheduleIDSubscriptionAutoInvoiceThresholdBilling,
+		// ScheduleIDOutboundWebhookStaleRetry,
+		// ScheduleIDPaddleInvoicePullSync,
+		// ScheduleIDMoyasarAuthPaymentSettlement,
+		// ScheduleIDCheckoutSessionExpiry,
+		// ScheduleIDMarketplaceUsageReport,
+		// ScheduleIDMarketplaceUsageSnapshot,
+		ScheduleIDSubscriptionBillingPeriods,
 	} {
 		_, ok := seen[c]
 		require.True(t, ok, "const %q must appear in AllTemporalServerScheduleIDs", c)
 	}
-	require.Equal(t, 13, len(ids), "expected thirteen managed server schedule ids")
+	require.Equal(t, 3, len(ids), "expected three managed server schedule ids")
 }

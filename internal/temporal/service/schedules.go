@@ -9,9 +9,7 @@ import (
 	"github.com/flexprice/flexprice/internal/logger"
 	"github.com/flexprice/flexprice/internal/temporal/client"
 	"github.com/flexprice/flexprice/internal/temporal/models"
-	subscriptionModels "github.com/flexprice/flexprice/internal/temporal/models/subscription"
 	cronWorkflows "github.com/flexprice/flexprice/internal/temporal/workflows/cron"
-	subscriptionWorkflows "github.com/flexprice/flexprice/internal/temporal/workflows/subscription"
 	"github.com/flexprice/flexprice/internal/types"
 	enumspb "go.temporal.io/api/enums/v1"
 	"go.temporal.io/api/serviceerror"
@@ -22,13 +20,13 @@ import (
 // (not HTTP-only cron entrypoints; keep in sync with types.AllTemporalServerScheduleIDs).
 func AllTemporalScheduleConfigs() []types.ScheduleConfig {
 	return []types.ScheduleConfig{
-		{
-			ID:        types.ScheduleIDCreditGrantProcessing,
-			Interval:  15 * time.Minute,
-			Workflow:  cronWorkflows.CreditGrantProcessingWorkflow,
-			Input:     models.CreditGrantProcessingWorkflowInput{},
-			TaskQueue: types.TemporalTaskQueueCron,
-		},
+		// {
+		// 	ID:        types.ScheduleIDCreditGrantProcessing,
+		// 	Interval:  15 * time.Minute,
+		// 	Workflow:  cronWorkflows.CreditGrantProcessingWorkflow,
+		// 	Input:     models.CreditGrantProcessingWorkflowInput{},
+		// 	TaskQueue: types.TemporalTaskQueueCron,
+		// },
 		{
 			ID:        types.ScheduleIDSubscriptionAutoCancellation,
 			Interval:  15 * time.Minute,
@@ -36,20 +34,20 @@ func AllTemporalScheduleConfigs() []types.ScheduleConfig {
 			Input:     models.SubscriptionAutoCancellationWorkflowInput{},
 			TaskQueue: types.TemporalTaskQueueCron,
 		},
-		{
-			ID:        types.ScheduleIDWalletCreditExpiry,
-			Interval:  15 * time.Minute,
-			Workflow:  cronWorkflows.WalletCreditExpiryWorkflow,
-			Input:     models.WalletCreditExpiryWorkflowInput{},
-			TaskQueue: types.TemporalTaskQueueCron,
-		},
-		{
-			ID:        types.ScheduleIDSubscriptionBilling,
-			Interval:  2 * time.Minute,
-			Workflow:  subscriptionWorkflows.ScheduleSubscriptionBillingWorkflow,
-			Input:     subscriptionModels.ScheduleSubscriptionBillingWorkflowInput{BatchSize: types.DEFAULT_BATCH_SIZE},
-			TaskQueue: types.TemporalTaskQueueSubscription,
-		},
+		// {
+		// 	ID:        types.ScheduleIDWalletCreditExpiry,
+		// 	Interval:  15 * time.Minute,
+		// 	Workflow:  cronWorkflows.WalletCreditExpiryWorkflow,
+		// 	Input:     models.WalletCreditExpiryWorkflowInput{},
+		// 	TaskQueue: types.TemporalTaskQueueCron,
+		// },
+		// {
+		// 	ID:        types.ScheduleIDSubscriptionBilling,
+		// 	Interval:  2 * time.Minute,
+		// 	Workflow:  subscriptionWorkflows.ScheduleSubscriptionBillingWorkflow,
+		// 	Input:     subscriptionModels.ScheduleSubscriptionBillingWorkflowInput{BatchSize: types.DEFAULT_BATCH_SIZE},
+		// 	TaskQueue: types.TemporalTaskQueueSubscription,
+		// },
 		{
 			ID:        types.ScheduleIDSubscriptionRenewalAlerts,
 			Interval:  15 * time.Minute,
@@ -57,60 +55,67 @@ func AllTemporalScheduleConfigs() []types.ScheduleConfig {
 			Input:     models.SubscriptionRenewalDueAlertsWorkflowInput{},
 			TaskQueue: types.TemporalTaskQueueCron,
 		},
+		// {
+		// 	ID:        types.ScheduleIDSubscriptionTrialEndDue,
+		// 	Interval:  15 * time.Minute,
+		// 	Workflow:  cronWorkflows.SubscriptionTrialEndDueWorkflow,
+		// 	Input:     models.SubscriptionTrialEndDueWorkflowInput{},
+		// 	TaskQueue: types.TemporalTaskQueueCron,
+		// },
+		// {
+		// 	ID:        types.ScheduleIDSubscriptionAutoInvoiceThresholdBilling,
+		// 	Interval:  5 * time.Minute,
+		// 	Workflow:  cronWorkflows.AutoInvoiceThresholdBillingWorkflow,
+		// 	Input:     models.AutoInvoiceThresholdBillingWorkflowInput{},
+		// 	TaskQueue: types.TemporalTaskQueueCron,
+		// },
+		// {
+		// 	ID:        types.ScheduleIDOutboundWebhookStaleRetry,
+		// 	Interval:  2 * time.Minute,
+		// 	Workflow:  cronWorkflows.OutboundWebhookStaleRetryWorkflow,
+		// 	Input:     models.OutboundWebhookStaleRetryWorkflowInput{},
+		// 	TaskQueue: types.TemporalTaskQueueCron,
+		// },
+		// {
+		// 	ID:        types.ScheduleIDPaddleInvoicePullSync,
+		// 	Interval:  1 * time.Hour,
+		// 	Workflow:  cronWorkflows.PaddleInvoicePullSyncCronWorkflow,
+		// 	Input:     models.PaddleInvoicePullSyncCronInput{},
+		// 	TaskQueue: types.TemporalTaskQueueCron,
+		// },
+		// {
+		// 	ID:        types.ScheduleIDMoyasarAuthPaymentSettlement,
+		// 	Interval:  15 * time.Minute,
+		// 	Workflow:  cronWorkflows.MoyasarAuthPaymentSettlementWorkflow,
+		// 	Input:     struct{}{},
+		// 	TaskQueue: types.TemporalTaskQueueCron,
+		// },
+		// {
+		// 	ID:        types.ScheduleIDCheckoutSessionExpiry,
+		// 	Interval:  30 * time.Minute,
+		// 	Workflow:  cronWorkflows.CheckoutSessionExpiryWorkflow,
+		// 	Input:     models.CheckoutSessionExpiryWorkflowInput{},
+		// 	TaskQueue: types.TemporalTaskQueueCron,
+		// },
+		// {
+		// 	ID:        types.ScheduleIDMarketplaceUsageSnapshot,
+		// 	Interval:  6 * time.Hour,
+		// 	Workflow:  cronWorkflows.MarketplaceUsageSnapshotWorkflow,
+		// 	Input:     models.MarketplaceUsageSnapshotWorkflowInput{},
+		// 	TaskQueue: types.TemporalTaskQueueCron,
+		// },
+		// {
+		// 	ID:        types.ScheduleIDMarketplaceUsageReport,
+		// 	Interval:  3 * time.Hour,
+		// 	Workflow:  cronWorkflows.MarketplaceUsageReportWorkflow,
+		// 	Input:     models.MarketplaceUsageReportWorkflowInput{},
+		// 	TaskQueue: types.TemporalTaskQueueCron,
+		// },
 		{
-			ID:        types.ScheduleIDSubscriptionTrialEndDue,
+			ID:        types.ScheduleIDSubscriptionBillingPeriods,
 			Interval:  15 * time.Minute,
-			Workflow:  cronWorkflows.SubscriptionTrialEndDueWorkflow,
-			Input:     models.SubscriptionTrialEndDueWorkflowInput{},
-			TaskQueue: types.TemporalTaskQueueCron,
-		},
-		{
-			ID:        types.ScheduleIDSubscriptionAutoInvoiceThresholdBilling,
-			Interval:  5 * time.Minute,
-			Workflow:  cronWorkflows.AutoInvoiceThresholdBillingWorkflow,
-			Input:     models.AutoInvoiceThresholdBillingWorkflowInput{},
-			TaskQueue: types.TemporalTaskQueueCron,
-		},
-		{
-			ID:        types.ScheduleIDOutboundWebhookStaleRetry,
-			Interval:  2 * time.Minute,
-			Workflow:  cronWorkflows.OutboundWebhookStaleRetryWorkflow,
-			Input:     models.OutboundWebhookStaleRetryWorkflowInput{},
-			TaskQueue: types.TemporalTaskQueueCron,
-		},
-		{
-			ID:        types.ScheduleIDPaddleInvoicePullSync,
-			Interval:  1 * time.Hour,
-			Workflow:  cronWorkflows.PaddleInvoicePullSyncCronWorkflow,
-			Input:     models.PaddleInvoicePullSyncCronInput{},
-			TaskQueue: types.TemporalTaskQueueCron,
-		},
-		{
-			ID:        types.ScheduleIDMoyasarAuthPaymentSettlement,
-			Interval:  15 * time.Minute,
-			Workflow:  cronWorkflows.MoyasarAuthPaymentSettlementWorkflow,
-			Input:     struct{}{},
-			TaskQueue: types.TemporalTaskQueueCron,
-		},
-		{
-			ID:        types.ScheduleIDCheckoutSessionExpiry,
-			Interval:  30 * time.Minute,
-			Workflow:  cronWorkflows.CheckoutSessionExpiryWorkflow,
-			Input:     models.CheckoutSessionExpiryWorkflowInput{},
-			TaskQueue: types.TemporalTaskQueueCron,
-		},
-		{
-			ID:        types.ScheduleIDMarketplaceUsageSnapshot,
-			Interval:  6 * time.Hour,
-			Workflow:  cronWorkflows.MarketplaceUsageSnapshotWorkflow,
-			Input:     models.MarketplaceUsageSnapshotWorkflowInput{},
-			TaskQueue: types.TemporalTaskQueueCron,
-		},
-		{
-			ID:        types.ScheduleIDMarketplaceUsageReport,
-			Interval:  3 * time.Hour,
-			Workflow:  cronWorkflows.MarketplaceUsageReportWorkflow,
-			Input:     models.MarketplaceUsageReportWorkflowInput{},
+			Workflow:  cronWorkflows.SubscriptionBillingPeriodsWorkflow,
+			Input:     models.SubscriptionBillingPeriodsWorkflowInput{},
 			TaskQueue: types.TemporalTaskQueueCron,
 		},
 	}

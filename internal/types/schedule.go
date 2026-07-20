@@ -13,19 +13,20 @@ import (
 type ScheduleID string
 
 const (
-	ScheduleIDCreditGrantProcessing                   ScheduleID = "credit-grants-processing"
-	ScheduleIDSubscriptionAutoCancellation            ScheduleID = "subscription-auto-cancellation"
-	ScheduleIDWalletCreditExpiry                      ScheduleID = "wallet-credit-expiry"
-	ScheduleIDSubscriptionBilling                     ScheduleID = "subscription-billing"
-	ScheduleIDSubscriptionRenewalAlerts               ScheduleID = "subscription-renewal-due-alerts"
-	ScheduleIDSubscriptionTrialEndDue                 ScheduleID = "subscription-trial-end-due"
-	ScheduleIDSubscriptionAutoInvoiceThresholdBilling ScheduleID = "subscription-auto-invoice-threshold-billing"
-	ScheduleIDOutboundWebhookStaleRetry               ScheduleID = "webhook-stale-retry"
-	ScheduleIDPaddleInvoicePullSync                   ScheduleID = "paddle-invoice-pull-sync"
-	ScheduleIDMoyasarAuthPaymentSettlement            ScheduleID = "moyasar-auth-payment-settlement"
-	ScheduleIDCheckoutSessionExpiry                   ScheduleID = "checkout-session-expiry"
-	ScheduleIDMarketplaceUsageSnapshot                ScheduleID = "marketplace-usage-snapshot"
-	ScheduleIDMarketplaceUsageReport                  ScheduleID = "marketplace-usage-report"
+	// ScheduleIDCreditGrantProcessing                   ScheduleID = "credit-grants-processing"
+	ScheduleIDSubscriptionAutoCancellation ScheduleID = "subscription-auto-cancellation"
+	// ScheduleIDWalletCreditExpiry                      ScheduleID = "wallet-credit-expiry"
+	// ScheduleIDSubscriptionBilling                     ScheduleID = "subscription-billing"
+	ScheduleIDSubscriptionRenewalAlerts ScheduleID = "subscription-renewal-due-alerts"
+	// ScheduleIDSubscriptionTrialEndDue                 ScheduleID = "subscription-trial-end-due"
+	// ScheduleIDSubscriptionAutoInvoiceThresholdBilling ScheduleID = "subscription-auto-invoice-threshold-billing"
+	// ScheduleIDOutboundWebhookStaleRetry               ScheduleID = "webhook-stale-retry"
+	// ScheduleIDPaddleInvoicePullSync                   ScheduleID = "paddle-invoice-pull-sync"
+	// ScheduleIDMoyasarAuthPaymentSettlement            ScheduleID = "moyasar-auth-payment-settlement"
+	// ScheduleIDCheckoutSessionExpiry                   ScheduleID = "checkout-session-expiry"
+	// ScheduleIDMarketplaceUsageSnapshot                ScheduleID = "marketplace-usage-snapshot"
+	// ScheduleIDMarketplaceUsageReport                  ScheduleID = "marketplace-usage-report"
+	ScheduleIDSubscriptionBillingPeriods ScheduleID = "subscription-billing-periods"
 )
 
 // String returns the raw schedule id.
@@ -35,19 +36,20 @@ func (id ScheduleID) String() string { return string(id) }
 // (keep aligned with AllTemporalScheduleConfigs in internal/temporal/service/schedules.go).
 func AllTemporalServerScheduleIDs() []ScheduleID {
 	return []ScheduleID{
-		ScheduleIDCreditGrantProcessing,
+		// ScheduleIDCreditGrantProcessing,
 		ScheduleIDSubscriptionAutoCancellation,
-		ScheduleIDWalletCreditExpiry,
-		ScheduleIDSubscriptionBilling,
+		// ScheduleIDWalletCreditExpiry,
+		// ScheduleIDSubscriptionBilling,
 		ScheduleIDSubscriptionRenewalAlerts,
-		ScheduleIDSubscriptionTrialEndDue,
-		ScheduleIDSubscriptionAutoInvoiceThresholdBilling,
-		ScheduleIDOutboundWebhookStaleRetry,
-		ScheduleIDPaddleInvoicePullSync,
-		ScheduleIDMoyasarAuthPaymentSettlement,
-		ScheduleIDCheckoutSessionExpiry,
-		ScheduleIDMarketplaceUsageSnapshot,
-		ScheduleIDMarketplaceUsageReport,
+		// ScheduleIDSubscriptionTrialEndDue,
+		// ScheduleIDSubscriptionAutoInvoiceThresholdBilling,
+		// ScheduleIDOutboundWebhookStaleRetry,
+		// ScheduleIDPaddleInvoicePullSync,
+		// ScheduleIDMoyasarAuthPaymentSettlement,
+		// ScheduleIDCheckoutSessionExpiry,
+		// ScheduleIDMarketplaceUsageSnapshot,
+		// ScheduleIDMarketplaceUsageReport,
+		ScheduleIDSubscriptionBillingPeriods,
 	}
 }
 
