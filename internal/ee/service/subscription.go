@@ -1887,10 +1887,10 @@ func (s *subscriptionService) UpdateSubscription(ctx context.Context, subscripti
 		subscription.SubscriptionStatus = req.Status
 	}
 
-	if req.CancelAt != nil {
-		subscription.CancelAt = req.CancelAt
-		subscription.EndDate = req.CancelAt
-	}
+
+	// Unconditional assignment: sending cancel_at=null (or omitting it) clears any
+	// scheduled cancellation on the subscription.
+	subscription.CancelAt = req.CancelAt
 
 	subscription.CancelAtPeriodEnd = req.CancelAtPeriodEnd
 
@@ -3148,6 +3148,34 @@ func (s *subscriptionService) processSubscriptionPeriod(ctx context.Context, sub
 		for i := 0; i < len(periods)-1; i++ {
 			period := periods[i]
 
+			// Check for cancellation at this period end
+			if sub.CancelAtPeriodEnd && sub.CancelAt != nil && !sub.CancelAt.After(period.end) {
+				sub.SubscriptionStatus = types.SubscriptionStatusCancelled
+				sub.EndDate = sub.CancelAt
+				sub.CancelledAt = sub.CancelAt // Set when actually cancelling
+
+				// Update the cancellation schedule status to executed
+				if err := s.MarkCancellationScheduleAsExecuted(ctx, sub.ID); err != nil {
+					s.Logger.Error(ctx, "failed to mark cancellation schedule as executed",
+						"subscription_id", sub.ID,
+						"error", err)
+					// Don't fail the entire operation, just log the error
+				}
+
+				break
+			}
+
+			// Check if this period end matches the subscription end date
+			if sub.EndDate != nil && period.end.Equal(*sub.EndDate) {
+				sub.SubscriptionStatus = types.SubscriptionStatusCancelled
+				sub.CancelledAt = sub.EndDate
+				s.Logger.Info(ctx, "will cancel subscription at end of this period",
+					"subscription_id", sub.ID,
+					"period_end", period.end,
+					"end_date", *sub.EndDate)
+				break
+			}
+
 			// Create a single invoice for both arrear and advance charges at period end
 			paymentParams := dto.NewPaymentParametersFromSubscription(sub.CollectionMethod, sub.PaymentBehavior, sub.GatewayPaymentMethodID)
 			// Apply backward compatibility normalization
@@ -3177,34 +3205,6 @@ func (s *subscriptionService) processSubscriptionPeriod(ctx context.Context, sub
 				sub = updatedSub
 			}
 
-			// Check for cancellation at this period end
-			if sub.CancelAtPeriodEnd && sub.CancelAt != nil && !sub.CancelAt.After(period.end) {
-				sub.SubscriptionStatus = types.SubscriptionStatusCancelled
-				sub.EndDate = sub.CancelAt
-				sub.CancelledAt = sub.CancelAt // Set when actually cancelling
-
-				// Update the cancellation schedule status to executed
-				if err := s.MarkCancellationScheduleAsExecuted(ctx, sub.ID); err != nil {
-					s.Logger.Error(ctx, "failed to mark cancellation schedule as executed",
-						"subscription_id", sub.ID,
-						"error", err)
-					// Don't fail the entire operation, just log the error
-				}
-
-				break
-			}
-
-			// Check if this period end matches the subscription end date
-			if sub.EndDate != nil && period.end.Equal(*sub.EndDate) {
-				sub.SubscriptionStatus = types.SubscriptionStatusCancelled
-				sub.CancelledAt = sub.EndDate
-				s.Logger.Info(ctx, "will cancel subscription at end of this period",
-					"subscription_id", sub.ID,
-					"period_end", period.end,
-					"end_date", *sub.EndDate)
-				break
-			}
-
 			if inv == nil {
 				s.Logger.Info(ctx, "no invoice was created for period",
 					"subscription_id", sub.ID,
@@ -3224,8 +3224,6 @@ func (s *subscriptionService) processSubscriptionPeriod(ctx context.Context, sub
 
 		// Update to the new current period (last period)
 		newPeriod := periods[len(periods)-1]
-		sub.CurrentPeriodStart = newPeriod.start
-		sub.CurrentPeriodEnd = newPeriod.end
 
 		// Final catch-up cancellation guard:
 		// cancel only when the termination timestamp has already been reached.
@@ -3266,6 +3264,11 @@ func (s *subscriptionService) processSubscriptionPeriod(ctx context.Context, sub
 			}); err != nil {
 				return err
 			}
+		}
+
+		if sub.SubscriptionStatus != types.SubscriptionStatusCancelled {
+			sub.CurrentPeriodStart = newPeriod.start
+			sub.CurrentPeriodEnd = newPeriod.end
 		}
 
 		// Update the subscription
