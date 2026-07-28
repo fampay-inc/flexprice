@@ -62,6 +62,7 @@ func (s *PlanServiceSuite) TestCreatePlan() {
 		req := dto.CreatePlanRequest{
 			Name:        "Test Plan",
 			Description: "A test plan",
+			Product:     "test-product",
 		}
 
 		resp, err := s.service.CreatePlan(s.GetContext(), req)
