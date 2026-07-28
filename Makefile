@@ -212,6 +212,40 @@ generate-migration:
 	@go run ./cmd/migrate postgres --dry-run --timeout 300 > migrations/ent/migration_$(shell date +%Y%m%d%H%M%S).sql
 	@echo "SQL migration file generated in migrations/ent/"
 
+# Atlas versioned migrations (requires atlas CLI: https://atlasgo.io)
+# Config lives in atlas.hcl (env "local"); connection URLs are derived from
+# FLEXPRICE_POSTGRES_* variables in .env.local via getenv() in atlas.hcl.
+
+define atlas_env
+	set -a; [ -f .env.local ] && . ./.env.local; set +a
+endef
+
+# atlas migrate diff + recompute atlas.sum. Usage: make atlas-diff name=<name>
+.PHONY: atlas-diff
+atlas-diff:
+	@if [ -z "$(name)" ]; then echo "Usage: make atlas-diff name=<migration_name>"; exit 1; fi
+	@$(atlas_env); \
+	atlas migrate diff $(name) --env local && \
+	atlas migrate hash --dir "file://migrations/atlas"
+	@echo "Done — review any new file in migrations/atlas/ before make atlas-apply"
+
+# Recompute atlas.sum after manually editing/removing migration files
+.PHONY: atlas-hash
+atlas-hash:
+	@atlas migrate hash --dir "file://migrations/atlas"
+
+# Apply pending Atlas migrations to the database from .env.local.
+.PHONY: atlas-apply
+atlas-apply:
+	@$(atlas_env); \
+	atlas migrate apply --env local
+
+# Show applied vs pending migrations for the database from .env.local.
+.PHONY: atlas-status
+atlas-status:
+	@$(atlas_env); \
+	atlas migrate status --env local
+
 # Initialize databases and required topics
 init-db: up migrate-postgres migrate-clickhouse generate-ent migrate-ent seed-db
 	@echo "Database initialization complete"

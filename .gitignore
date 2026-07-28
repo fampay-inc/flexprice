@@ -30,6 +30,7 @@ go.work.sum
 *.cov
 coverage.out
 coverage.html
+coverage.xml
 **/pkg/
 **/bin/
 .gocache/

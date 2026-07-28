@@ -99,6 +99,7 @@ func (s *SubscriptionChangeServiceTestSuite) createTestPlan(name string, amount 
 	planReq := dto.CreatePlanRequest{
 		Name:        name,
 		Description: "Test plan for subscription changes",
+		Product:     "test-product",
 	}
 
 	planResponse, err := s.planService.CreatePlan(ctx, planReq)
@@ -184,6 +185,7 @@ func (s *SubscriptionChangeServiceTestSuite) createTestPlanWithBilling(name stri
 	planReq := dto.CreatePlanRequest{
 		Name:        name,
 		Description: "Test plan for subscription changes",
+		Product:     "test-product",
 	}
 
 	planResponse, err := s.planService.CreatePlan(ctx, planReq)
@@ -254,6 +256,7 @@ func (s *SubscriptionChangeServiceTestSuite) createUsageBasedPlan(name string, f
 	planReq := dto.CreatePlanRequest{
 		Name:        name,
 		Description: "Usage-based test plan",
+		Product:     "test-product",
 	}
 
 	planResponse, err := s.planService.CreatePlan(ctx, planReq)
@@ -329,6 +332,7 @@ func (s *SubscriptionChangeServiceTestSuite) createMultiMeterUsagePlan(name stri
 	planReq := dto.CreatePlanRequest{
 		Name:        name,
 		Description: "Multi-meter usage-based test plan",
+		Product:     "test-product",
 	}
 
 	planResponse, err := s.planService.CreatePlan(ctx, planReq)
