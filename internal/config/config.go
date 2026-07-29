@@ -30,51 +30,51 @@ type Configuration struct {
 	// (non-nil) every event is published to it in addition to the local `kafka` cluster;
 	// when nil, publishing is single-cluster. The `kafka` block is this deployment's own
 	// local cluster — consumed AND always written. See infrastructure/docs/GCP-CUTOVER-STEPWISE.md.
-	KafkaSecondary             *KafkaConfig                     `mapstructure:"kafka_secondary" validate:"omitempty"`
-	ClickHouse                 ClickHouseConfig                 `validate:"required"`
-	Logging                    LoggingConfig                    `validate:"required"`
-	Postgres                   PostgresConfig                   `validate:"required"`
-	Sentry                     SentryConfig                     `validate:"required"`
-	Otel                       OtelConfig                       `validate:"omitempty"`
-	Pyroscope                  PyroscopeConfig                  `validate:"required"`
-	Event                      EventConfig                      `validate:"required"`
-	DynamoDB                   DynamoDBConfig                   `validate:"required"`
-	Temporal                   TemporalConfig                   `validate:"required"`
-	Webhook                    Webhook                          `validate:"omitempty"`
-	Secrets                    SecretsConfig                    `validate:"required"`
-	Billing                    BillingConfig                    `validate:"omitempty"`
-	S3                         S3Config                         `validate:"required"`
-	FlexpriceS3Exports         FlexpriceS3ExportsConfig         `mapstructure:"flexprice_s3_exports" validate:"omitempty"`
-	Cache                      CacheConfig                      `validate:"required"`
-	EventProcessing            EventProcessingConfig            `mapstructure:"event_processing" validate:"required"`
-	EventProcessingLazy        EventProcessingLazyConfig        `mapstructure:"event_processing_lazy" validate:"required"`
-	EventProcessingReplay      EventProcessingReplayConfig      `mapstructure:"event_processing_replay" validate:"required"`
-	CostSheetUsageTracking     CostSheetUsageTrackingConfig     `mapstructure:"costsheet_usage_tracking" validate:"required"`
+	KafkaSecondary             *KafkaConfig                     `mapstructure:"kafka_secondary"               validate:"omitempty"`
+	ClickHouse                 ClickHouseConfig                 `                                             validate:"required"`
+	Logging                    LoggingConfig                    `                                             validate:"required"`
+	Postgres                   PostgresConfig                   `                                             validate:"required"`
+	Sentry                     SentryConfig                     `                                             validate:"required"`
+	Otel                       OtelConfig                       `                                             validate:"omitempty"`
+	Pyroscope                  PyroscopeConfig                  `                                             validate:"required"`
+	Event                      EventConfig                      `                                             validate:"required"`
+	DynamoDB                   DynamoDBConfig                   `                                             validate:"required"`
+	Temporal                   TemporalConfig                   `                                             validate:"required"`
+	Webhook                    Webhook                          `                                             validate:"omitempty"`
+	Secrets                    SecretsConfig                    `                                             validate:"required"`
+	Billing                    BillingConfig                    `                                             validate:"omitempty"`
+	S3                         S3Config                         `                                             validate:"required"`
+	FlexpriceS3Exports         FlexpriceS3ExportsConfig         `mapstructure:"flexprice_s3_exports"          validate:"omitempty"`
+	Cache                      CacheConfig                      `                                             validate:"required"`
+	EventProcessing            EventProcessingConfig            `mapstructure:"event_processing"              validate:"required"`
+	EventProcessingLazy        EventProcessingLazyConfig        `mapstructure:"event_processing_lazy"         validate:"required"`
+	EventProcessingReplay      EventProcessingReplayConfig      `mapstructure:"event_processing_replay"       validate:"required"`
+	CostSheetUsageTracking     CostSheetUsageTrackingConfig     `mapstructure:"costsheet_usage_tracking"      validate:"required"`
 	CostSheetUsageTrackingLazy CostSheetUsageTrackingLazyConfig `mapstructure:"costsheet_usage_tracking_lazy" validate:"required"`
-	EventPostProcessing        EventPostProcessingConfig        `mapstructure:"event_post_processing" validate:"required"`
-	FeatureUsageTracking       FeatureUsageTrackingConfig       `mapstructure:"feature_usage_tracking" validate:"required"`
-	FeatureUsageTrackingLazy   FeatureUsageTrackingLazyConfig   `mapstructure:"feature_usage_tracking_lazy" validate:"required"`
+	EventPostProcessing        EventPostProcessingConfig        `mapstructure:"event_post_processing"         validate:"required"`
+	FeatureUsageTracking       FeatureUsageTrackingConfig       `mapstructure:"feature_usage_tracking"        validate:"required"`
+	FeatureUsageTrackingLazy   FeatureUsageTrackingLazyConfig   `mapstructure:"feature_usage_tracking_lazy"   validate:"required"`
 	FeatureUsageTrackingReplay FeatureUsageTrackingReplayConfig `mapstructure:"feature_usage_tracking_replay" validate:"required"`
-	MeterUsageTracking         MeterUsageTrackingConfig         `mapstructure:"meter_usage_tracking" validate:"required"`
-	MeterUsageTrackingLazy     MeterUsageTrackingLazyConfig     `mapstructure:"meter_usage_tracking_lazy" validate:"required"`
-	UsageBenchmark             UsageBenchmarkConfig             `mapstructure:"usage_benchmark" validate:"omitempty"`
-	EnvAccess                  EnvAccessConfig                  `mapstructure:"env_access" json:"env_access" validate:"omitempty"`
-	FeatureFlag                FeatureFlagConfig                `mapstructure:"feature_flag" validate:"required"`
-	Email                      EmailConfig                      `mapstructure:"email" validate:"required"`
-	RBAC                       RBACConfig                       `mapstructure:"rbac" validate:"omitempty"`
-	OAuth                      OAuthConfig                      `mapstructure:"oauth" validate:"required"`
-	WalletBalanceAlert         WalletBalanceAlertConfig         `mapstructure:"wallet_balance_alert" validate:"required"`
-	CustomerPortal             CustomerPortalConfig             `mapstructure:"customer_portal" validate:"required"`
-	Checkout                   CheckoutConfig                   `mapstructure:"checkout" validate:"omitempty"`
-	Redis                      RedisConfig                      `mapstructure:"redis" validate:"required"`
-	RawEventsReprocessing      RawEventsReprocessingConfig      `mapstructure:"raw_events_reprocessing" validate:"required"`
-	RawEventConsumption        RawEventConsumptionConfig        `mapstructure:"raw_event_consumption" validate:"required"`
-	IntegrationEvents          IntegrationEventsConfig          `mapstructure:"integration_events" validate:"omitempty"`
-	OnboardingEvents           OnboardingEventsConfig           `mapstructure:"onboarding_events" validate:"omitempty"`
-	WebhookRetryJob            WebhookRetryJobConfig            `mapstructure:"webhook_retry_job" validate:"omitempty"`
-	Gemini                     GeminiConfig                     `mapstructure:"gemini" validate:"omitempty"`
-	BenefitEvents              BenefitEventsConfig              `mapstructure:"benefit_events" validate:"omitempty"`
-	Whop                       WhopConfig                       `mapstructure:"whop" validate:"omitempty"`
+	MeterUsageTracking         MeterUsageTrackingConfig         `mapstructure:"meter_usage_tracking"          validate:"required"`
+	MeterUsageTrackingLazy     MeterUsageTrackingLazyConfig     `mapstructure:"meter_usage_tracking_lazy"     validate:"required"`
+	UsageBenchmark             UsageBenchmarkConfig             `mapstructure:"usage_benchmark"               validate:"omitempty"`
+	EnvAccess                  EnvAccessConfig                  `mapstructure:"env_access"                    validate:"omitempty" json:"env_access"`
+	FeatureFlag                FeatureFlagConfig                `mapstructure:"feature_flag"                  validate:"required"`
+	Email                      EmailConfig                      `mapstructure:"email"                         validate:"required"`
+	RBAC                       RBACConfig                       `mapstructure:"rbac"                          validate:"omitempty"`
+	OAuth                      OAuthConfig                      `mapstructure:"oauth"                         validate:"required"`
+	WalletBalanceAlert         WalletBalanceAlertConfig         `mapstructure:"wallet_balance_alert"          validate:"required"`
+	CustomerPortal             CustomerPortalConfig             `mapstructure:"customer_portal"               validate:"required"`
+	Checkout                   CheckoutConfig                   `mapstructure:"checkout"                      validate:"omitempty"`
+	Redis                      RedisConfig                      `mapstructure:"redis"                         validate:"required"`
+	RawEventsReprocessing      RawEventsReprocessingConfig      `mapstructure:"raw_events_reprocessing"       validate:"required"`
+	RawEventConsumption        RawEventConsumptionConfig        `mapstructure:"raw_event_consumption"         validate:"required"`
+	IntegrationEvents          IntegrationEventsConfig          `mapstructure:"integration_events"            validate:"omitempty"`
+	OnboardingEvents           OnboardingEventsConfig           `mapstructure:"onboarding_events"             validate:"omitempty"`
+	WebhookRetryJob            WebhookRetryJobConfig            `mapstructure:"webhook_retry_job"             validate:"omitempty"`
+	Gemini                     GeminiConfig                     `mapstructure:"gemini"                        validate:"omitempty"`
+	BenefitEvents              BenefitEventsConfig              `mapstructure:"benefit_events"                validate:"omitempty"`
+	Whop                       WhopConfig                       `mapstructure:"whop"                          validate:"omitempty"`
 }
 
 // WhopConfig holds Whop integration settings (non-secret, static config)
@@ -87,13 +87,13 @@ type WhopConfig struct {
 // GeminiConfig holds Google Gemini API settings for server-side AI pricing parse (portal).
 type GeminiConfig struct {
 	APIKey string `mapstructure:"api_key" validate:"omitempty"`
-	Model  string `mapstructure:"model" validate:"omitempty"`
+	Model  string `mapstructure:"model"   validate:"omitempty"`
 }
 
 type CacheConfig struct {
-	Enabled  bool                `mapstructure:"enabled" validate:"required"`
+	Enabled  bool                `mapstructure:"enabled"  validate:"required"`
 	InMemory InMemoryCacheConfig `mapstructure:"inmemory" validate:"required"`
-	Redis    RedisCacheConfig    `mapstructure:"redis" validate:"required"`
+	Redis    RedisCacheConfig    `mapstructure:"redis"    validate:"required"`
 }
 
 type InMemoryCacheConfig struct {
@@ -106,21 +106,21 @@ type RedisCacheConfig struct {
 
 type S3Config struct {
 	Enabled             bool         `mapstructure:"enabled" validate:"required"`
-	Region              string       `mapstructure:"region" validate:"required"`
+	Region              string       `mapstructure:"region"  validate:"required"`
 	InvoiceBucketConfig BucketConfig `mapstructure:"invoice" validate:"required"`
 }
 
 type BucketConfig struct {
-	Bucket                string `mapstructure:"bucket" validate:"required"`
+	Bucket                string `mapstructure:"bucket"                  validate:"required"`
 	PresignExpiryDuration string `mapstructure:"presign_expiry_duration" validate:"required"`
-	KeyPrefix             string `mapstructure:"key_prefix" validate:"omitempty"`
+	KeyPrefix             string `mapstructure:"key_prefix"              validate:"omitempty"`
 }
 
 type FlexpriceS3ExportsConfig struct {
-	Bucket             string `mapstructure:"bucket" validate:"required"`
-	Region             string `mapstructure:"region" validate:"required"`
-	AWSAccessKeyID     string `mapstructure:"aws_access_key_id" validate:"required"`
-	AWSSecretAccessKey string `mapstructure:"aws_secret_access_key" validate:"required"`
+	Bucket             string `mapstructure:"bucket"                      validate:"required"`
+	Region             string `mapstructure:"region"                      validate:"required"`
+	AWSAccessKeyID     string `mapstructure:"aws_access_key_id"           validate:"required"`
+	AWSSecretAccessKey string `mapstructure:"aws_secret_access_key"       validate:"required"`
 	AWSSessionToken    string `mapstructure:"aws_session_token,omitempty"`
 }
 
@@ -134,7 +134,7 @@ type ServerConfig struct {
 
 type AuthConfig struct {
 	Provider types.AuthProvider `mapstructure:"provider" validate:"required"`
-	Secret   string             `mapstructure:"secret" validate:"required"`
+	Secret   string             `mapstructure:"secret"   validate:"required"`
 	Supabase SupabaseConfig     `mapstructure:"supabase"`
 	APIKey   APIKeyConfig       `mapstructure:"api_key"`
 }
@@ -145,14 +145,14 @@ type SupabaseConfig struct {
 }
 
 type KafkaConfig struct {
-	Brokers       []string `mapstructure:"brokers" validate:"required"`
+	Brokers       []string `mapstructure:"brokers"        validate:"required"`
 	ConsumerGroup string   `mapstructure:"consumer_group" validate:"required"`
-	Topic         string   `mapstructure:"topic" validate:"required"`
-	TopicLazy     string   `mapstructure:"topic_lazy" validate:"required"`
+	Topic         string   `mapstructure:"topic"          validate:"required"`
+	TopicLazy     string   `mapstructure:"topic_lazy"     validate:"required"`
 	// TopicDLQ is the global fallback dead-letter Kafka topic used by handlers that
 	// do not define their own per-consumer-group topic_dlq. Empty disables DLQ for
 	// those handlers.
-	TopicDLQ      string               `mapstructure:"topic_dlq" default:""`
+	TopicDLQ      string               `mapstructure:"topic_dlq"      default:""`
 	TLS           bool                 `mapstructure:"tls"` // set to true if using 9094 port else can set to false
 	UseSASL       bool                 `mapstructure:"use_sasl"`
 	SASLMechanism sarama.SASLMechanism `mapstructure:"sasl_mechanism"`
@@ -162,7 +162,7 @@ type KafkaConfig struct {
 	// Empty defaults to ["https://www.googleapis.com/auth/cloud-platform"],
 	// which is what GCP Managed Kafka requires.
 	SASLOAuthScopes        []string `mapstructure:"sasl_oauth_scopes"`
-	ClientID               string   `mapstructure:"client_id" validate:"required"`
+	ClientID               string   `mapstructure:"client_id"                  validate:"required"`
 	RouteTenantsOnLazyMode []string `mapstructure:"route_tenants_on_lazy_mode" validate:"omitempty"`
 	// TopicsDefaults/Topics describe the full desired topic set for `migrate kafka`
 	// (partition counts, replication factor, retention). Consumed only by
@@ -185,44 +185,44 @@ type KafkaTopicSpec struct {
 }
 
 type ClickHouseConfig struct {
-	Address        string `mapstructure:"address" validate:"required"`
+	Address        string `mapstructure:"address"          validate:"required"`
 	TLS            bool   `mapstructure:"tls"`
-	Username       string `mapstructure:"username" validate:"required"`
-	Password       string `mapstructure:"password" validate:"required"`
-	Database       string `mapstructure:"database" validate:"required"`
+	Username       string `mapstructure:"username"         validate:"required"`
+	Password       string `mapstructure:"password"         validate:"required"`
+	Database       string `mapstructure:"database"         validate:"required"`
 	MaxMemoryUsage int64  `mapstructure:"max_memory_usage" validate:"required"`
 }
 
 type LoggingConfig struct {
-	Level   types.LogLevel `mapstructure:"level" validate:"required"`
+	Level   types.LogLevel `mapstructure:"level"    validate:"required"`
 	DBLevel types.LogLevel `mapstructure:"db_level" validate:"required"`
 
 	// Service identity fields added to every log line
 	ServiceName string `mapstructure:"service_name" validate:"omitempty"`
-	Environment string `mapstructure:"environment" validate:"omitempty"`
-	Region      string `mapstructure:"region" validate:"omitempty"`
+	Environment string `mapstructure:"environment"  validate:"omitempty"`
+	Region      string `mapstructure:"region"       validate:"omitempty"`
 
 	// OpenTelemetry log export configuration (works with SigNoz, Grafana, Datadog, etc.)
-	OtelEnabled    bool   `mapstructure:"otel_enabled" default:"false"`
-	OtelEndpoint   string `mapstructure:"otel_endpoint" validate:"omitempty"`    // e.g. <host>:<port>
-	OtelInsecure   bool   `mapstructure:"otel_insecure" default:"false"`         // set true for local collector without TLS
-	OtelProtocol   string `mapstructure:"otel_protocol" default:"grpc"`          // grpc (default) or http
-	OtelAuthHeader string `mapstructure:"otel_auth_header" validate:"omitempty"` // header name
-	OtelAuthValue  string `mapstructure:"otel_auth_value" validate:"omitempty"`  // header value / token
-	OtelDebug      bool   `mapstructure:"otel_debug" default:"false"`            // use synchronous SimpleProcessor and verbose stderr output
+	OtelEnabled    bool   `mapstructure:"otel_enabled"     default:"false"`
+	OtelEndpoint   string `mapstructure:"otel_endpoint"                    validate:"omitempty"` // e.g. <host>:<port>
+	OtelInsecure   bool   `mapstructure:"otel_insecure"    default:"false"`                      // set true for local collector without TLS
+	OtelProtocol   string `mapstructure:"otel_protocol"    default:"grpc"`                       // grpc (default) or http
+	OtelAuthHeader string `mapstructure:"otel_auth_header"                 validate:"omitempty"` // header name
+	OtelAuthValue  string `mapstructure:"otel_auth_value"                  validate:"omitempty"` // header value / token
+	OtelDebug      bool   `mapstructure:"otel_debug"       default:"false"`                      // use synchronous SimpleProcessor and verbose stderr output
 }
 
 type PostgresConfig struct {
-	Host                   string `mapstructure:"host" validate:"required"`
-	Port                   int    `mapstructure:"port" validate:"required"`
-	User                   string `mapstructure:"user" validate:"required"`
-	Password               string `mapstructure:"password" validate:"required"`
-	DBName                 string `mapstructure:"dbname" validate:"required"`
-	SSLMode                string `mapstructure:"sslmode" validate:"required"`
-	MaxOpenConns           int    `mapstructure:"max_open_conns" default:"10"`
-	MaxIdleConns           int    `mapstructure:"max_idle_conns" default:"5"`
-	ConnMaxLifetimeMinutes int    `mapstructure:"conn_max_lifetime_minutes" default:"60"`
-	AutoMigrate            bool   `mapstructure:"auto_migrate" default:"false"`
+	Host                   string `mapstructure:"host"                      validate:"required"`
+	Port                   int    `mapstructure:"port"                      validate:"required"`
+	User                   string `mapstructure:"user"                      validate:"required"`
+	Password               string `mapstructure:"password"                  validate:"required"`
+	DBName                 string `mapstructure:"dbname"                    validate:"required"`
+	SSLMode                string `mapstructure:"sslmode"                   validate:"required"`
+	MaxOpenConns           int    `mapstructure:"max_open_conns"                                default:"10"`
+	MaxIdleConns           int    `mapstructure:"max_idle_conns"                                default:"5"`
+	ConnMaxLifetimeMinutes int    `mapstructure:"conn_max_lifetime_minutes"                     default:"60"`
+	AutoMigrate            bool   `mapstructure:"auto_migrate"                                  default:"false"`
 
 	// Reader endpoint configuration for read replicas
 	ReaderHost string `mapstructure:"reader_host"`
@@ -236,16 +236,16 @@ type APIKeyConfig struct {
 
 type APIKeyDetails struct {
 	TenantID string `mapstructure:"tenant_id" json:"tenant_id" validate:"required"`
-	UserID   string `mapstructure:"user_id" json:"user_id" validate:"required"`
-	Name     string `mapstructure:"name" json:"name" validate:"required"`      // description of what this key is for
-	IsActive bool   `mapstructure:"is_active" json:"is_active" default:"true"` // whether this key is active
+	UserID   string `mapstructure:"user_id"   json:"user_id"   validate:"required"`
+	Name     string `mapstructure:"name"      json:"name"      validate:"required"`                // description of what this key is for
+	IsActive bool   `mapstructure:"is_active" json:"is_active"                     default:"true"` // whether this key is active
 }
 
 // SentryConfig is retained only for transitional rollback. Error/exception
 // capture is now OTel-native (see internal/tracing.CaptureException and
 // internal/spanerr); Sentry is no longer the sink and defaults to disabled.
 type SentryConfig struct {
-	Enabled     bool    `mapstructure:"enabled" default:"false"`
+	Enabled     bool    `mapstructure:"enabled"     default:"false"`
 	DSN         string  `mapstructure:"dsn"`
 	Environment string  `mapstructure:"environment"`
 	SampleRate  float64 `mapstructure:"sample_rate" default:"1.0"`
@@ -256,11 +256,11 @@ type SentryConfig struct {
 // want, for example, logs to SigNoz and traces to Sentry. Top-level fields act
 // as defaults; per-signal fields override when non-empty.
 type OtelConfig struct {
-	Enabled     bool              `mapstructure:"enabled" default:"false"`
-	ServiceName string            `mapstructure:"service_name" validate:"omitempty"` // falls back to logging.service_name, then deployment.mode
-	Protocol    string            `mapstructure:"protocol" default:"grpc"`           // grpc (default) or http
-	Insecure    bool              `mapstructure:"insecure" default:"false"`          // true for local collector without TLS
-	Headers     map[string]string `mapstructure:"headers" validate:"omitempty"`      // applied to every signal unless that signal supplies its own non-empty map
+	Enabled     bool              `mapstructure:"enabled"      default:"false"`
+	ServiceName string            `mapstructure:"service_name"                 validate:"omitempty"` // falls back to logging.service_name, then deployment.mode
+	Protocol    string            `mapstructure:"protocol"     default:"grpc"`                       // grpc (default) or http
+	Insecure    bool              `mapstructure:"insecure"     default:"false"`                      // true for local collector without TLS
+	Headers     map[string]string `mapstructure:"headers"                      validate:"omitempty"` // applied to every signal unless that signal supplies its own non-empty map
 
 	Traces OtelTracesConfig `mapstructure:"traces"`
 	Logs   OtelLogsConfig   `mapstructure:"logs"`
@@ -273,14 +273,14 @@ type OtelConfig struct {
 // env-var friendly. Use Headers when you need to send more than one header.
 // AuthHeader/AuthValue are merged into the resolved header set at startup.
 type OtelTracesConfig struct {
-	Enabled             bool              `mapstructure:"enabled" default:"false"`
-	Endpoint            string            `mapstructure:"endpoint" validate:"omitempty"` // host:port (grpc) or full URL (http)
-	Protocol            string            `mapstructure:"protocol" validate:"omitempty"` // overrides otel.protocol when non-empty
-	AuthHeader          string            `mapstructure:"auth_header" validate:"omitempty"`
-	AuthValue           string            `mapstructure:"auth_value" validate:"omitempty"`
-	Headers             map[string]string `mapstructure:"headers" validate:"omitempty"`          // overrides otel.headers when non-empty
-	SampleRate          float64           `mapstructure:"sample_rate" default:"1.0"`             // 0.0 - 1.0
-	StorageSpansEnabled bool              `mapstructure:"storage_spans_enabled" default:"false"` // enable per-query DB/cache/ClickHouse child spans (can be noisy)
+	Enabled             bool              `mapstructure:"enabled"               default:"false"`
+	Endpoint            string            `mapstructure:"endpoint"                              validate:"omitempty"` // host:port (grpc) or full URL (http)
+	Protocol            string            `mapstructure:"protocol"                              validate:"omitempty"` // overrides otel.protocol when non-empty
+	AuthHeader          string            `mapstructure:"auth_header"                           validate:"omitempty"`
+	AuthValue           string            `mapstructure:"auth_value"                            validate:"omitempty"`
+	Headers             map[string]string `mapstructure:"headers"                               validate:"omitempty"` // overrides otel.headers when non-empty
+	SampleRate          float64           `mapstructure:"sample_rate"           default:"1.0"`                        // 0.0 - 1.0
+	StorageSpansEnabled bool              `mapstructure:"storage_spans_enabled" default:"false"`                      // enable per-query DB/cache/ClickHouse child spans (can be noisy)
 	// CaptureExceptions records errors (CaptureException calls, error-level logs,
 	// recovered panics) as OTel "exception" span events for SigNoz's Exceptions
 	// tab. Keep sample_rate at 1.0 so error-bearing traces are not sampled away.
@@ -290,12 +290,12 @@ type OtelTracesConfig struct {
 // OtelLogsConfig configures OTLP log export. See OtelTracesConfig for the
 // AuthHeader/AuthValue convenience pair.
 type OtelLogsConfig struct {
-	Enabled    bool              `mapstructure:"enabled" default:"false"`
-	Endpoint   string            `mapstructure:"endpoint" validate:"omitempty"`
-	Protocol   string            `mapstructure:"protocol" validate:"omitempty"`
-	AuthHeader string            `mapstructure:"auth_header" validate:"omitempty"`
-	AuthValue  string            `mapstructure:"auth_value" validate:"omitempty"`
-	Headers    map[string]string `mapstructure:"headers" validate:"omitempty"`
+	Enabled    bool              `mapstructure:"enabled"     default:"false"`
+	Endpoint   string            `mapstructure:"endpoint"                    validate:"omitempty"`
+	Protocol   string            `mapstructure:"protocol"                    validate:"omitempty"`
+	AuthHeader string            `mapstructure:"auth_header"                 validate:"omitempty"`
+	AuthValue  string            `mapstructure:"auth_value"                  validate:"omitempty"`
+	Headers    map[string]string `mapstructure:"headers"                     validate:"omitempty"`
 }
 
 // MergedHeaders returns the effective header set, merging the AuthHeader/
@@ -370,14 +370,14 @@ type PyroscopeConfig struct {
 	BasicAuthUser   string   `mapstructure:"basic_auth_user"`
 	BasicAuthPass   string   `mapstructure:"basic_auth_password"`
 	ProfileTypes    []string `mapstructure:"profile_types"`
-	SampleRate      uint32   `mapstructure:"sample_rate" default:"100"`
-	DisableGCRuns   bool     `mapstructure:"disable_gc_runs" default:"false"`
+	SampleRate      uint32   `mapstructure:"sample_rate"         default:"100"`
+	DisableGCRuns   bool     `mapstructure:"disable_gc_runs"     default:"false"`
 }
 
 type TemporalConfig struct {
-	Address                string               `mapstructure:"address" validate:"required"`
-	TaskQueue              string               `mapstructure:"task_queue" validate:"required"`
-	Namespace              string               `mapstructure:"namespace" validate:"required"`
+	Address                string               `mapstructure:"address"                    validate:"required"`
+	TaskQueue              string               `mapstructure:"task_queue"                 validate:"required"`
+	Namespace              string               `mapstructure:"namespace"                  validate:"required"`
 	APIKey                 string               `mapstructure:"api_key"`
 	APIKeyName             string               `mapstructure:"api_key_name"`
 	TLS                    bool                 `mapstructure:"tls"`
@@ -405,98 +405,98 @@ type SecretsConfig struct {
 }
 
 type BillingConfig struct {
-	TenantID      string `mapstructure:"tenant_id" validate:"omitempty"`
+	TenantID      string `mapstructure:"tenant_id"      validate:"omitempty"`
 	EnvironmentID string `mapstructure:"environment_id" validate:"omitempty"`
 }
 
 type EventProcessingConfig struct {
 	// Rate limit in messages consumed per second
-	Enabled               bool   `mapstructure:"enabled" default:"true"`
-	Topic                 string `mapstructure:"topic" default:"events"`
-	RateLimit             int64  `mapstructure:"rate_limit" default:"1"`
-	ConsumerGroup         string `mapstructure:"consumer_group" default:"v1_event_processing"`
-	TopicBackfill         string `mapstructure:"topic_backfill" default:"event_processing_backfill"`
-	RateLimitBackfill     int64  `mapstructure:"rate_limit_backfill" default:"1"`
+	Enabled               bool   `mapstructure:"enabled"                 default:"true"`
+	Topic                 string `mapstructure:"topic"                   default:"events"`
+	RateLimit             int64  `mapstructure:"rate_limit"              default:"1"`
+	ConsumerGroup         string `mapstructure:"consumer_group"          default:"v1_event_processing"`
+	TopicBackfill         string `mapstructure:"topic_backfill"          default:"event_processing_backfill"`
+	RateLimitBackfill     int64  `mapstructure:"rate_limit_backfill"     default:"1"`
 	ConsumerGroupBackfill string `mapstructure:"consumer_group_backfill" default:"v1_event_processing_backfill"`
-	TopicDLQ              string `mapstructure:"topic_dlq" default:""`
+	TopicDLQ              string `mapstructure:"topic_dlq"               default:""`
 }
 
 type BenefitEventsConfig struct {
-	Enabled       bool   `mapstructure:"enabled" default:"true"`
-	Topic         string `mapstructure:"topic" default:"flexprice.benefit.events"`
-	RateLimit     int64  `mapstructure:"rate_limit" default:"1"`
+	Enabled       bool   `mapstructure:"enabled"        default:"true"`
+	Topic         string `mapstructure:"topic"          default:"flexprice.benefit.events"`
+	RateLimit     int64  `mapstructure:"rate_limit"     default:"1"`
 	ConsumerGroup string `mapstructure:"consumer_group" default:"v1_benefit_events"`
 }
 
 type EventPostProcessingConfig struct {
 	// Rate limit in messages consumed per second
-	Enabled               bool   `mapstructure:"enabled" default:"true"`
-	Topic                 string `mapstructure:"topic" default:"events_post_processing"`
-	RateLimit             int64  `mapstructure:"rate_limit" default:"1"`
-	ConsumerGroup         string `mapstructure:"consumer_group" default:"v1_events_post_processing"`
-	TopicBackfill         string `mapstructure:"topic_backfill" default:"v1_events_post_processing_backfill"`
-	RateLimitBackfill     int64  `mapstructure:"rate_limit_backfill" default:"1"`
+	Enabled               bool   `mapstructure:"enabled"                 default:"true"`
+	Topic                 string `mapstructure:"topic"                   default:"events_post_processing"`
+	RateLimit             int64  `mapstructure:"rate_limit"              default:"1"`
+	ConsumerGroup         string `mapstructure:"consumer_group"          default:"v1_events_post_processing"`
+	TopicBackfill         string `mapstructure:"topic_backfill"          default:"v1_events_post_processing_backfill"`
+	RateLimitBackfill     int64  `mapstructure:"rate_limit_backfill"     default:"1"`
 	ConsumerGroupBackfill string `mapstructure:"consumer_group_backfill" default:"v1_events_post_processing_backfill"`
 }
 
 type EventProcessingLazyConfig struct {
-	Enabled               bool   `mapstructure:"enabled" default:"true"`
-	Topic                 string `mapstructure:"topic" default:"events_lazy"`
-	RateLimit             int64  `mapstructure:"rate_limit" default:"1"`
-	ConsumerGroup         string `mapstructure:"consumer_group" default:"v1_event_processing_lazy"`
-	TopicBackfill         string `mapstructure:"topic_backfill" default:"event_processing_lazy_backfill"`
-	RateLimitBackfill     int64  `mapstructure:"rate_limit_backfill" default:"1"`
+	Enabled               bool   `mapstructure:"enabled"                 default:"true"`
+	Topic                 string `mapstructure:"topic"                   default:"events_lazy"`
+	RateLimit             int64  `mapstructure:"rate_limit"              default:"1"`
+	ConsumerGroup         string `mapstructure:"consumer_group"          default:"v1_event_processing_lazy"`
+	TopicBackfill         string `mapstructure:"topic_backfill"          default:"event_processing_lazy_backfill"`
+	RateLimitBackfill     int64  `mapstructure:"rate_limit_backfill"     default:"1"`
 	ConsumerGroupBackfill string `mapstructure:"consumer_group_backfill" default:"v1_event_processing_lazy_backfill"`
-	TopicDLQ              string `mapstructure:"topic_dlq" default:""`
+	TopicDLQ              string `mapstructure:"topic_dlq"               default:""`
 }
 
 type EventProcessingReplayConfig struct {
-	Enabled       bool   `mapstructure:"enabled" default:"true"`
-	Topic         string `mapstructure:"topic" default:"v1_event_processing_replay"`
-	RateLimit     int64  `mapstructure:"rate_limit" default:"1"`
+	Enabled       bool   `mapstructure:"enabled"        default:"true"`
+	Topic         string `mapstructure:"topic"          default:"v1_event_processing_replay"`
+	RateLimit     int64  `mapstructure:"rate_limit"     default:"1"`
 	ConsumerGroup string `mapstructure:"consumer_group" default:"v1_event_processing_replay"`
 }
 type FeatureUsageTrackingConfig struct {
 	// Rate limit in messages consumed per second
-	Enabled                bool   `mapstructure:"enabled" default:"true"`
-	Topic                  string `mapstructure:"topic" default:"events"`
-	RateLimit              int64  `mapstructure:"rate_limit" default:"1"`
-	ConsumerGroup          string `mapstructure:"consumer_group" default:"v1_feature_tracking_service"`
-	TopicBackfill          string `mapstructure:"topic_backfill" default:"v1_feature_tracking_service_backfill"`
-	RateLimitBackfill      int64  `mapstructure:"rate_limit_backfill" default:"1"`
-	ConsumerGroupBackfill  string `mapstructure:"consumer_group_backfill" default:"v1_feature_tracking_service_backfill"`
-	BackfillEnabled        bool   `mapstructure:"backfill_enabled" default:"false"`
+	Enabled                bool   `mapstructure:"enabled"                   default:"true"`
+	Topic                  string `mapstructure:"topic"                     default:"events"`
+	RateLimit              int64  `mapstructure:"rate_limit"                default:"1"`
+	ConsumerGroup          string `mapstructure:"consumer_group"            default:"v1_feature_tracking_service"`
+	TopicBackfill          string `mapstructure:"topic_backfill"            default:"v1_feature_tracking_service_backfill"`
+	RateLimitBackfill      int64  `mapstructure:"rate_limit_backfill"       default:"1"`
+	ConsumerGroupBackfill  string `mapstructure:"consumer_group_backfill"   default:"v1_feature_tracking_service_backfill"`
+	BackfillEnabled        bool   `mapstructure:"backfill_enabled"          default:"false"`
 	WalletAlertPushEnabled bool   `mapstructure:"wallet_alert_push_enabled" default:"true"`
-	TopicDLQ               string `mapstructure:"topic_dlq" default:""`
+	TopicDLQ               string `mapstructure:"topic_dlq"                 default:""`
 }
 
 type FeatureUsageTrackingLazyConfig struct {
-	Enabled               bool   `mapstructure:"enabled" default:"true"`
-	Topic                 string `mapstructure:"topic" default:"events_lazy"`
-	RateLimit             int64  `mapstructure:"rate_limit" default:"1"`
-	ConsumerGroup         string `mapstructure:"consumer_group" default:"v1_feature_tracking_service_realtime"`
-	TopicBackfill         string `mapstructure:"topic_backfill" default:"v1_feature_tracking_service_lazy_backfill"`
-	RateLimitBackfill     int64  `mapstructure:"rate_limit_backfill" default:"1"`
+	Enabled               bool   `mapstructure:"enabled"                 default:"true"`
+	Topic                 string `mapstructure:"topic"                   default:"events_lazy"`
+	RateLimit             int64  `mapstructure:"rate_limit"              default:"1"`
+	ConsumerGroup         string `mapstructure:"consumer_group"          default:"v1_feature_tracking_service_realtime"`
+	TopicBackfill         string `mapstructure:"topic_backfill"          default:"v1_feature_tracking_service_lazy_backfill"`
+	RateLimitBackfill     int64  `mapstructure:"rate_limit_backfill"     default:"1"`
 	ConsumerGroupBackfill string `mapstructure:"consumer_group_backfill" default:"v1_feature_tracking_service_lazy_backfill"`
-	TopicDLQ              string `mapstructure:"topic_dlq" default:""`
+	TopicDLQ              string `mapstructure:"topic_dlq"               default:""`
 }
 
 type FeatureUsageTrackingReplayConfig struct {
-	Enabled       bool   `mapstructure:"enabled" default:"true"`
-	Topic         string `mapstructure:"topic" default:"v1_feature_tracking_service_replay"`
-	RateLimit     int64  `mapstructure:"rate_limit" default:"1"`
+	Enabled       bool   `mapstructure:"enabled"        default:"true"`
+	Topic         string `mapstructure:"topic"          default:"v1_feature_tracking_service_replay"`
+	RateLimit     int64  `mapstructure:"rate_limit"     default:"1"`
 	ConsumerGroup string `mapstructure:"consumer_group" default:"v1_feature_tracking_service_replay"`
 }
 
 // MeterUsageTrackingConfig configures the meter_usage pipeline consumer
 type MeterUsageTrackingConfig struct {
-	Enabled                   bool   `mapstructure:"enabled" default:"true"`
-	Topic                     string `mapstructure:"topic" default:"events"`
-	RateLimit                 int64  `mapstructure:"rate_limit" default:"1"`
-	ConsumerGroup             string `mapstructure:"consumer_group" default:"v1_meter_usage_tracking_service"`
-	TopicDLQ                  string `mapstructure:"topic_dlq" default:""`
+	Enabled                   bool   `mapstructure:"enabled"                     default:"true"`
+	Topic                     string `mapstructure:"topic"                       default:"events"`
+	RateLimit                 int64  `mapstructure:"rate_limit"                  default:"1"`
+	ConsumerGroup             string `mapstructure:"consumer_group"              default:"v1_meter_usage_tracking_service"`
+	TopicDLQ                  string `mapstructure:"topic_dlq"                   default:""`
 	RedisDeduplicationEnabled bool   `mapstructure:"redis_deduplication_enabled" default:"false"`
-	WalletAlertPushEnabled    bool   `mapstructure:"wallet_alert_push_enabled" default:"false"`
+	WalletAlertPushEnabled    bool   `mapstructure:"wallet_alert_push_enabled"   default:"false"`
 	SpendAlertWebhookEnabled  bool   `mapstructure:"spend_alert_webhook_enabled" default:"false"`
 
 	// event.rejected webhook (fired when an event produces no meter usage); opt-in.
@@ -517,48 +517,48 @@ type MeterUsageTrackingConfig struct {
 // reads from a separate topic with its own consumer group so lazy traffic is
 // isolated from the normal stream.
 type MeterUsageTrackingLazyConfig struct {
-	Enabled       bool   `mapstructure:"enabled" default:"true"`
-	Topic         string `mapstructure:"topic" default:"events_lazy"`
-	RateLimit     int64  `mapstructure:"rate_limit" default:"1"`
+	Enabled       bool   `mapstructure:"enabled"        default:"true"`
+	Topic         string `mapstructure:"topic"          default:"events_lazy"`
+	RateLimit     int64  `mapstructure:"rate_limit"     default:"1"`
 	ConsumerGroup string `mapstructure:"consumer_group" default:"v1_meter_usage_tracking_service_lazy"`
-	TopicDLQ      string `mapstructure:"topic_dlq" default:""`
+	TopicDLQ      string `mapstructure:"topic_dlq"      default:""`
 }
 
 // UsageBenchmarkConfig configures the usage benchmarking consumer
 type UsageBenchmarkConfig struct {
-	Enabled       bool   `mapstructure:"enabled" default:"false"`
-	Topic         string `mapstructure:"topic" default:"staging_benchmarking"`
-	RateLimit     int64  `mapstructure:"rate_limit" default:"10"`
+	Enabled       bool   `mapstructure:"enabled"        default:"false"`
+	Topic         string `mapstructure:"topic"          default:"staging_benchmarking"`
+	RateLimit     int64  `mapstructure:"rate_limit"     default:"10"`
 	ConsumerGroup string `mapstructure:"consumer_group" default:"v1_usage_benchmark_service"`
 }
 
 type WalletBalanceAlertConfig struct {
 	// Rate limit in messages consumed per second
-	Enabled       bool   `mapstructure:"enabled" default:"true"`
-	Topic         string `mapstructure:"topic" default:"wallet_alert"`
-	RateLimit     int64  `mapstructure:"rate_limit" default:"1"`
+	Enabled       bool   `mapstructure:"enabled"        default:"true"`
+	Topic         string `mapstructure:"topic"          default:"wallet_alert"`
+	RateLimit     int64  `mapstructure:"rate_limit"     default:"1"`
 	ConsumerGroup string `mapstructure:"consumer_group" default:"v1_wallet_alert_service"`
 }
 
 type RawEventsReprocessingConfig struct {
-	Enabled     bool   `mapstructure:"enabled" default:"true"`
+	Enabled     bool   `mapstructure:"enabled"      default:"true"`
 	OutputTopic string `mapstructure:"output_topic" default:"prod_events_v4"`
 }
 
 type RawEventConsumptionConfig struct {
-	Enabled       bool   `mapstructure:"enabled" default:"true"`
-	Topic         string `mapstructure:"topic" default:"raw_events"`
-	OutputTopic   string `mapstructure:"output_topic" default:"events"`
-	RateLimit     int64  `mapstructure:"rate_limit" default:"10"`
+	Enabled       bool   `mapstructure:"enabled"        default:"true"`
+	Topic         string `mapstructure:"topic"          default:"raw_events"`
+	OutputTopic   string `mapstructure:"output_topic"   default:"events"`
+	RateLimit     int64  `mapstructure:"rate_limit"     default:"10"`
 	ConsumerGroup string `mapstructure:"consumer_group" default:"v1_raw_event_processing"`
 }
 
 type OnboardingEventsConfig struct {
-	Enabled       bool   `mapstructure:"enabled" default:"true"`
-	Topic         string `mapstructure:"topic" default:"staging_onboarding_events"`
-	RateLimit     int64  `mapstructure:"rate_limit" default:"100"`
+	Enabled       bool   `mapstructure:"enabled"        default:"true"`
+	Topic         string `mapstructure:"topic"          default:"staging_onboarding_events"`
+	RateLimit     int64  `mapstructure:"rate_limit"     default:"100"`
 	ConsumerGroup string `mapstructure:"consumer_group" default:"onboarding_events_consumer"`
-	MaxRetries    int    `mapstructure:"max_retries" default:"3"`
+	MaxRetries    int    `mapstructure:"max_retries"    default:"3"`
 }
 
 // WebhookRetryJobConfig configures the Temporal stale-webhook retry cron job.
@@ -583,25 +583,25 @@ type EnvAccessConfig struct {
 }
 
 type FeatureFlagConfig struct {
-	EnableFeatureUsageForAnalytics    bool   `mapstructure:"enable_feature_usage_for_analytics" validate:"required"`
-	ForceV1ForTenant                  string `mapstructure:"force_v1_for_tenant" validate:"omitempty"`
+	EnableFeatureUsageForAnalytics    bool   `mapstructure:"enable_feature_usage_for_analytics"     validate:"required"`
+	ForceV1ForTenant                  string `mapstructure:"force_v1_for_tenant"                    validate:"omitempty"`
 	EnableMeterUsageForPreviewInvoice bool   `mapstructure:"enable_meter_usage_for_preview_invoice" validate:"omitempty"`
-	EnableMeterUsageForAnalytics      bool   `mapstructure:"enable_meter_usage_for_analytics" validate:"omitempty"`
-	EnableMeterUsageForBilling        bool   `mapstructure:"enable_meter_usage_for_billing" validate:"omitempty"`
-	EnableUsageBenchmark              bool   `mapstructure:"enable_usage_benchmark" validate:"omitempty"`
+	EnableMeterUsageForAnalytics      bool   `mapstructure:"enable_meter_usage_for_analytics"       validate:"omitempty"`
+	EnableMeterUsageForBilling        bool   `mapstructure:"enable_meter_usage_for_billing"         validate:"omitempty"`
+	EnableUsageBenchmark              bool   `mapstructure:"enable_usage_benchmark"                 validate:"omitempty"`
 
 	// Per-tenant overrides for the meter-usage rollout. Resolution order:
 	//   1. disabled_tenants — tenant force-disabled (highest priority)
 	//   2. enabled_tenants  — tenant force-enabled
 	//   3. global flag above — applies to everyone else
-	MeterUsageForPreviewInvoiceEnabledTenants  []string `mapstructure:"meter_usage_for_preview_invoice_enabled_tenants" validate:"omitempty"`
+	MeterUsageForPreviewInvoiceEnabledTenants  []string `mapstructure:"meter_usage_for_preview_invoice_enabled_tenants"  validate:"omitempty"`
 	MeterUsageForPreviewInvoiceDisabledTenants []string `mapstructure:"meter_usage_for_preview_invoice_disabled_tenants" validate:"omitempty"`
-	MeterUsageForAnalyticsEnabledTenants       []string `mapstructure:"meter_usage_for_analytics_enabled_tenants" validate:"omitempty"`
-	MeterUsageForAnalyticsDisabledTenants      []string `mapstructure:"meter_usage_for_analytics_disabled_tenants" validate:"omitempty"`
-	MeterUsageForBillingEnabledTenants         []string `mapstructure:"meter_usage_for_billing_enabled_tenants" validate:"omitempty"`
-	MeterUsageForBillingDisabledTenants        []string `mapstructure:"meter_usage_for_billing_disabled_tenants" validate:"omitempty"`
-	UsageBenchmarkEnabledTenants               []string `mapstructure:"usage_benchmark_enabled_tenants" validate:"omitempty"`
-	UsageBenchmarkDisabledTenants              []string `mapstructure:"usage_benchmark_disabled_tenants" validate:"omitempty"`
+	MeterUsageForAnalyticsEnabledTenants       []string `mapstructure:"meter_usage_for_analytics_enabled_tenants"        validate:"omitempty"`
+	MeterUsageForAnalyticsDisabledTenants      []string `mapstructure:"meter_usage_for_analytics_disabled_tenants"       validate:"omitempty"`
+	MeterUsageForBillingEnabledTenants         []string `mapstructure:"meter_usage_for_billing_enabled_tenants"          validate:"omitempty"`
+	MeterUsageForBillingDisabledTenants        []string `mapstructure:"meter_usage_for_billing_disabled_tenants"         validate:"omitempty"`
+	UsageBenchmarkEnabledTenants               []string `mapstructure:"usage_benchmark_enabled_tenants"                  validate:"omitempty"`
+	UsageBenchmarkDisabledTenants              []string `mapstructure:"usage_benchmark_disabled_tenants"                 validate:"omitempty"`
 }
 
 // IsMeterUsageEnabledForBilling resolves the meter-usage rollout for the
@@ -652,7 +652,11 @@ func (c *FeatureFlagConfig) IsUsageBenchmarkEnabled(tenantID string) bool {
 	)
 }
 
-func resolveTenantRollout(tenantID string, globalEnabled bool, enabledTenants, disabledTenants []string) bool {
+func resolveTenantRollout(
+	tenantID string,
+	globalEnabled bool,
+	enabledTenants, disabledTenants []string,
+) bool {
 	if tenantID != "" {
 		if slices.Contains(disabledTenants, tenantID) {
 			return false
@@ -665,35 +669,35 @@ func resolveTenantRollout(tenantID string, globalEnabled bool, enabledTenants, d
 }
 
 type Email struct {
-	Enabled      bool   `mapstructure:"enabled" validate:"required"`
+	Enabled      bool   `mapstructure:"enabled"        validate:"required"`
 	ResendAPIKey string `mapstructure:"resend_api_key" validate:"omitempty"`
-	FromAddress  string `mapstructure:"from_address" validate:"omitempty"`
-	ReplyTo      string `mapstructure:"reply_to" validate:"omitempty"`
-	CalendarURL  string `mapstructure:"calendar_url" validate:"omitempty"`
+	FromAddress  string `mapstructure:"from_address"   validate:"omitempty"`
+	ReplyTo      string `mapstructure:"reply_to"       validate:"omitempty"`
+	CalendarURL  string `mapstructure:"calendar_url"   validate:"omitempty"`
 }
 
 type EmailConfig struct {
-	Enabled          bool   `mapstructure:"enabled" validate:"required"`
-	ResendAPIKey     string `mapstructure:"resend_api_key" validate:"omitempty"`
-	FromAddress      string `mapstructure:"from_address" validate:"omitempty"`
-	ReplyTo          string `mapstructure:"reply_to" validate:"omitempty"`
-	CalendarURL      string `mapstructure:"calendar_url" validate:"omitempty"`
+	Enabled          bool   `mapstructure:"enabled"            validate:"required"`
+	ResendAPIKey     string `mapstructure:"resend_api_key"     validate:"omitempty"`
+	FromAddress      string `mapstructure:"from_address"       validate:"omitempty"`
+	ReplyTo          string `mapstructure:"reply_to"           validate:"omitempty"`
+	CalendarURL      string `mapstructure:"calendar_url"       validate:"omitempty"`
 	ZapierWebhookURL string `mapstructure:"zapier_webhook_url" validate:"omitempty"`
 }
 type CostSheetUsageTrackingConfig struct {
-	Enabled       bool   `mapstructure:"enabled" default:"true"`
-	Topic         string `mapstructure:"topic" default:"events"`
-	RateLimit     int64  `mapstructure:"rate_limit" default:"1"`
+	Enabled       bool   `mapstructure:"enabled"        default:"true"`
+	Topic         string `mapstructure:"topic"          default:"events"`
+	RateLimit     int64  `mapstructure:"rate_limit"     default:"1"`
 	ConsumerGroup string `mapstructure:"consumer_group" default:"v1_costsheet_usage_tracking_service"`
-	TopicDLQ      string `mapstructure:"topic_dlq" default:""`
+	TopicDLQ      string `mapstructure:"topic_dlq"      default:""`
 }
 
 type CostSheetUsageTrackingLazyConfig struct {
-	Enabled       bool   `mapstructure:"enabled" default:"true"`
-	Topic         string `mapstructure:"topic" default:"events_lazy"`
-	RateLimit     int64  `mapstructure:"rate_limit" default:"1"`
+	Enabled       bool   `mapstructure:"enabled"        default:"true"`
+	Topic         string `mapstructure:"topic"          default:"events_lazy"`
+	RateLimit     int64  `mapstructure:"rate_limit"     default:"1"`
 	ConsumerGroup string `mapstructure:"consumer_group" default:"v1_costsheet_usage_tracking_service_lazy"`
-	TopicDLQ      string `mapstructure:"topic_dlq" default:""`
+	TopicDLQ      string `mapstructure:"topic_dlq"      default:""`
 }
 
 type CheckoutConfig struct {
@@ -701,19 +705,19 @@ type CheckoutConfig struct {
 }
 
 type CustomerPortalConfig struct {
-	URL               string `mapstructure:"url" validate:"required"`
+	URL               string `mapstructure:"url"                 validate:"required"`
 	TokenTimeoutHours int    `mapstructure:"token_timeout_hours" validate:"required"`
 }
 
 // RedisConfig holds configuration for Redis
 type RedisConfig struct {
-	Host      string        `mapstructure:"host" default:"localhost"`
-	Port      int           `mapstructure:"port" default:"6379"`
-	Password  string        `mapstructure:"password" default:""`
-	DB        int           `mapstructure:"db" default:"0"`
-	UseTLS    bool          `mapstructure:"use_tls" default:"false"`
-	PoolSize  int           `mapstructure:"pool_size" default:"10"`
-	Timeout   time.Duration `mapstructure:"timeout" default:"5s"`
+	Host      string        `mapstructure:"host"       default:"localhost"`
+	Port      int           `mapstructure:"port"       default:"6379"`
+	Password  string        `mapstructure:"password"   default:""`
+	DB        int           `mapstructure:"db"         default:"0"`
+	UseTLS    bool          `mapstructure:"use_tls"    default:"false"`
+	PoolSize  int           `mapstructure:"pool_size"  default:"10"`
+	Timeout   time.Duration `mapstructure:"timeout"    default:"5s"`
 	KeyPrefix string        `mapstructure:"key_prefix" default:"flexprice"`
 	// ClusterMode: true → *redis.ClusterClient (Redis Cluster, ElastiCache
 	// cluster-mode enabled). false → standalone *redis.Client. Default is
@@ -794,11 +798,15 @@ func NewConfig() (*Configuration, error) {
 	}
 
 	// tenant webhook config
-	tenantWebhookConfig := make(map[string]TenantWebhookConfig)
-	if err := v.UnmarshalKey("webhook.tenants", &tenantWebhookConfig); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal webhook tenants config: %v", err)
+	tenantWebhookConfigEnv := os.Getenv("FLEXPRICE_WEBHOOK_TENANTS")
+	if tenantWebhookConfigEnv != "" {
+		var tenantWebhookConfig map[string]TenantWebhookConfig
+		if err := json.Unmarshal([]byte(tenantWebhookConfigEnv), &tenantWebhookConfig); err != nil {
+			return nil, fmt.Errorf("failed to parse FLEXPRICE_WEBHOOK_TENANTS JSON: %v", err)
+		}
+
+		cfg.Webhook.Tenants = tenantWebhookConfig
 	}
-	cfg.Webhook.Tenants = tenantWebhookConfig
 	cfg.Webhook.normalizeTenantKeys()
 
 	// Alternative: try to parse user_env_mapping directly
@@ -956,8 +964,11 @@ func (c Configuration) validateSecrets() error {
 	// would corrupt stored ciphertext. Reconcile separately before adding it. See config.yaml.
 
 	if len(bad) > 0 {
-		return fmt.Errorf("placeholder/dev secrets detected for enabled features (mode %q): %s — inject real values via FLEXPRICE_* env",
-			c.Deployment.Mode, strings.Join(bad, ", "))
+		return fmt.Errorf(
+			"placeholder/dev secrets detected for enabled features (mode %q): %s — inject real values via FLEXPRICE_* env",
+			c.Deployment.Mode,
+			strings.Join(bad, ", "),
+		)
 	}
 	return nil
 }

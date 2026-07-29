@@ -20,12 +20,12 @@ type Webhook struct {
 	Svix            Svix                           `mapstructure:"svix_config"`
 }
 
-// TenantWebhookConfig represents webhook configuration for a specific tenant
+// TenantWebhookConfig represents webhook configuration for a specific tenant.
 type TenantWebhookConfig struct {
-	Endpoint       string            `mapstructure:"endpoint"`
-	Headers        map[string]string `mapstructure:"headers"`
-	Enabled        bool              `mapstructure:"enabled"`
-	ExcludedEvents []string          `mapstructure:"excluded_events"`
+	Endpoint       string            `mapstructure:"endpoint"        json:"endpoint"`
+	Headers        map[string]string `mapstructure:"headers"         json:"headers"`
+	Enabled        bool              `mapstructure:"enabled"         json:"enabled"`
+	ExcludedEvents []string          `mapstructure:"excluded_events" json:"excluded_events"`
 }
 
 type Svix struct {
