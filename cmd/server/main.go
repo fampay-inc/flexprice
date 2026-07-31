@@ -17,6 +17,7 @@ import (
 	integrationevents "github.com/flexprice/flexprice/internal/integration/events"
 	"github.com/flexprice/flexprice/internal/kafka"
 	"github.com/flexprice/flexprice/internal/logger"
+	"github.com/flexprice/flexprice/internal/metrics"
 	"github.com/flexprice/flexprice/internal/pdf"
 	"github.com/flexprice/flexprice/internal/postgres"
 	"github.com/flexprice/flexprice/internal/publisher"
@@ -305,11 +306,13 @@ func main() {
 			provideHandlers,
 			provideRouter,
 		),
+		metrics.Module(),
 		fx.Invoke(
 			tracing.RegisterHooks,
 			repository.InitTracing,
 			pyroscope.RegisterHooks,
 			initIntegrationFactory,
+			metrics.RegisterServerHooks,
 			startServer,
 		),
 	)
