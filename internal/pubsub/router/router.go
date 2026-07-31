@@ -9,8 +9,10 @@ import (
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"github.com/flexprice/flexprice/internal/config"
+	ierr "github.com/flexprice/flexprice/internal/errors"
 	"github.com/flexprice/flexprice/internal/kafka"
 	"github.com/flexprice/flexprice/internal/logger"
+	"github.com/flexprice/flexprice/internal/metrics"
 	"github.com/flexprice/flexprice/internal/tracing"
 	"github.com/flexprice/flexprice/internal/types"
 )
@@ -146,6 +148,7 @@ func (r *Router) AddNoPublishHandler(
 		topicName,
 		subscriber,
 		func(msg *message.Message) error {
+			start := time.Now()
 			tenantID := msg.Metadata.Get("tenant_id")
 			environmentID := msg.Metadata.Get("environment_id")
 
@@ -161,13 +164,21 @@ func (r *Router) AddNoPublishHandler(
 			ctx = context.WithValue(ctx, types.CtxEnvironmentID, environmentID)
 
 			err := handlerFunc(ctx, msg)
+			duration := time.Since(start)
+
+			metrics.KafkaMessageLatency.WithLabelValues(handlerName, topicName).Observe(duration.Seconds())
 			if err != nil {
+				_, code := ierr.ResolveError(err)
+				metrics.KafkaMessagesTotal.WithLabelValues(handlerName, topicName, "failure").Inc()
+				metrics.KafkaMessageFailuresTotal.WithLabelValues(handlerName, topicName, string(code)).Inc()
 				r.tracing.CaptureException(context.Background(), err)
-				r.logger.Error(context.Background(), "handler failed",
+				r.logger.Errorw("handler failed",
 					"error", err,
 					"correlation_id", middleware.MessageCorrelationID(msg),
 					"message_uuid", msg.UUID,
 				)
+			} else {
+				metrics.KafkaMessagesTotal.WithLabelValues(handlerName, topicName, "success").Inc()
 			}
 			return err
 		},

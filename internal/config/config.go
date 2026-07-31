@@ -37,6 +37,7 @@ type Configuration struct {
 	Sentry                     SentryConfig                     `                                             validate:"required"`
 	Otel                       OtelConfig                       `                                             validate:"omitempty"`
 	Pyroscope                  PyroscopeConfig                  `                                             validate:"required"`
+	Metrics                    MetricsConfig                    `mapstructure:"metrics"                       validate:"omitempty"`
 	Event                      EventConfig                      `                                             validate:"required"`
 	DynamoDB                   DynamoDBConfig                   `                                             validate:"required"`
 	Temporal                   TemporalConfig                   `                                             validate:"required"`
@@ -361,6 +362,10 @@ func (c OtelConfig) ResolveHeaders(signalHeaders map[string]string) map[string]s
 		return signalHeaders
 	}
 	return c.Headers
+}
+
+type MetricsConfig struct {
+	Port int `mapstructure:"port" default:"2113"`
 }
 
 type PyroscopeConfig struct {

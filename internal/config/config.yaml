@@ -162,6 +162,9 @@ otel:
     auth_header: "signoz-ingestion-key" # Set auth_value via FLEXPRICE_OTEL_LOGS_AUTH_VALUE
     auth_value: ""
 
+metrics:
+  port: 2113 # Prometheus scrape endpoint (GET /metrics). Override via FLEXPRICE_METRICS_PORT.
+
 pyroscope:
   enabled: false # Set to true to enable continuous profiling
   server_address: "http://localhost:4040" # Pyroscope server URL or Grafana Cloud Profiles URL
