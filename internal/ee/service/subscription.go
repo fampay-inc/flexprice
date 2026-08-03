@@ -1887,12 +1887,25 @@ func (s *subscriptionService) UpdateSubscription(ctx context.Context, subscripti
 		subscription.SubscriptionStatus = req.Status
 	}
 
+	if req.CancelAt != nil {
+		cancelAtStr := lo.FromPtr(req.CancelAt)
+		if cancelAtStr == "" {
+			subscription.CancelAt = nil
+		} else {
+			cancelAt, err := types.ParseTime(cancelAtStr)
+			if err != nil {
+				return nil, ierr.NewError("invalid cancel_at").
+					WithHint("cancel_at must be an RFC3339 timestamp").
+					WithReportableDetails(map[string]interface{}{"cancel_at": cancelAtStr}).
+					Mark(ierr.ErrValidation)
+			}
+			subscription.CancelAt = &cancelAt
+		}
+	}
 
-	// Unconditional assignment: sending cancel_at=null (or omitting it) clears any
-	// scheduled cancellation on the subscription.
-	subscription.CancelAt = req.CancelAt
-
-	subscription.CancelAtPeriodEnd = req.CancelAtPeriodEnd
+	if req.CancelAtPeriodEnd != nil {
+		subscription.CancelAtPeriodEnd = lo.FromPtr(req.CancelAtPeriodEnd)
+	}
 
 	if req.Metadata != nil {
 		subscription.Metadata = req.Metadata

@@ -575,8 +575,8 @@ func (r *RemoveAddonRequest) Validate() error {
 
 type UpdateSubscriptionRequest struct {
 	Status            types.SubscriptionStatus `json:"status"`
-	CancelAt          *time.Time               `json:"cancel_at,omitempty"`
-	CancelAtPeriodEnd bool                     `json:"cancel_at_period_end,omitempty"`
+	CancelAt          *string                  `json:"cancel_at,omitempty"`
+	CancelAtPeriodEnd *bool                    `json:"cancel_at_period_end,omitempty"`
 
 	// ParentSubscriptionID sets or clears the parent subscription. Omit to leave unchanged; send "" to clear.
 	ParentSubscriptionID *string `json:"parent_subscription_id,omitempty"`

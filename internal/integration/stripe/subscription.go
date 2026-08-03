@@ -666,9 +666,9 @@ func (s *stripeSubscriptionService) handleNormalChange(ctx context.Context, exis
 
 	// Handle cancellation dates if subscription is cancelled in Stripe
 	if stripeSubscription.CancelAt != 0 {
-		cancelAt := time.Unix(stripeSubscription.CancelAt, 0).UTC()
+		cancelAt := time.Unix(stripeSubscription.CancelAt, 0).UTC().Format(time.RFC3339)
 		updateReq.CancelAt = &cancelAt
-		updateReq.CancelAtPeriodEnd = stripeSubscription.CancelAtPeriodEnd
+		updateReq.CancelAtPeriodEnd = &stripeSubscription.CancelAtPeriodEnd
 	}
 
 	// Log the changes that will be made
