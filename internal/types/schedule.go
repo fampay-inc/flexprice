@@ -20,7 +20,7 @@ const (
 	ScheduleIDSubscriptionRenewalAlerts ScheduleID = "subscription-renewal-due-alerts"
 	// ScheduleIDSubscriptionTrialEndDue                 ScheduleID = "subscription-trial-end-due"
 	// ScheduleIDSubscriptionAutoInvoiceThresholdBilling ScheduleID = "subscription-auto-invoice-threshold-billing"
-	// ScheduleIDOutboundWebhookStaleRetry               ScheduleID = "webhook-stale-retry"
+	ScheduleIDOutboundWebhookStaleRetry ScheduleID = "webhook-stale-retry"
 	// ScheduleIDPaddleInvoicePullSync                   ScheduleID = "paddle-invoice-pull-sync"
 	// ScheduleIDMoyasarAuthPaymentSettlement            ScheduleID = "moyasar-auth-payment-settlement"
 	// ScheduleIDCheckoutSessionExpiry                   ScheduleID = "checkout-session-expiry"
@@ -43,7 +43,7 @@ func AllTemporalServerScheduleIDs() []ScheduleID {
 		ScheduleIDSubscriptionRenewalAlerts,
 		// ScheduleIDSubscriptionTrialEndDue,
 		// ScheduleIDSubscriptionAutoInvoiceThresholdBilling,
-		// ScheduleIDOutboundWebhookStaleRetry,
+		ScheduleIDOutboundWebhookStaleRetry,
 		// ScheduleIDPaddleInvoicePullSync,
 		// ScheduleIDMoyasarAuthPaymentSettlement,
 		// ScheduleIDCheckoutSessionExpiry,
