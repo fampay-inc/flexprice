@@ -8,6 +8,7 @@ import (
 	"github.com/flexprice/flexprice/internal/config"
 	"github.com/flexprice/flexprice/internal/spanerr"
 	"github.com/flexprice/flexprice/internal/types"
+	"github.com/getsentry/sentry-go"
 	"go.opentelemetry.io/contrib/bridges/otelzap"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -41,6 +42,10 @@ type Logger struct {
 	// exception span events (SigNoz Exceptions tab). Mirrors
 	// otel.traces.capture_exceptions; see logErrorToSpan.
 	captureExceptions bool
+	// sentryEnabled mirrors cfg.Sentry.Enabled at construction time so
+	// logErrorToSpan can also forward error-level logs to Sentry as issues
+	// (with tenant/env/user scope from the ctx-bound hub when present).
+	sentryEnabled bool
 	// ctxBound is true once WithContext has wrapped the core with otelCtxCore.
 	// Guards against repeated WithContext calls accumulating nested wrappers,
 	// which would append multiple _span_ctx fields on every Write.
@@ -186,6 +191,7 @@ func NewLogger(cfg *config.Configuration) (*Logger, error) {
 		SugaredLogger:     sugar,
 		otelLogProvider:   otelLogProvider,
 		captureExceptions: cfg.Otel.Enabled && cfg.Otel.Traces.Enabled && cfg.Otel.Traces.CaptureExceptions,
+		sentryEnabled:     cfg.Sentry.Enabled,
 	}, nil
 }
 
@@ -385,6 +391,7 @@ func (l *Logger) WithContext(ctx context.Context) *Logger {
 		SugaredLogger:     newSugared,
 		otelLogProvider:   l.otelLogProvider,
 		captureExceptions: l.captureExceptions,
+		sentryEnabled:     l.sentryEnabled,
 		ctxBound:          ctxBound,
 	}
 }
@@ -433,10 +440,15 @@ func (l *Logger) Error(ctx context.Context, msg string, fields ...any) {
 // when capture is disabled or ctx has no recording span (spanerr handles the
 // latter) — spanless errors reach the Exceptions tab via CaptureException.
 func (l *Logger) logErrorToSpan(ctx context.Context, msg string, fields ...any) {
-	if !l.captureExceptions || ctx == nil {
+	if ctx == nil {
+		return
+	}
+
+	if !l.captureExceptions && !l.sentryEnabled {
 		return
 	}
 	errType, message := "", ""
+	var errObj error
 	for i := 0; i+1 < len(fields); i += 2 {
 		key, ok := fields[i].(string)
 		if !ok {
@@ -446,6 +458,7 @@ func (l *Logger) logErrorToSpan(ctx context.Context, msg string, fields ...any) 
 		case "error":
 			switch v := fields[i+1].(type) {
 			case error:
+				errObj = v
 				message = v.Error()
 				if errType == "" {
 					errType = fmt.Sprintf("%T", v)
@@ -462,7 +475,28 @@ func (l *Logger) logErrorToSpan(ctx context.Context, msg string, fields ...any) 
 	if message == "" {
 		message = msg
 	}
-	spanerr.RecordException(ctx, errType, message)
+
+	if l.sentryEnabled {
+		var toCapture error
+		if errObj != nil {
+			toCapture = errObj
+		} else if message != "" {
+			toCapture = fmt.Errorf("%s", message)
+		}
+		if toCapture != nil {
+			if hub := sentry.GetHubFromContext(ctx); hub != nil {
+				hub.CaptureException(toCapture)
+			} else {
+				sentry.CaptureException(toCapture)
+			}
+		}
+	}
+
+	// OTel sink: exception span event on the active span (spanerr handles the
+	// no-span case). No-op when capture is disabled by config.
+	if l.captureExceptions {
+		spanerr.RecordException(ctx, errType, message)
+	}
 }
 
 // Fatal logs at fatal level then calls os.Exit(1). Use only in cmd/.
