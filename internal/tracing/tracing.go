@@ -25,6 +25,7 @@ import (
 	"github.com/flexprice/flexprice/internal/logger"
 	"github.com/flexprice/flexprice/internal/spanerr"
 	"github.com/getsentry/sentry-go"
+	sentryotel "github.com/getsentry/sentry-go/otel"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -96,10 +97,14 @@ func (s *Service) initSentry() error {
 		return nil
 	}
 
+	// EnableTracing must be true so the sentryotel SpanProcessor (attached below
+	// when the OTel TracerProvider is built) can turn OTel spans into Sentry
+	// transactions/spans. Without this, sentryotel silently drops spans.
 	err := sentry.Init(sentry.ClientOptions{
-		Dsn:           s.cfg.Sentry.DSN,
-		Environment:   s.cfg.Sentry.Environment,
-		EnableTracing: false, // Tracing is handled by OTel; Sentry is errors-only.
+		Dsn:              s.cfg.Sentry.DSN,
+		Environment:      s.cfg.Sentry.Environment,
+		EnableTracing:    true,
+		TracesSampleRate: s.cfg.Sentry.SampleRate,
 	})
 	if err != nil {
 		s.logger.Error(context.Background(), "Failed to initialize Sentry", "error", err)
@@ -107,13 +112,46 @@ func (s *Service) initSentry() error {
 	}
 
 	s.sentryEnabled = true
-	s.logger.Info(context.Background(), "Sentry initialized (errors-only mode)",
+	s.logger.Info(context.Background(), "Sentry initialized",
 		"environment", s.cfg.Sentry.Environment,
+		"sample_rate", s.cfg.Sentry.SampleRate,
 	)
 	return nil
 }
 
 func (s *Service) initTracer(ctx context.Context) error {
+	if s.sentryEnabled {
+		res, err := s.newResource(ctx)
+		if err != nil && !errors.Is(err, resource.ErrPartialResource) {
+			return err
+		}
+		sampleRate := s.cfg.Sentry.SampleRate
+		if sampleRate <= 0 {
+			sampleRate = 1.0
+		}
+		if sampleRate > 1.0 {
+			sampleRate = 1.0
+		}
+		// Head-based sampling in the OTel sampler so sentryotel only mirrors the
+		// sampled spans. Sentry's SDK-level TracesSampleRate stays 1.0 (see
+		// initSentry) to avoid double-sampling.
+		sampler := sdktrace.ParentBased(sdktrace.TraceIDRatioBased(sampleRate))
+		tp := sdktrace.NewTracerProvider(
+			sdktrace.WithSpanProcessor(sentryotel.NewSentrySpanProcessor()),
+			sdktrace.WithResource(res),
+			sdktrace.WithSampler(sampler),
+		)
+		otel.SetTracerProvider(tp)
+		otel.SetTextMapPropagator(sentryotel.NewSentryPropagator())
+		s.tracerProvider = tp
+		s.tracer = tp.Tracer(tracerName)
+		s.tracingEnabled = true
+		s.logger.Info(ctx, "Sentry-only tracing initialized (no OTLP export)",
+			"sample_rate", sampleRate,
+		)
+		return nil
+	}
+
 	tracesCfg := s.cfg.Otel.Traces
 	if !s.cfg.Otel.Enabled || !tracesCfg.Enabled || tracesCfg.Endpoint == "" {
 		s.logger.Info(context.Background(), "OTel tracing is disabled")
@@ -344,6 +382,14 @@ func (s *Service) CaptureException(ctx context.Context, err error) {
 	}
 	if ctx == nil {
 		ctx = context.Background()
+	}
+
+	if s.sentryEnabled {
+		if hub := sentry.GetHubFromContext(ctx); hub != nil {
+			hub.CaptureException(err)
+		} else {
+			sentry.CaptureException(err)
+		}
 	}
 
 	// Active span present: record directly onto it (with per-scope dedup).
