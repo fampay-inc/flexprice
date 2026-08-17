@@ -5,12 +5,13 @@ import (
 	"errors"
 	"strings"
 	"time"
-
+	
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"github.com/flexprice/flexprice/internal/config"
 	domainBenefit "github.com/flexprice/flexprice/internal/domain/benefit"
 	ierr "github.com/flexprice/flexprice/internal/errors"
+	"github.com/flexprice/flexprice/internal/metrics"
 	"github.com/flexprice/flexprice/internal/pubsub"
 	"github.com/flexprice/flexprice/internal/pubsub/kafka"
 	pubsubRouter "github.com/flexprice/flexprice/internal/pubsub/router"
@@ -45,8 +46,8 @@ type BenefitConsumptionService interface {
 
 type benefitConsumptionService struct {
 	ServiceParams
-	pubSub        pubsub.PubSub
-	sentryService *tracing.Service
+	pubSub              pubsub.PubSub
+	sentryService       *tracing.Service
 	subscriptionService SubscriptionService
 }
 
@@ -59,7 +60,7 @@ func NewBenefitConsumptionService(
 		sentryService:       sentryService,
 		subscriptionService: NewSubscriptionService(params),
 	}
-
+	
 	ps, err := kafka.NewPubSubFromConfig(
 		params.Config,
 		params.Logger,
@@ -78,9 +79,9 @@ func (s *benefitConsumptionService) RegisterHandler(router *pubsubRouter.Router,
 		s.Logger.Infow("benefit consumption handler disabled by configuration")
 		return
 	}
-
+	
 	throttle := middleware.NewThrottle(cfg.BenefitEvents.RateLimit, time.Second)
-
+	
 	router.AddNoPublishHandler(
 		"benefit_consumption_handler",
 		cfg.BenefitEvents.Topic,
@@ -89,7 +90,7 @@ func (s *benefitConsumptionService) RegisterHandler(router *pubsubRouter.Router,
 		s.processMessage,
 		throttle.Middleware,
 	)
-
+	
 	s.Logger.Infow("registered benefit consumption handler",
 		"topic", cfg.BenefitEvents.Topic,
 		"rate_limit", cfg.BenefitEvents.RateLimit,
@@ -106,7 +107,7 @@ func (s *benefitConsumptionService) processMessage(ctx context.Context, msg *mes
 		s.sentryService.CaptureException(ctx, err)
 		return nil
 	}
-
+	
 	if err := validateProtoFields(&ev); err != nil {
 		s.Logger.Warnw("dropping invalid benefit event",
 			"reason", err.Error(),
@@ -115,12 +116,12 @@ func (s *benefitConsumptionService) processMessage(ctx context.Context, msg *mes
 		)
 		return nil
 	}
-
+	
 	s.Logger.Infow("benefit event with this username is being processed",
 		"event_id", ev.GetEventId(),
 		"username", ev.GetUsername(),
 	)
-
+	
 	tenantID := s.Config.Billing.TenantID
 	if tenantID == "" {
 		s.Logger.Errorw("billing.tenant_id is not configured; cannot process benefit events",
@@ -129,12 +130,12 @@ func (s *benefitConsumptionService) processMessage(ctx context.Context, msg *mes
 		)
 		return nil
 	}
-
+	
 	ctx = context.WithValue(ctx, types.CtxTenantID, tenantID)
 	if environmentID := s.Config.Billing.EnvironmentID; environmentID != "" {
 		ctx = context.WithValue(ctx, types.CtxEnvironmentID, environmentID)
 	}
-
+	
 	validated, err := s.validateEvent(ctx, &ev)
 	if err != nil {
 		if isDropEvent(err) {
@@ -155,22 +156,25 @@ func (s *benefitConsumptionService) processMessage(ctx context.Context, msg *mes
 			WithHint("Failed to validate benefit event").
 			Mark(ierr.ErrSystem)
 	}
-
+	
 	row := toLedgerRow(&ev, validated, tenantID, s.Config.Billing.EnvironmentID)
-
+	
 	if err := s.BenefitLedgerRepo.Create(ctx, row); err != nil {
 		if ierr.IsAlreadyExists(err) {
-			s.Logger.Debugw("duplicate benefit event ignored",
+			s.Logger.Info(ctx, "duplicate benefit event ignored",
 				"event_id", ev.GetEventId(),
 				"username", ev.GetUsername(),
 			)
+			metrics.BenefitLedgerDuplicatesTotal.Inc()
 			return nil
 		}
+		
 		s.Logger.Errorw("failed to store benefit event",
 			"error", err,
 			"event_id", ev.GetEventId(),
 			"username", ev.GetUsername(),
 		)
+		
 		if !s.shouldRetryError(err) {
 			return nil
 		}
@@ -178,11 +182,12 @@ func (s *benefitConsumptionService) processMessage(ctx context.Context, msg *mes
 			WithHint("Failed to store benefit event").
 			Mark(ierr.ErrSystem)
 	}
-
+	
 	s.Logger.Debugw("stored benefit event",
 		"event_id", row.EventID,
 		"username", ev.GetUsername(),
 	)
+	
 	return nil
 }
 
@@ -190,11 +195,11 @@ func validateProtoFields(ev *benefitsv1.BenefitEvent) error {
 	if ev.GetEventId() == "" || ev.GetSubscriptionId() == "" || ev.GetUsername() == "" || ev.GetFeatureId() == "" {
 		return drop("missing required fields or fields empty")
 	}
-
+	
 	if ev.GetValue() <= 0 {
 		return drop("value must be greater than 0")
 	}
-
+	
 	for name, val := range map[string]string{
 		"subscription_id": ev.GetSubscriptionId(),
 		"feature_id":      ev.GetFeatureId(),
@@ -214,7 +219,7 @@ func (s *benefitConsumptionService) validateEvent(ctx context.Context, ev *benef
 		}
 		return nil, ierr.WithError(err).WithHint("customer lookup failed").Mark(ierr.ErrDatabase)
 	}
-
+	
 	sub, err := s.SubRepo.Get(ctx, ev.GetSubscriptionId())
 	if err != nil {
 		if ierr.IsNotFound(err) {
@@ -222,15 +227,15 @@ func (s *benefitConsumptionService) validateEvent(ctx context.Context, ev *benef
 		}
 		return nil, ierr.WithError(err).WithHint("subscription lookup failed").Mark(ierr.ErrDatabase)
 	}
-
+	
 	if sub.CustomerID != cust.ID {
 		return nil, drop("subscription does not belong to customer")
 	}
-
+	
 	if err := s.validateFeatureEntitlement(ctx, sub.ID, ev.GetFeatureId()); err != nil {
 		return nil, err
 	}
-
+	
 	return &eventValidation{Product: sub.Product, CustomerID: sub.CustomerID}, nil
 }
 

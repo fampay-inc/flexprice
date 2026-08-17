@@ -3,7 +3,7 @@ package router
 import (
 	"context"
 	"time"
-
+	
 	"github.com/ThreeDotsLabs/watermill"
 	watermillKafka "github.com/ThreeDotsLabs/watermill-kafka/v2/pkg/kafka"
 	"github.com/ThreeDotsLabs/watermill/message"
@@ -35,15 +35,15 @@ func NewRouter(cfg *config.Configuration, logger *logger.Logger, tracingSvc *tra
 	if err != nil {
 		return nil, err
 	}
-
+	
 	var dlqPublisher message.Publisher
-
+	
 	dlqPublisher, err = createDLQPublisher(cfg, logger)
 	if err != nil {
 		return nil, err
 	}
 	logger.Info(context.Background(), "DLQ publisher initialized")
-
+	
 	router.AddMiddleware(
 		// Outermost: establishes the per-message context — installs the writer-pin
 		// holder (read-your-writes) and starts the db.resolved_target span, rolling
@@ -54,7 +54,7 @@ func NewRouter(cfg *config.Configuration, logger *logger.Logger, tracingSvc *tra
 		middleware.Recoverer,
 		middleware.CorrelationID,
 	)
-
+	
 	return &Router{
 		router:       router,
 		logger:       logger,
@@ -71,7 +71,7 @@ func createDLQPublisher(cfg *config.Configuration, logger *logger.Logger) (messa
 		saramaConfig.Producer.Return.Successes = true
 		saramaConfig.Producer.Return.Errors = true
 	}
-
+	
 	publisher, err := watermillKafka.NewPublisher(
 		watermillKafka.PublisherConfig{
 			Brokers:               kc.Brokers,
@@ -83,7 +83,7 @@ func createDLQPublisher(cfg *config.Configuration, logger *logger.Logger) (messa
 	if err != nil {
 		return nil, err
 	}
-
+	
 	logger.Info(context.Background(), "DLQ publisher initialized", "brokers", kc.Brokers, "dlq_topic", kc.TopicDLQ)
 	return publisher, nil
 }
@@ -114,13 +114,13 @@ func consumerContextMiddleware(tracingSvc *tracing.Service) message.HandlerMiddl
 			// message via a goroutine) so it does NOT inherit this and installs its
 			// own pin — see onboarding.processMessage.
 			ctx := types.WithWriterPinning(msg.Context())
-
+			
 			// Start a root span on that ctx so the reader/writer DB router can record
 			// db.resolved_target on it, and roll the handler's outcome onto the span.
 			span, ctx := tracingSvc.StartKafkaConsumerSpan(ctx, message.HandlerNameFromCtx(ctx))
 			msg.SetContext(ctx)
 			defer span.Finish()
-
+			
 			msgs, err := h(msg)
 			if err != nil {
 				span.SetStatusError(err)
@@ -151,7 +151,7 @@ func (r *Router) AddNoPublishHandler(
 			start := time.Now()
 			tenantID := msg.Metadata.Get("tenant_id")
 			environmentID := msg.Metadata.Get("environment_id")
-
+			
 			// Detach from msg.Context() cancellation so a consumer-group rebalance
 			// or subscriber shutdown doesn't kill an in-flight handler mid-write.
 			// WithoutCancel keeps values (tracing span, writer pin, handler name)
@@ -162,10 +162,10 @@ func (r *Router) AddNoPublishHandler(
 			defer cancel()
 			ctx = context.WithValue(ctx, types.CtxTenantID, tenantID)
 			ctx = context.WithValue(ctx, types.CtxEnvironmentID, environmentID)
-
+			
 			err := handlerFunc(ctx, msg)
 			duration := time.Since(start)
-
+			
 			metrics.KafkaMessageLatency.WithLabelValues(handlerName, topicName).Observe(duration.Seconds())
 			if err != nil {
 				_, code := ierr.ResolveError(err)
@@ -183,7 +183,7 @@ func (r *Router) AddNoPublishHandler(
 			return err
 		},
 	)
-
+	
 	// PoisonQueue must be outermost so it catches failures after retries are exhausted
 	if r.dlqPublisher != nil && topicDLQ != "" {
 		pq, err := middleware.PoisonQueue(r.dlqPublisher, topicDLQ)
@@ -196,7 +196,7 @@ func (r *Router) AddNoPublishHandler(
 			handler.AddMiddleware(pq)
 		}
 	}
-
+	
 	handler.AddMiddleware(middleware.Retry{
 		MaxRetries:          3,
 		InitialInterval:     1 * time.Second,
@@ -214,7 +214,7 @@ func (r *Router) AddNoPublishHandler(
 			)
 		},
 	}.Middleware)
-
+	
 	for _, mw := range middlewares {
 		handler.AddMiddleware(mw)
 	}
