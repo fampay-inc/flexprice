@@ -2,6 +2,7 @@ package metrics
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"go.uber.org/fx"
 )
 
@@ -73,6 +74,7 @@ func Init() {
 		KafkaMessageLatency,
 		KafkaMessageFailuresTotal,
 	)
+	prometheus.MustRegister(collectors.NewGoCollector())
 }
 
 func Module() fx.Option {

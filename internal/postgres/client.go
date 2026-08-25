@@ -16,6 +16,8 @@ import (
 	"github.com/flexprice/flexprice/internal/tracing"
 	"github.com/flexprice/flexprice/internal/types"
 	_ "github.com/lib/pq"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
 	"go.uber.org/fx"
 )
 
@@ -99,6 +101,7 @@ func NewEntClients(config *config.Configuration, logger *logger.Logger) (*EntCli
 	writerDB.SetMaxOpenConns(config.Postgres.MaxOpenConns)
 	writerDB.SetMaxIdleConns(config.Postgres.MaxIdleConns)
 	writerDB.SetConnMaxLifetime(time.Duration(config.Postgres.ConnMaxLifetimeMinutes) * time.Minute)
+	prometheus.MustRegister(collectors.NewDBStatsCollector(writerDB, "flexprice"))
 
 	// Create writer driver
 	writerDrv := entsql.OpenDB(dialect.Postgres, writerDB)
@@ -162,6 +165,8 @@ func NewEntClients(config *config.Configuration, logger *logger.Logger) (*EntCli
 			"host", config.Postgres.ReaderHost,
 			"port", config.Postgres.ReaderPort,
 		)
+
+		prometheus.MustRegister(collectors.NewDBStatsCollector(readerDB, "flexprice_reader"))
 	} else {
 		// Use writer client as reader if no separate reader is configured
 		readerClient = writerClient
