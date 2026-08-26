@@ -10,6 +10,7 @@ import (
 	"github.com/flexprice/flexprice/internal/logger"
 	"github.com/flexprice/flexprice/internal/pubsub"
 	repoent "github.com/flexprice/flexprice/internal/repository/ent"
+	"github.com/flexprice/flexprice/internal/tracing"
 	"github.com/flexprice/flexprice/internal/types"
 )
 
@@ -33,6 +34,7 @@ type webhookPublisher struct {
 	config          *config.Webhook
 	logger          *logger.Logger
 	systemEventRepo *repoent.SystemEventRepository
+	tracing         *tracing.Service
 }
 
 // NewPublisher creates a webhook publisher backed by a PubSub (e.g. in-memory for tests/local).
@@ -41,12 +43,14 @@ func NewPublisher(
 	cfg *config.Configuration,
 	logger *logger.Logger,
 	systemEventRepo *repoent.SystemEventRepository,
+	tracingSvc *tracing.Service,
 ) (WebhookPublisher, error) {
 	return &webhookPublisher{
 		pubSub:          pubSub,
 		config:          &cfg.Webhook,
 		logger:          logger,
 		systemEventRepo: systemEventRepo,
+		tracing:         tracingSvc,
 	}, nil
 }
 
@@ -57,19 +61,51 @@ func NewPublisherFromProducer(
 	cfg *config.Configuration,
 	logger *logger.Logger,
 	systemEventRepo *repoent.SystemEventRepository,
+	tracingSvc *tracing.Service,
 ) (WebhookPublisher, error) {
 	return &webhookPublisher{
 		producer:        producer,
 		config:          &cfg.Webhook,
 		logger:          logger,
 		systemEventRepo: systemEventRepo,
+		tracing:         tracingSvc,
 	}, nil
 }
 
-func (p *webhookPublisher) PublishWebhook(ctx context.Context, event *types.WebhookEvent) error {
+func (p *webhookPublisher) PublishWebhook(ctx context.Context, event *types.WebhookEvent) (err error) {
+	transport := "pubsub"
+	if p.producer != nil {
+		transport = "kafka"
+	}
+
+	rootSpan, ctx := p.tracing.StartWebhookPublishSpan(ctx, map[string]interface{}{
+		"event.id":       event.ID,
+		"event.name":     string(event.EventName),
+		"entity.type":    string(event.EntityType),
+		"entity.id":      event.EntityID,
+		"tenant.id":      event.TenantID,
+		"environment.id": event.EnvironmentID,
+		"topic":          p.config.Topic,
+		"transport":      transport,
+	})
+	defer func() {
+		if rootSpan == nil {
+			return
+		}
+		if err != nil {
+			rootSpan.SetStatusError(err)
+		} else {
+			rootSpan.SetStatusOK()
+		}
+		rootSpan.Finish()
+	}()
+
 	payload, err := json.Marshal(event)
 	if err != nil {
 		return err
+	}
+	if rootSpan != nil {
+		rootSpan.SetData("payload.bytes", len(payload))
 	}
 
 	messageID := event.ID
@@ -91,35 +127,63 @@ func (p *webhookPublisher) PublishWebhook(ctx context.Context, event *types.Webh
 	)
 
 	if p.systemEventRepo != nil {
-		if err := p.systemEventRepo.OnConsumed(ctx, event); err != nil {
+		dbSpan, dbCtx := p.tracing.StartDBSpan(ctx, "system_events.on_consumed", map[string]interface{}{
+			"event.id":    event.ID,
+			"event.name":  string(event.EventName),
+			"entity.type": string(event.EntityType),
+			"entity.id":   event.EntityID,
+		})
+		onConsumedErr := p.systemEventRepo.OnConsumed(dbCtx, event)
+		if dbSpan != nil {
+			if onConsumedErr != nil {
+				dbSpan.SetStatusError(onConsumedErr)
+			} else {
+				dbSpan.SetStatusOK()
+			}
+			dbSpan.Finish()
+		}
+		if onConsumedErr != nil {
 			p.logger.Error(ctx, "system_events OnConsumed failed",
-				"error", err,
+				"error", onConsumedErr,
 				"event_id", event.ID,
 				"event_name", event.EventName,
 			)
 		}
 	}
 
+	produceSpan, produceCtx := p.tracing.StartKafkaProducerSpan(ctx, p.config.Topic, map[string]interface{}{
+		"event.id":       event.ID,
+		"event.name":     string(event.EventName),
+		"tenant.id":      event.TenantID,
+		"environment.id": event.EnvironmentID,
+		"message.id":     messageID,
+		"payload.bytes":  len(payload),
+		"transport":      transport,
+	})
+
 	if p.producer != nil {
-		if err := p.producer.Publish(p.config.Topic, msg); err != nil {
-			p.logger.Error(ctx, "failed to publish webhook event",
-				"error", err,
-				"event_id", event.ID,
-				"event_name", event.EventName,
-				"tenant_id", event.TenantID,
-			)
-			return err
-		}
+		err = p.producer.Publish(p.config.Topic, msg)
 	} else {
-		if err := p.pubSub.Publish(ctx, p.config.Topic, msg); err != nil {
-			p.logger.Error(ctx, "failed to publish webhook event",
-				"error", err,
-				"event_id", event.ID,
-				"event_name", event.EventName,
-				"tenant_id", event.TenantID,
-			)
-			return err
+		err = p.pubSub.Publish(produceCtx, p.config.Topic, msg)
+	}
+
+	if produceSpan != nil {
+		if err != nil {
+			produceSpan.SetStatusError(err)
+		} else {
+			produceSpan.SetStatusOK()
 		}
+		produceSpan.Finish()
+	}
+
+	if err != nil {
+		p.logger.Error(ctx, "failed to publish webhook event",
+			"error", err,
+			"event_id", event.ID,
+			"event_name", event.EventName,
+			"tenant_id", event.TenantID,
+		)
+		return err
 	}
 
 	p.logger.Debug(ctx, "successfully published webhook event",

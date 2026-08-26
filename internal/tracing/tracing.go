@@ -568,6 +568,24 @@ func (s *Service) StartKafkaConsumerSpan(ctx context.Context, topic string) (*Sp
 	})
 }
 
+// StartKafkaProducerSpan starts a span around a Kafka / pubsub produce. Not
+// gated by storage_spans_enabled — publish frequency is bounded by webhook
+// volume (comparable to consumer spans, which are also always-on).
+func (s *Service) StartKafkaProducerSpan(ctx context.Context, topic string, params map[string]interface{}) (*Span, context.Context) {
+	merged := map[string]interface{}{"topic": topic}
+	for k, v := range params {
+		merged[k] = v
+	}
+	return s.startSpan(ctx, "kafka.produce."+topic, "kafka.produce", merged)
+}
+
+// StartWebhookPublishSpan wraps the full PublishWebhook call (marshal +
+// outbox insert + produce). Always-on when tracing is enabled; child DB
+// span is still gated by storage_spans_enabled.
+func (s *Service) StartWebhookPublishSpan(ctx context.Context, params map[string]interface{}) (*Span, context.Context) {
+	return s.startSpan(ctx, "webhook.publish", "webhook.publish", params)
+}
+
 // MonitorEventProcessing tracks event processing latency relative to the
 // event's source timestamp. Tag thresholds match the previous Sentry behaviour
 // so existing alerts continue to work once their backend is repointed.
