@@ -45,7 +45,8 @@ func SyncBillingCustomers() error {
 	}
 
 	// Create postgres client wrapper
-	client := postgres.NewClient(entClient, logger, tracing.NewService(cfg, logger))
+	tracingSvc := tracing.NewService(cfg, logger)
+	client := postgres.NewClient(entClient, logger, tracingSvc)
 
 	// Initialize cache
 	cacheClient := cache.GetInMemoryCache()
@@ -69,7 +70,7 @@ func SyncBillingCustomers() error {
 	ps := memory.NewPubSub(cfg, logger)
 
 	// Initialize webhook publisher
-	webhookPublisher, err := publisher.NewPublisher(ps, cfg, logger, systemEventRepo)
+	webhookPublisher, err := publisher.NewPublisher(ps, cfg, logger, systemEventRepo, tracingSvc)
 	if err != nil {
 		log.Fatalf("Failed to create webhook publisher: %v", err)
 	}

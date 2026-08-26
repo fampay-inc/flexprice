@@ -2263,6 +2263,10 @@ func (s *subscriptionService) ListSubscriptions(ctx context.Context, filter *typ
 		),
 	}
 
+	if len(subscriptions) == 0 {
+		return response, nil
+	}
+
 	// Collect unique plan IDs
 	planIDMap := make(map[string]*dto.PlanResponse, 0)
 	for _, sub := range subscriptions {
@@ -2310,6 +2314,7 @@ func (s *subscriptionService) ListSubscriptions(ctx context.Context, filter *typ
 		for _, sub := range subscriptions {
 			if sub.CustomerID == "" {
 				s.Logger.Info(ctx, "subscription has empty customer_id", "subscription_id", sub.ID)
+				continue
 			}
 			customerIDMap[sub.CustomerID] = nil
 		}

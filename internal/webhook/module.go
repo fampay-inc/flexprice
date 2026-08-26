@@ -84,6 +84,7 @@ func provideWebhookPublisher(
 	logger *logger.Logger,
 	producer *kafkaProducerPkg.Producer,
 	systemEventRepo *repoent.SystemEventRepository,
+	tracingSvc *tracing.Service,
 ) (publisher.WebhookPublisher, error) {
-	return publisher.NewPublisherFromProducer(producer, cfg, logger, systemEventRepo)
+	return publisher.NewPublisherFromProducer(producer, cfg, logger, systemEventRepo, tracingSvc)
 }
