@@ -649,6 +649,9 @@ func (s *entitlementService) UpdateEntitlement(ctx context.Context, id string, r
 	if req.ConfigValue != nil {
 		existing.ConfigValue = req.ConfigValue
 	}
+	if req.DisplayOrder != nil {
+		existing.DisplayOrder = *req.DisplayOrder
+	}
 
 	// Validate updated entitlement
 	if err := existing.Validate(); err != nil {

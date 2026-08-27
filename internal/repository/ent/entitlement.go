@@ -64,6 +64,7 @@ func (r *entitlementRepository) Create(ctx context.Context, e *domainEntitlement
 		SetNillableParentEntitlementID(e.ParentEntitlementID).
 		SetNillableStartDate(e.StartDate).
 		SetNillableEndDate(e.EndDate).
+		SetDisplayOrder(e.DisplayOrder).
 		SetTenantID(e.TenantID).
 		SetStatus(string(e.Status)).
 		SetCreatedAt(e.CreatedAt).
@@ -296,6 +297,7 @@ func (r *entitlementRepository) Update(ctx context.Context, e *domainEntitlement
 		SetUsageResetPeriod(e.UsageResetPeriod).
 		SetStaticValue(e.StaticValue).
 		SetNillableParentEntitlementID(e.ParentEntitlementID).
+		SetDisplayOrder(e.DisplayOrder).
 		SetStatus(string(e.Status)).
 		SetUpdatedAt(time.Now().UTC()).
 		SetUpdatedBy(types.GetUserID(ctx))
