@@ -28,6 +28,7 @@ type CreateEntitlementRequest struct {
 	StartDate           *time.Time                        `json:"start_date,omitempty"`
 	EndDate             *time.Time                        `json:"end_date,omitempty"`
 	ConfigValue         map[string]interface{}            `json:"config_value,omitempty"`
+	DisplayOrder        int                               `json:"display_order,omitempty"`
 }
 
 func (r *CreateEntitlementRequest) Validate() error {
@@ -114,6 +115,7 @@ func (r *CreateEntitlementRequest) ToEntitlement(ctx context.Context) *entitleme
 		ParentEntitlementID: r.ParentEntitlementID,
 		StartDate:           r.StartDate,
 		EndDate:             r.EndDate,
+		DisplayOrder:        r.DisplayOrder,
 		EnvironmentID:       types.GetEnvironmentID(ctx),
 		BaseModel:           types.GetDefaultBaseModel(ctx),
 	}
@@ -128,6 +130,7 @@ type UpdateEntitlementRequest struct {
 	IsSoftLimit      *bool                             `json:"is_soft_limit"`
 	StaticValue      string                            `json:"static_value"`
 	ConfigValue      map[string]interface{}            `json:"config_value,omitempty"`
+	DisplayOrder     *int                              `json:"display_order,omitempty"`
 }
 
 // Validate validates the update entitlement request
