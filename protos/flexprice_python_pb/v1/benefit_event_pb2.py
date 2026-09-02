@@ -13,7 +13,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16v1/benefit_event.proto\x12\nbenefitsv1\"\xdd\x01\n\x0c\x42\x65nefitEvent\x12\x19\n\x08\x65vent_id\x18\x01 \x01(\tR\x07\x65ventId\x12\x1a\n\x08username\x18\x02 \x01(\tR\x08username\x12\'\n\x0fsubscription_id\x18\x03 \x01(\tR\x0esubscriptionId\x12\x1d\n\nfeature_id\x18\x04 \x01(\tR\tfeatureId\x12\x1a\n\x08\x63\x61tegory\x18\x05 \x01(\tR\x08\x63\x61tegory\x12\x14\n\x05value\x18\x06 \x01(\x03R\x05value\x12\x1c\n\ttimestamp\x18\x07 \x01(\x03R\ttimestampB<Z:gitlab.famapp.in/backend/flexprice/protos/pb/v1;benefitsv1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x16v1/benefit_event.proto\x12\nbenefitsv1\"\xe2\x02\n\x0c\x42\x65nefitEvent\x12\x19\n\x08\x65vent_id\x18\x01 \x01(\tR\x07\x65ventId\x12\x1a\n\x08username\x18\x02 \x01(\tR\x08username\x12\'\n\x0fsubscription_id\x18\x03 \x01(\tR\x0esubscriptionId\x12\x1d\n\nfeature_id\x18\x04 \x01(\tR\tfeatureId\x12\x1a\n\x08\x63\x61tegory\x18\x05 \x01(\tR\x08\x63\x61tegory\x12\x14\n\x05value\x18\x06 \x01(\x03R\x05value\x12\x1c\n\ttimestamp\x18\x07 \x01(\x03R\ttimestamp\x12!\n\x0c\x62\x65nefit_type\x18\x08 \x01(\tR\x0b\x62\x65nefitType\x12\x34\n\nentry_type\x18\t \x01(\x0e\x32\x15.benefitsv1.EntryTypeR\tentryType\x12*\n\x11original_event_id\x18\n \x01(\tR\x0foriginalEventId*@\n\tEntryType\x12\x1a\n\x16\x45NTRY_TYPE_UNSPECIFIED\x10\x00\x12\t\n\x05GRANT\x10\x01\x12\x0c\n\x08REVERSAL\x10\x02\x42<Z:gitlab.famapp.in/backend/flexprice/protos/pb/v1;benefitsv1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -22,6 +22,8 @@ if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
   DESCRIPTOR._serialized_options = b'Z:gitlab.famapp.in/backend/flexprice/protos/pb/v1;benefitsv1'
+  _globals['_ENTRYTYPE']._serialized_start=395
+  _globals['_ENTRYTYPE']._serialized_end=459
   _globals['_BENEFITEVENT']._serialized_start=39
-  _globals['_BENEFITEVENT']._serialized_end=260
+  _globals['_BENEFITEVENT']._serialized_end=393
 # @@protoc_insertion_point(module_scope)
