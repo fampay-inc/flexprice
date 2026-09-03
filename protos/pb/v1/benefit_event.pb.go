@@ -21,18 +21,69 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type EntryType int32
+
+const (
+	EntryType_ENTRY_TYPE_UNSPECIFIED EntryType = 0
+	EntryType_GRANT                  EntryType = 1
+	EntryType_REVERSAL               EntryType = 2
+)
+
+// Enum value maps for EntryType.
+var (
+	EntryType_name = map[int32]string{
+		0: "ENTRY_TYPE_UNSPECIFIED",
+		1: "GRANT",
+		2: "REVERSAL",
+	}
+	EntryType_value = map[string]int32{
+		"ENTRY_TYPE_UNSPECIFIED": 0,
+		"GRANT":                  1,
+		"REVERSAL":               2,
+	}
+)
+
+func (x EntryType) Enum() *EntryType {
+	p := new(EntryType)
+	*p = x
+	return p
+}
+
+func (x EntryType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (EntryType) Descriptor() protoreflect.EnumDescriptor {
+	return file_v1_benefit_event_proto_enumTypes[0].Descriptor()
+}
+
+func (EntryType) Type() protoreflect.EnumType {
+	return &file_v1_benefit_event_proto_enumTypes[0]
+}
+
+func (x EntryType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use EntryType.Descriptor instead.
+func (EntryType) EnumDescriptor() ([]byte, []int) {
+	return file_v1_benefit_event_proto_rawDescGZIP(), []int{0}
+}
+
 type BenefitEvent struct {
-	state          protoimpl.MessageState `protogen:"open.v1"`
-	EventId        string                 `protobuf:"bytes,1,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
-	Username       string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
-	SubscriptionId string                 `protobuf:"bytes,3,opt,name=subscription_id,json=subscriptionId,proto3" json:"subscription_id,omitempty"`
-	FeatureId      string                 `protobuf:"bytes,4,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
-	Category       string                 `protobuf:"bytes,5,opt,name=category,proto3" json:"category,omitempty"`
-	Value          int64                  `protobuf:"varint,6,opt,name=value,proto3" json:"value,omitempty"`
-	Timestamp      int64                  `protobuf:"varint,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	BenefitType    string                 `protobuf:"bytes,8,opt,name=benefit_type,json=benefitType,proto3" json:"benefit_type,omitempty"` // lowercase: famcash, famcoins, flexcash;
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	EventId         string                 `protobuf:"bytes,1,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
+	Username        string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
+	SubscriptionId  *string                `protobuf:"bytes,3,opt,name=subscription_id,json=subscriptionId,proto3,oneof" json:"subscription_id,omitempty"`
+	FeatureId       *string                `protobuf:"bytes,4,opt,name=feature_id,json=featureId,proto3,oneof" json:"feature_id,omitempty"`
+	Category        *string                `protobuf:"bytes,5,opt,name=category,proto3,oneof" json:"category,omitempty"`
+	Value           int64                  `protobuf:"varint,6,opt,name=value,proto3" json:"value,omitempty"`
+	Timestamp       int64                  `protobuf:"varint,7,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	BenefitType     *string                `protobuf:"bytes,8,opt,name=benefit_type,json=benefitType,proto3,oneof" json:"benefit_type,omitempty"` // lowercase: famcash, famcoins, flexcash;
+	EntryType       *EntryType             `protobuf:"varint,9,opt,name=entry_type,json=entryType,proto3,enum=benefitsv1.EntryType,oneof" json:"entry_type,omitempty"`
+	OriginalEventId *string                `protobuf:"bytes,10,opt,name=original_event_id,json=originalEventId,proto3,oneof" json:"original_event_id,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *BenefitEvent) Reset() {
@@ -80,22 +131,22 @@ func (x *BenefitEvent) GetUsername() string {
 }
 
 func (x *BenefitEvent) GetSubscriptionId() string {
-	if x != nil {
-		return x.SubscriptionId
+	if x != nil && x.SubscriptionId != nil {
+		return *x.SubscriptionId
 	}
 	return ""
 }
 
 func (x *BenefitEvent) GetFeatureId() string {
-	if x != nil {
-		return x.FeatureId
+	if x != nil && x.FeatureId != nil {
+		return *x.FeatureId
 	}
 	return ""
 }
 
 func (x *BenefitEvent) GetCategory() string {
-	if x != nil {
-		return x.Category
+	if x != nil && x.Category != nil {
+		return *x.Category
 	}
 	return ""
 }
@@ -115,84 +166,22 @@ func (x *BenefitEvent) GetTimestamp() int64 {
 }
 
 func (x *BenefitEvent) GetBenefitType() string {
-	if x != nil {
-		return x.BenefitType
+	if x != nil && x.BenefitType != nil {
+		return *x.BenefitType
 	}
 	return ""
 }
 
-type BenefitReversalEvent struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	EventId         string                 `protobuf:"bytes,1,opt,name=event_id,json=eventId,proto3" json:"event_id,omitempty"`
-	Username        string                 `protobuf:"bytes,2,opt,name=username,proto3" json:"username,omitempty"`
-	Value           int64                  `protobuf:"varint,3,opt,name=value,proto3" json:"value,omitempty"`
-	Timestamp       int64                  `protobuf:"varint,4,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	OriginalEventId string                 `protobuf:"bytes,5,opt,name=original_event_id,json=originalEventId,proto3" json:"original_event_id,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
-}
-
-func (x *BenefitReversalEvent) Reset() {
-	*x = BenefitReversalEvent{}
-	mi := &file_v1_benefit_event_proto_msgTypes[1]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *BenefitReversalEvent) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*BenefitReversalEvent) ProtoMessage() {}
-
-func (x *BenefitReversalEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_v1_benefit_event_proto_msgTypes[1]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
+func (x *BenefitEvent) GetEntryType() EntryType {
+	if x != nil && x.EntryType != nil {
+		return *x.EntryType
 	}
-	return mi.MessageOf(x)
+	return EntryType_ENTRY_TYPE_UNSPECIFIED
 }
 
-// Deprecated: Use BenefitReversalEvent.ProtoReflect.Descriptor instead.
-func (*BenefitReversalEvent) Descriptor() ([]byte, []int) {
-	return file_v1_benefit_event_proto_rawDescGZIP(), []int{1}
-}
-
-func (x *BenefitReversalEvent) GetEventId() string {
-	if x != nil {
-		return x.EventId
-	}
-	return ""
-}
-
-func (x *BenefitReversalEvent) GetUsername() string {
-	if x != nil {
-		return x.Username
-	}
-	return ""
-}
-
-func (x *BenefitReversalEvent) GetValue() int64 {
-	if x != nil {
-		return x.Value
-	}
-	return 0
-}
-
-func (x *BenefitReversalEvent) GetTimestamp() int64 {
-	if x != nil {
-		return x.Timestamp
-	}
-	return 0
-}
-
-func (x *BenefitReversalEvent) GetOriginalEventId() string {
-	if x != nil {
-		return x.OriginalEventId
+func (x *BenefitEvent) GetOriginalEventId() string {
+	if x != nil && x.OriginalEventId != nil {
+		return *x.OriginalEventId
 	}
 	return ""
 }
@@ -202,23 +191,31 @@ var File_v1_benefit_event_proto protoreflect.FileDescriptor
 const file_v1_benefit_event_proto_rawDesc = "" +
 	"\n" +
 	"\x16v1/benefit_event.proto\x12\n" +
-	"benefitsv1\"\x80\x02\n" +
+	"benefitsv1\"\xe6\x03\n" +
 	"\fBenefitEvent\x12\x19\n" +
 	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12\x1a\n" +
-	"\busername\x18\x02 \x01(\tR\busername\x12'\n" +
-	"\x0fsubscription_id\x18\x03 \x01(\tR\x0esubscriptionId\x12\x1d\n" +
+	"\busername\x18\x02 \x01(\tR\busername\x12,\n" +
+	"\x0fsubscription_id\x18\x03 \x01(\tH\x00R\x0esubscriptionId\x88\x01\x01\x12\"\n" +
 	"\n" +
-	"feature_id\x18\x04 \x01(\tR\tfeatureId\x12\x1a\n" +
-	"\bcategory\x18\x05 \x01(\tR\bcategory\x12\x14\n" +
+	"feature_id\x18\x04 \x01(\tH\x01R\tfeatureId\x88\x01\x01\x12\x1f\n" +
+	"\bcategory\x18\x05 \x01(\tH\x02R\bcategory\x88\x01\x01\x12\x14\n" +
 	"\x05value\x18\x06 \x01(\x03R\x05value\x12\x1c\n" +
-	"\ttimestamp\x18\a \x01(\x03R\ttimestamp\x12!\n" +
-	"\fbenefit_type\x18\b \x01(\tR\vbenefitType\"\xad\x01\n" +
-	"\x14BenefitReversalEvent\x12\x19\n" +
-	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12\x1a\n" +
-	"\busername\x18\x02 \x01(\tR\busername\x12\x14\n" +
-	"\x05value\x18\x03 \x01(\x03R\x05value\x12\x1c\n" +
-	"\ttimestamp\x18\x04 \x01(\x03R\ttimestamp\x12*\n" +
-	"\x11original_event_id\x18\x05 \x01(\tR\x0foriginalEventIdB<Z:gitlab.famapp.in/backend/flexprice/protos/pb/v1;benefitsv1b\x06proto3"
+	"\ttimestamp\x18\a \x01(\x03R\ttimestamp\x12&\n" +
+	"\fbenefit_type\x18\b \x01(\tH\x03R\vbenefitType\x88\x01\x01\x129\n" +
+	"\n" +
+	"entry_type\x18\t \x01(\x0e2\x15.benefitsv1.EntryTypeH\x04R\tentryType\x88\x01\x01\x12/\n" +
+	"\x11original_event_id\x18\n" +
+	" \x01(\tH\x05R\x0foriginalEventId\x88\x01\x01B\x12\n" +
+	"\x10_subscription_idB\r\n" +
+	"\v_feature_idB\v\n" +
+	"\t_categoryB\x0f\n" +
+	"\r_benefit_typeB\r\n" +
+	"\v_entry_typeB\x14\n" +
+	"\x12_original_event_id*@\n" +
+	"\tEntryType\x12\x1a\n" +
+	"\x16ENTRY_TYPE_UNSPECIFIED\x10\x00\x12\t\n" +
+	"\x05GRANT\x10\x01\x12\f\n" +
+	"\bREVERSAL\x10\x02B<Z:gitlab.famapp.in/backend/flexprice/protos/pb/v1;benefitsv1b\x06proto3"
 
 var (
 	file_v1_benefit_event_proto_rawDescOnce sync.Once
@@ -232,17 +229,19 @@ func file_v1_benefit_event_proto_rawDescGZIP() []byte {
 	return file_v1_benefit_event_proto_rawDescData
 }
 
-var file_v1_benefit_event_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_v1_benefit_event_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_v1_benefit_event_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_v1_benefit_event_proto_goTypes = []any{
-	(*BenefitEvent)(nil),         // 0: benefitsv1.BenefitEvent
-	(*BenefitReversalEvent)(nil), // 1: benefitsv1.BenefitReversalEvent
+	(EntryType)(0),       // 0: benefitsv1.EntryType
+	(*BenefitEvent)(nil), // 1: benefitsv1.BenefitEvent
 }
 var file_v1_benefit_event_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0, // 0: benefitsv1.BenefitEvent.entry_type:type_name -> benefitsv1.EntryType
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_v1_benefit_event_proto_init() }
@@ -250,18 +249,20 @@ func file_v1_benefit_event_proto_init() {
 	if File_v1_benefit_event_proto != nil {
 		return
 	}
+	file_v1_benefit_event_proto_msgTypes[0].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_v1_benefit_event_proto_rawDesc), len(file_v1_benefit_event_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   2,
+			NumEnums:      1,
+			NumMessages:   1,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_v1_benefit_event_proto_goTypes,
 		DependencyIndexes: file_v1_benefit_event_proto_depIdxs,
+		EnumInfos:         file_v1_benefit_event_proto_enumTypes,
 		MessageInfos:      file_v1_benefit_event_proto_msgTypes,
 	}.Build()
 	File_v1_benefit_event_proto = out.File
