@@ -4,22 +4,22 @@ package benefitsv1;
 
 option go_package = "gitlab.famapp.in/backend/flexprice/protos/pb/v1;benefitsv1";
 
+enum EntryType {
+  ENTRY_TYPE_UNSPECIFIED = 0;
+  GRANT                  = 1;
+  REVERSAL               = 2;
+}
 
 message BenefitEvent {
-  string event_id        = 1;
-  string username        = 2;
-  string subscription_id = 3;
-  string feature_id      = 4;
-  string category        = 5;
-  int64  value           = 6;
-  int64  timestamp       = 7;
-  string benefit_type    = 8; // lowercase: famcash, famcoins, flexcash;
+  string             event_id          = 1;
+  string             username          = 2;
+  optional string    subscription_id   = 3;
+  optional string    feature_id        = 4;
+  optional string    category          = 5;
+  int64              value             = 6;
+  int64              timestamp         = 7;
+  optional string    benefit_type      = 8; // lowercase: famcash, famcoins, flexcash;
+  optional EntryType entry_type        = 9;
+  optional string    original_event_id = 10;
 }
 
-message BenefitReversalEvent {
-  string event_id          = 1;
-  string username          = 2;
-  int64  value             = 3;
-  int64  timestamp         = 4;
-  string original_event_id = 5;
-}
