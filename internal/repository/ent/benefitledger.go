@@ -81,42 +81,27 @@ func (r *benefitLedgerRepository) Create(ctx context.Context, b *domainBenefit.B
 	return nil
 }
 
-func (r *benefitLedgerRepository) GetAggregatedBenefits(ctx context.Context, customerID, product, groupBy string) ([]*domainBenefit.BenefitAggregate, error) {
+func (r *benefitLedgerRepository) GetAggregatedBenefitsByCategory(ctx context.Context, customerID, product string) ([]*domainBenefit.BenefitAggregate, error) {
 	tenantID := types.GetTenantID(ctx)
 	environmentID := types.GetEnvironmentID(ctx)
 
 	span := StartRepositorySpan(ctx, "benefit_ledger", "get_aggregated_benefits", map[string]interface{}{
 		"customer_id": customerID,
 		"product":     product,
-		"group_by":    groupBy,
 	})
 	defer FinishSpan(span)
 
-	byCategory := groupBy == "category"
-
 	// product is the partition key for benefit_ledgers, so filtering on it lets
 	// Postgres prune to a single partition instead of scanning them all.
-	var query string
-	if byCategory {
-		query = `
-			SELECT category, COALESCE(SUM(value), 0)::bigint AS total
-			FROM benefit_ledgers
-			WHERE product = $1
-				AND tenant_id = $2
-				AND environment_id = $3
-				AND customer_id = $4
-				AND category IS NOT NULL AND category != ''
-			GROUP BY category`
-	} else {
-		query = `
-			SELECT feature_id, COALESCE(SUM(value), 0)::bigint AS total
-			FROM benefit_ledgers
-			WHERE product = $1
-				AND tenant_id = $2
-				AND environment_id = $3
-				AND customer_id = $4
-			GROUP BY feature_id`
-	}
+	query := `
+		SELECT category, COALESCE(SUM(value), 0)::bigint AS total
+		FROM benefit_ledgers
+		WHERE product = $1
+			AND tenant_id = $2
+			AND environment_id = $3
+			AND customer_id = $4
+			AND category IS NOT NULL AND category != ''
+		GROUP BY category`
 
 	rows, err := r.client.Reader(ctx).QueryContext(ctx, query, product, tenantID, environmentID, customerID)
 	if err != nil {
@@ -130,12 +115,7 @@ func (r *benefitLedgerRepository) GetAggregatedBenefits(ctx context.Context, cus
 	results := make([]*domainBenefit.BenefitAggregate, 0)
 	for rows.Next() {
 		agg := &domainBenefit.BenefitAggregate{}
-		var scanErr error
-		if byCategory {
-			scanErr = rows.Scan(&agg.Category, &agg.Total)
-		} else {
-			scanErr = rows.Scan(&agg.FeatureID, &agg.Total)
-		}
+		scanErr := rows.Scan(&agg.Category, &agg.Total)
 		if scanErr != nil {
 			SetSpanError(span, scanErr)
 			return nil, ierr.WithError(scanErr).
