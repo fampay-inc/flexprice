@@ -30,7 +30,6 @@ func NewBenefitHandler(benefitService service.BenefitService, log *logger.Logger
 // @Security ApiKeyAuth
 // @Param external_customer_id query string true "External customer ID"
 // @Param product query string true "Product (partition key of the benefit ledger)"
-// @Param group_by query string false "Aggregation grouping. Omit to group by feature_id (default); pass 'category' to group by category instead"
 // @Success 200 {array} dto.BenefitAggregateResponse
 // @Failure 400 {object} ierr.ErrorResponse "Invalid request"
 // @Failure 404 {object} ierr.ErrorResponse "Customer not found"
@@ -39,7 +38,6 @@ func NewBenefitHandler(benefitService service.BenefitService, log *logger.Logger
 func (h *BenefitHandler) GetBenefits(c *gin.Context) {
 	externalCustomerID := c.Query("external_customer_id")
 	product := c.Query("product")
-	groupBy := c.Query("group_by")
 
 	if externalCustomerID == "" || product == "" {
 		c.Error(ierr.NewError("external_customer_id and product are required").
@@ -52,7 +50,6 @@ func (h *BenefitHandler) GetBenefits(c *gin.Context) {
 		c.Request.Context(),
 		externalCustomerID,
 		product,
-		groupBy,
 	)
 	if err != nil {
 		c.Error(err)
