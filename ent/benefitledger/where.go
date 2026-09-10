@@ -139,6 +139,26 @@ func EventTimestamp(v time.Time) predicate.BenefitLedger {
 	return predicate.BenefitLedger(sql.FieldEQ(FieldEventTimestamp, v))
 }
 
+// BenefitType applies equality check predicate on the "benefit_type" field. It's identical to BenefitTypeEQ.
+func BenefitType(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldEQ(FieldBenefitType, v))
+}
+
+// EntryType applies equality check predicate on the "entry_type" field. It's identical to EntryTypeEQ.
+func EntryType(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldEQ(FieldEntryType, v))
+}
+
+// OriginalEventID applies equality check predicate on the "original_event_id" field. It's identical to OriginalEventIDEQ.
+func OriginalEventID(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldEQ(FieldOriginalEventID, v))
+}
+
+// ReversedValue applies equality check predicate on the "reversed_value" field. It's identical to ReversedValueEQ.
+func ReversedValue(v int) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldEQ(FieldReversedValue, v))
+}
+
 // TenantIDEQ applies the EQ predicate on the "tenant_id" field.
 func TenantIDEQ(v string) predicate.BenefitLedger {
 	return predicate.BenefitLedger(sql.FieldEQ(FieldTenantID, v))
@@ -1052,6 +1072,271 @@ func EventTimestampLT(v time.Time) predicate.BenefitLedger {
 // EventTimestampLTE applies the LTE predicate on the "event_timestamp" field.
 func EventTimestampLTE(v time.Time) predicate.BenefitLedger {
 	return predicate.BenefitLedger(sql.FieldLTE(FieldEventTimestamp, v))
+}
+
+// BenefitTypeEQ applies the EQ predicate on the "benefit_type" field.
+func BenefitTypeEQ(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldEQ(FieldBenefitType, v))
+}
+
+// BenefitTypeNEQ applies the NEQ predicate on the "benefit_type" field.
+func BenefitTypeNEQ(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldNEQ(FieldBenefitType, v))
+}
+
+// BenefitTypeIn applies the In predicate on the "benefit_type" field.
+func BenefitTypeIn(vs ...string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldIn(FieldBenefitType, vs...))
+}
+
+// BenefitTypeNotIn applies the NotIn predicate on the "benefit_type" field.
+func BenefitTypeNotIn(vs ...string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldNotIn(FieldBenefitType, vs...))
+}
+
+// BenefitTypeGT applies the GT predicate on the "benefit_type" field.
+func BenefitTypeGT(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldGT(FieldBenefitType, v))
+}
+
+// BenefitTypeGTE applies the GTE predicate on the "benefit_type" field.
+func BenefitTypeGTE(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldGTE(FieldBenefitType, v))
+}
+
+// BenefitTypeLT applies the LT predicate on the "benefit_type" field.
+func BenefitTypeLT(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldLT(FieldBenefitType, v))
+}
+
+// BenefitTypeLTE applies the LTE predicate on the "benefit_type" field.
+func BenefitTypeLTE(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldLTE(FieldBenefitType, v))
+}
+
+// BenefitTypeContains applies the Contains predicate on the "benefit_type" field.
+func BenefitTypeContains(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldContains(FieldBenefitType, v))
+}
+
+// BenefitTypeHasPrefix applies the HasPrefix predicate on the "benefit_type" field.
+func BenefitTypeHasPrefix(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldHasPrefix(FieldBenefitType, v))
+}
+
+// BenefitTypeHasSuffix applies the HasSuffix predicate on the "benefit_type" field.
+func BenefitTypeHasSuffix(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldHasSuffix(FieldBenefitType, v))
+}
+
+// BenefitTypeIsNil applies the IsNil predicate on the "benefit_type" field.
+func BenefitTypeIsNil() predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldIsNull(FieldBenefitType))
+}
+
+// BenefitTypeNotNil applies the NotNil predicate on the "benefit_type" field.
+func BenefitTypeNotNil() predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldNotNull(FieldBenefitType))
+}
+
+// BenefitTypeEqualFold applies the EqualFold predicate on the "benefit_type" field.
+func BenefitTypeEqualFold(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldEqualFold(FieldBenefitType, v))
+}
+
+// BenefitTypeContainsFold applies the ContainsFold predicate on the "benefit_type" field.
+func BenefitTypeContainsFold(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldContainsFold(FieldBenefitType, v))
+}
+
+// EntryTypeEQ applies the EQ predicate on the "entry_type" field.
+func EntryTypeEQ(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldEQ(FieldEntryType, v))
+}
+
+// EntryTypeNEQ applies the NEQ predicate on the "entry_type" field.
+func EntryTypeNEQ(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldNEQ(FieldEntryType, v))
+}
+
+// EntryTypeIn applies the In predicate on the "entry_type" field.
+func EntryTypeIn(vs ...string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldIn(FieldEntryType, vs...))
+}
+
+// EntryTypeNotIn applies the NotIn predicate on the "entry_type" field.
+func EntryTypeNotIn(vs ...string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldNotIn(FieldEntryType, vs...))
+}
+
+// EntryTypeGT applies the GT predicate on the "entry_type" field.
+func EntryTypeGT(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldGT(FieldEntryType, v))
+}
+
+// EntryTypeGTE applies the GTE predicate on the "entry_type" field.
+func EntryTypeGTE(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldGTE(FieldEntryType, v))
+}
+
+// EntryTypeLT applies the LT predicate on the "entry_type" field.
+func EntryTypeLT(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldLT(FieldEntryType, v))
+}
+
+// EntryTypeLTE applies the LTE predicate on the "entry_type" field.
+func EntryTypeLTE(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldLTE(FieldEntryType, v))
+}
+
+// EntryTypeContains applies the Contains predicate on the "entry_type" field.
+func EntryTypeContains(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldContains(FieldEntryType, v))
+}
+
+// EntryTypeHasPrefix applies the HasPrefix predicate on the "entry_type" field.
+func EntryTypeHasPrefix(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldHasPrefix(FieldEntryType, v))
+}
+
+// EntryTypeHasSuffix applies the HasSuffix predicate on the "entry_type" field.
+func EntryTypeHasSuffix(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldHasSuffix(FieldEntryType, v))
+}
+
+// EntryTypeIsNil applies the IsNil predicate on the "entry_type" field.
+func EntryTypeIsNil() predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldIsNull(FieldEntryType))
+}
+
+// EntryTypeNotNil applies the NotNil predicate on the "entry_type" field.
+func EntryTypeNotNil() predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldNotNull(FieldEntryType))
+}
+
+// EntryTypeEqualFold applies the EqualFold predicate on the "entry_type" field.
+func EntryTypeEqualFold(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldEqualFold(FieldEntryType, v))
+}
+
+// EntryTypeContainsFold applies the ContainsFold predicate on the "entry_type" field.
+func EntryTypeContainsFold(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldContainsFold(FieldEntryType, v))
+}
+
+// OriginalEventIDEQ applies the EQ predicate on the "original_event_id" field.
+func OriginalEventIDEQ(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldEQ(FieldOriginalEventID, v))
+}
+
+// OriginalEventIDNEQ applies the NEQ predicate on the "original_event_id" field.
+func OriginalEventIDNEQ(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldNEQ(FieldOriginalEventID, v))
+}
+
+// OriginalEventIDIn applies the In predicate on the "original_event_id" field.
+func OriginalEventIDIn(vs ...string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldIn(FieldOriginalEventID, vs...))
+}
+
+// OriginalEventIDNotIn applies the NotIn predicate on the "original_event_id" field.
+func OriginalEventIDNotIn(vs ...string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldNotIn(FieldOriginalEventID, vs...))
+}
+
+// OriginalEventIDGT applies the GT predicate on the "original_event_id" field.
+func OriginalEventIDGT(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldGT(FieldOriginalEventID, v))
+}
+
+// OriginalEventIDGTE applies the GTE predicate on the "original_event_id" field.
+func OriginalEventIDGTE(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldGTE(FieldOriginalEventID, v))
+}
+
+// OriginalEventIDLT applies the LT predicate on the "original_event_id" field.
+func OriginalEventIDLT(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldLT(FieldOriginalEventID, v))
+}
+
+// OriginalEventIDLTE applies the LTE predicate on the "original_event_id" field.
+func OriginalEventIDLTE(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldLTE(FieldOriginalEventID, v))
+}
+
+// OriginalEventIDContains applies the Contains predicate on the "original_event_id" field.
+func OriginalEventIDContains(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldContains(FieldOriginalEventID, v))
+}
+
+// OriginalEventIDHasPrefix applies the HasPrefix predicate on the "original_event_id" field.
+func OriginalEventIDHasPrefix(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldHasPrefix(FieldOriginalEventID, v))
+}
+
+// OriginalEventIDHasSuffix applies the HasSuffix predicate on the "original_event_id" field.
+func OriginalEventIDHasSuffix(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldHasSuffix(FieldOriginalEventID, v))
+}
+
+// OriginalEventIDIsNil applies the IsNil predicate on the "original_event_id" field.
+func OriginalEventIDIsNil() predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldIsNull(FieldOriginalEventID))
+}
+
+// OriginalEventIDNotNil applies the NotNil predicate on the "original_event_id" field.
+func OriginalEventIDNotNil() predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldNotNull(FieldOriginalEventID))
+}
+
+// OriginalEventIDEqualFold applies the EqualFold predicate on the "original_event_id" field.
+func OriginalEventIDEqualFold(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldEqualFold(FieldOriginalEventID, v))
+}
+
+// OriginalEventIDContainsFold applies the ContainsFold predicate on the "original_event_id" field.
+func OriginalEventIDContainsFold(v string) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldContainsFold(FieldOriginalEventID, v))
+}
+
+// ReversedValueEQ applies the EQ predicate on the "reversed_value" field.
+func ReversedValueEQ(v int) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldEQ(FieldReversedValue, v))
+}
+
+// ReversedValueNEQ applies the NEQ predicate on the "reversed_value" field.
+func ReversedValueNEQ(v int) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldNEQ(FieldReversedValue, v))
+}
+
+// ReversedValueIn applies the In predicate on the "reversed_value" field.
+func ReversedValueIn(vs ...int) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldIn(FieldReversedValue, vs...))
+}
+
+// ReversedValueNotIn applies the NotIn predicate on the "reversed_value" field.
+func ReversedValueNotIn(vs ...int) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldNotIn(FieldReversedValue, vs...))
+}
+
+// ReversedValueGT applies the GT predicate on the "reversed_value" field.
+func ReversedValueGT(v int) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldGT(FieldReversedValue, v))
+}
+
+// ReversedValueGTE applies the GTE predicate on the "reversed_value" field.
+func ReversedValueGTE(v int) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldGTE(FieldReversedValue, v))
+}
+
+// ReversedValueLT applies the LT predicate on the "reversed_value" field.
+func ReversedValueLT(v int) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldLT(FieldReversedValue, v))
+}
+
+// ReversedValueLTE applies the LTE predicate on the "reversed_value" field.
+func ReversedValueLTE(v int) predicate.BenefitLedger {
+	return predicate.BenefitLedger(sql.FieldLTE(FieldReversedValue, v))
 }
 
 // And groups predicates with the AND operator between them.

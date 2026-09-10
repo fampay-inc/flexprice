@@ -166,6 +166,62 @@ func (blc *BenefitLedgerCreate) SetEventTimestamp(t time.Time) *BenefitLedgerCre
 	return blc
 }
 
+// SetBenefitType sets the "benefit_type" field.
+func (blc *BenefitLedgerCreate) SetBenefitType(s string) *BenefitLedgerCreate {
+	blc.mutation.SetBenefitType(s)
+	return blc
+}
+
+// SetNillableBenefitType sets the "benefit_type" field if the given value is not nil.
+func (blc *BenefitLedgerCreate) SetNillableBenefitType(s *string) *BenefitLedgerCreate {
+	if s != nil {
+		blc.SetBenefitType(*s)
+	}
+	return blc
+}
+
+// SetEntryType sets the "entry_type" field.
+func (blc *BenefitLedgerCreate) SetEntryType(s string) *BenefitLedgerCreate {
+	blc.mutation.SetEntryType(s)
+	return blc
+}
+
+// SetNillableEntryType sets the "entry_type" field if the given value is not nil.
+func (blc *BenefitLedgerCreate) SetNillableEntryType(s *string) *BenefitLedgerCreate {
+	if s != nil {
+		blc.SetEntryType(*s)
+	}
+	return blc
+}
+
+// SetOriginalEventID sets the "original_event_id" field.
+func (blc *BenefitLedgerCreate) SetOriginalEventID(s string) *BenefitLedgerCreate {
+	blc.mutation.SetOriginalEventID(s)
+	return blc
+}
+
+// SetNillableOriginalEventID sets the "original_event_id" field if the given value is not nil.
+func (blc *BenefitLedgerCreate) SetNillableOriginalEventID(s *string) *BenefitLedgerCreate {
+	if s != nil {
+		blc.SetOriginalEventID(*s)
+	}
+	return blc
+}
+
+// SetReversedValue sets the "reversed_value" field.
+func (blc *BenefitLedgerCreate) SetReversedValue(i int) *BenefitLedgerCreate {
+	blc.mutation.SetReversedValue(i)
+	return blc
+}
+
+// SetNillableReversedValue sets the "reversed_value" field if the given value is not nil.
+func (blc *BenefitLedgerCreate) SetNillableReversedValue(i *int) *BenefitLedgerCreate {
+	if i != nil {
+		blc.SetReversedValue(*i)
+	}
+	return blc
+}
+
 // SetID sets the "id" field.
 func (blc *BenefitLedgerCreate) SetID(s string) *BenefitLedgerCreate {
 	blc.mutation.SetID(s)
@@ -222,6 +278,10 @@ func (blc *BenefitLedgerCreate) defaults() {
 	if _, ok := blc.mutation.EnvironmentID(); !ok {
 		v := benefitledger.DefaultEnvironmentID
 		blc.mutation.SetEnvironmentID(v)
+	}
+	if _, ok := blc.mutation.ReversedValue(); !ok {
+		v := benefitledger.DefaultReversedValue
+		blc.mutation.SetReversedValue(v)
 	}
 }
 
@@ -284,6 +344,9 @@ func (blc *BenefitLedgerCreate) check() error {
 	}
 	if _, ok := blc.mutation.EventTimestamp(); !ok {
 		return &ValidationError{Name: "event_timestamp", err: errors.New(`ent: missing required field "BenefitLedger.event_timestamp"`)}
+	}
+	if _, ok := blc.mutation.ReversedValue(); !ok {
+		return &ValidationError{Name: "reversed_value", err: errors.New(`ent: missing required field "BenefitLedger.reversed_value"`)}
 	}
 	return nil
 }
@@ -379,6 +442,22 @@ func (blc *BenefitLedgerCreate) createSpec() (*BenefitLedger, *sqlgraph.CreateSp
 	if value, ok := blc.mutation.EventTimestamp(); ok {
 		_spec.SetField(benefitledger.FieldEventTimestamp, field.TypeTime, value)
 		_node.EventTimestamp = value
+	}
+	if value, ok := blc.mutation.BenefitType(); ok {
+		_spec.SetField(benefitledger.FieldBenefitType, field.TypeString, value)
+		_node.BenefitType = value
+	}
+	if value, ok := blc.mutation.EntryType(); ok {
+		_spec.SetField(benefitledger.FieldEntryType, field.TypeString, value)
+		_node.EntryType = value
+	}
+	if value, ok := blc.mutation.OriginalEventID(); ok {
+		_spec.SetField(benefitledger.FieldOriginalEventID, field.TypeString, value)
+		_node.OriginalEventID = value
+	}
+	if value, ok := blc.mutation.ReversedValue(); ok {
+		_spec.SetField(benefitledger.FieldReversedValue, field.TypeInt, value)
+		_node.ReversedValue = value
 	}
 	return _node, _spec
 }

@@ -24,18 +24,29 @@ func (s *benefitService) GetBenefits(ctx context.Context, externalCustomerID, pr
 		return nil, err
 	}
 
-	aggregates, err := s.BenefitLedgerRepo.GetAggregatedBenefitsByCategory(ctx, cust.ID, product)
+	aggregates, err := s.BenefitLedgerRepo.GetBenefitTypeAggregates(ctx, cust.ID, product)
 	if err != nil {
 		return nil, err
 	}
 
-	response := make([]*dto.BenefitAggregateResponse, 0, len(aggregates))
+	index := make(map[string]int)
+	response := make([]*dto.BenefitAggregateResponse, 0)
 	for _, agg := range aggregates {
-		response = append(response, &dto.BenefitAggregateResponse{
-			Category: agg.Category,
-			Total:    agg.Total,
+		if agg.Net <= 0 {
+			continue
+		}
+		benefitType := agg.BenefitType
+		i, seen := index[agg.Category]
+		if !seen {
+			response = append(response, &dto.BenefitAggregateResponse{Category: agg.Category})
+			i = len(response) - 1
+			index[agg.Category] = i
+		}
+		response[i].Benefits = append(response[i].Benefits, dto.BenefitItem{
+			Type:  benefitType,
+			Value: agg.Net,
 		})
+		response[i].Total += agg.Net
 	}
-
 	return response, nil
 }

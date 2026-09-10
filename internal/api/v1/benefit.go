@@ -24,7 +24,7 @@ func NewBenefitHandler(benefitService service.BenefitService, log *logger.Logger
 // GetBenefits godoc
 // @Summary Get aggregated benefits for a customer and product
 // @ID getBenefits
-// @Description Returns lifetime benefits granted to a customer for a product, aggregated by category from the benefit ledger.
+// @Description Returns lifetime benefits granted to a customer for a product, grouped by category and aggregated from the benefit ledger.
 // @Tags Benefits
 // @Produce json
 // @Security ApiKeyAuth

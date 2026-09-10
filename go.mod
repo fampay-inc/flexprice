@@ -52,7 +52,7 @@ require (
 	github.com/swaggo/swag/v2 v2.0.0-rc5
 	github.com/teris-io/shortid v0.0.0-20220617161101-71ec9f2aa569
 	github.com/xdg-go/scram v1.2.0
-	gitlab.famapp.in/backend/flexprice/protos/pb v0.0.3
+	gitlab.famapp.in/backend/flexprice/protos/pb v0.0.5
 	go.opentelemetry.io/contrib/bridges/otelzap v0.16.0
 	go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin v0.69.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.69.0

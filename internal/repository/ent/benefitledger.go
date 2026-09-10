@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/flexprice/flexprice/ent"
+	"github.com/flexprice/flexprice/ent/benefitledger"
 	domainBenefit "github.com/flexprice/flexprice/internal/domain/benefit"
 	ierr "github.com/flexprice/flexprice/internal/errors"
 	"github.com/flexprice/flexprice/internal/logger"
@@ -26,13 +27,12 @@ func NewBenefitLedgerRepository(client postgres.IClient, log *logger.Logger) dom
 }
 
 func (r *benefitLedgerRepository) Create(ctx context.Context, b *domainBenefit.BenefitLedger) error {
-	client := r.client.Writer(ctx)
-
 	span := StartRepositorySpan(ctx, "benefit_ledger", "create", map[string]interface{}{
 		"event_id":        b.EventID,
 		"subscription_id": b.SubscriptionID,
 		"product":         b.Product,
 		"category":        b.Category,
+		"entry_type":      b.EntryType,
 	})
 	defer FinishSpan(span)
 
@@ -40,7 +40,8 @@ func (r *benefitLedgerRepository) Create(ctx context.Context, b *domainBenefit.B
 		b.EnvironmentID = types.GetEnvironmentID(ctx)
 	}
 
-	_, err := client.BenefitLedger.Create().
+	entryType := string(b.EntryType)
+	q := r.client.Writer(ctx).BenefitLedger.Create().
 		SetID(b.ID).
 		SetTenantID(b.TenantID).
 		SetEnvironmentID(b.EnvironmentID).
@@ -57,8 +58,12 @@ func (r *benefitLedgerRepository) Create(ctx context.Context, b *domainBenefit.B
 		SetUpdatedAt(b.UpdatedAt).
 		SetCreatedBy(b.CreatedBy).
 		SetUpdatedBy(b.UpdatedBy).
-		Save(ctx)
+		SetEntryType(entryType).
+		SetBenefitType(b.BenefitType).
+		SetReversedValue(b.ReversedValue).
+		SetOriginalEventID(b.OriginalEventID)
 
+	_, err := q.Save(ctx)
 	if err != nil {
 		SetSpanError(span, err)
 
@@ -81,54 +86,150 @@ func (r *benefitLedgerRepository) Create(ctx context.Context, b *domainBenefit.B
 	return nil
 }
 
-func (r *benefitLedgerRepository) GetAggregatedBenefitsByCategory(ctx context.Context, customerID, product string) ([]*domainBenefit.BenefitAggregate, error) {
+func (r *benefitLedgerRepository) GetGrantByEventID(ctx context.Context, eventID string) (*domainBenefit.BenefitLedger, error) {
 	tenantID := types.GetTenantID(ctx)
 	environmentID := types.GetEnvironmentID(ctx)
 
-	span := StartRepositorySpan(ctx, "benefit_ledger", "get_aggregated_benefits", map[string]interface{}{
+	span := StartRepositorySpan(ctx, "benefit_ledger", "get_grant_by_event_id", map[string]interface{}{
+		"event_id": eventID,
+	})
+	defer FinishSpan(span)
+
+	row, err := r.client.Reader(ctx).BenefitLedger.Query().
+		Where(
+			benefitledger.EventID(eventID),
+			benefitledger.TenantID(tenantID),
+			benefitledger.EnvironmentID(environmentID),
+			benefitledger.Or(
+				benefitledger.EntryTypeIsNil(),
+				benefitledger.EntryTypeEQ(""),
+				benefitledger.EntryTypeEQ(string(domainBenefit.EntryTypeGrant)),
+			),
+		).
+		First(ctx)
+	if err != nil {
+		SetSpanError(span, err)
+		if ent.IsNotFound(err) {
+			return nil, ierr.NewError("original grant not found").
+				WithHint("No grant row with entry_type='grant' found for event_id").
+				Mark(ierr.ErrNotFound)
+		}
+		return nil, ierr.WithError(err).
+			WithHint("Failed to fetch grant row").
+			Mark(ierr.ErrDatabase)
+	}
+
+	b := &domainBenefit.BenefitLedger{
+		ID:             row.ID,
+		Product:        row.Product,
+		SubscriptionID: row.SubscriptionID,
+		CustomerID:     row.CustomerID,
+		FeatureID:      row.FeatureID,
+		BenefitType:    row.BenefitType,
+		Value:          row.Value,
+		ReversedValue:  row.ReversedValue,
+	}
+	if row.EntryType != "" {
+		b.EntryType = domainBenefit.EntryType(row.EntryType)
+	} else {
+		b.EntryType = domainBenefit.EntryTypeGrant
+	}
+
+	SetSpanSuccess(span)
+	return b, nil
+}
+
+func (r *benefitLedgerRepository) UpdateReversedValue(ctx context.Context, product, eventID string, reversedValue int) error {
+	tenantID := types.GetTenantID(ctx)
+	environmentID := types.GetEnvironmentID(ctx)
+
+	span := StartRepositorySpan(ctx, "benefit_ledger", "update_reversed_value", map[string]interface{}{
+		"event_id":      eventID,
+		"product":       product,
+		"reversedValue": reversedValue,
+	})
+	defer FinishSpan(span)
+
+	n, err := r.client.Writer(ctx).BenefitLedger.Update().
+		Where(
+			benefitledger.Product(product),
+			benefitledger.EventID(eventID),
+			benefitledger.TenantID(tenantID),
+			benefitledger.EnvironmentID(environmentID),
+			benefitledger.Or(
+				benefitledger.EntryTypeIsNil(),
+				benefitledger.EntryTypeEQ(""),
+				benefitledger.EntryTypeEQ(string(domainBenefit.EntryTypeGrant)),
+			),
+		).
+		AddReversedValue(reversedValue).
+		Save(ctx)
+	if err != nil {
+		SetSpanError(span, err)
+		return ierr.WithError(err).
+			WithHint("Failed to update reversed_value on grant row").
+			Mark(ierr.ErrDatabase)
+	}
+	if n == 0 {
+		SetSpanError(span, ierr.ErrNotFound)
+		return ierr.NewError("grant row not found for reversed_value update").
+			WithHint("No matching grant row for product + event_id").
+			Mark(ierr.ErrNotFound)
+	}
+
+	SetSpanSuccess(span)
+	return nil
+}
+
+func (r *benefitLedgerRepository) GetBenefitTypeAggregates(ctx context.Context, customerID, product string) ([]*domainBenefit.BenefitTypeAggregate, error) {
+	tenantID := types.GetTenantID(ctx)
+	environmentID := types.GetEnvironmentID(ctx)
+
+	span := StartRepositorySpan(ctx, "benefit_ledger", "get_benefit_type_aggregates", map[string]interface{}{
 		"customer_id": customerID,
 		"product":     product,
 	})
 	defer FinishSpan(span)
 
-	// product is the partition key for benefit_ledgers, so filtering on it lets
-	// Postgres prune to a single partition instead of scanning them all.
 	query := `
-		SELECT category, COALESCE(SUM(value), 0)::bigint AS total
+		SELECT
+			COALESCE(category, '') AS category,
+			COALESCE(benefit_type, '') AS benefit_type,
+			SUM(value - reversed_value) AS net
 		FROM benefit_ledgers
-		WHERE product = $1
-			AND tenant_id = $2
-			AND environment_id = $3
-			AND customer_id = $4
-			AND category IS NOT NULL AND category != ''
-		GROUP BY category`
+		WHERE
+			tenant_id = $1
+			AND environment_id = $2
+			AND customer_id = $3
+			AND product = $4
+			AND (entry_type IS NULL OR entry_type = '' OR entry_type = 'grant')
+		GROUP BY category, benefit_type
+	`
 
-	rows, err := r.client.Reader(ctx).QueryContext(ctx, query, product, tenantID, environmentID, customerID)
+	dbRows, err := r.client.Reader(ctx).QueryContext(ctx, query, tenantID, environmentID, customerID, product)
 	if err != nil {
 		SetSpanError(span, err)
 		return nil, ierr.WithError(err).
-			WithHint("Failed to aggregate benefit ledger rows").
+			WithHint("Failed to query benefit type aggregates").
 			Mark(ierr.ErrDatabase)
 	}
-	defer rows.Close()
+	defer dbRows.Close()
 
-	results := make([]*domainBenefit.BenefitAggregate, 0)
-	for rows.Next() {
-		agg := &domainBenefit.BenefitAggregate{}
-		scanErr := rows.Scan(&agg.Category, &agg.Total)
-		if scanErr != nil {
-			SetSpanError(span, scanErr)
-			return nil, ierr.WithError(scanErr).
-				WithHint("Failed to scan benefit aggregate row").
+	results := make([]*domainBenefit.BenefitTypeAggregate, 0)
+	for dbRows.Next() {
+		agg := &domainBenefit.BenefitTypeAggregate{}
+		if err := dbRows.Scan(&agg.Category, &agg.BenefitType, &agg.Net); err != nil {
+			SetSpanError(span, err)
+			return nil, ierr.WithError(err).
+				WithHint("Failed to scan benefit type aggregate row").
 				Mark(ierr.ErrDatabase)
 		}
 		results = append(results, agg)
 	}
-
-	if err := rows.Err(); err != nil {
+	if err := dbRows.Err(); err != nil {
 		SetSpanError(span, err)
 		return nil, ierr.WithError(err).
-			WithHint("Failed to iterate benefit aggregate rows").
+			WithHint("Error iterating benefit type aggregate rows").
 			Mark(ierr.ErrDatabase)
 	}
 

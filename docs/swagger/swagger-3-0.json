@@ -907,7 +907,7 @@
           "Benefits"
         ],
         "summary": "Get aggregated benefits for a customer and product",
-        "description": "Returns lifetime benefits granted to a customer for a product, aggregated by category from the benefit ledger.",
+        "description": "Returns lifetime benefits granted to a customer for a product, aggregated from the benefit ledger. When group_by=category, returns one row per (category, benefit_type) pair so multi-currency rewards are preserved; each row includes category, benefit_type, and total (net after reversals). Omit group_by to get totals per feature_id instead.",
         "operationId": "getBenefits",
         "parameters": [
           {
@@ -931,7 +931,7 @@
           {
             "name": "group_by",
             "in": "query",
-            "description": "Aggregation grouping. Omit to group by feature_id (default); pass 'category' to group by category instead",
+            "description": "Aggregation grouping. Pass 'category' to group by (category, benefit_type); omit to group by feature_id",
             "schema": {
               "type": "string"
             }
@@ -15630,6 +15630,12 @@
       "BenefitAggregateResponse": {
         "type": "object",
         "properties": {
+          "benefits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BenefitItem"
+            }
+          },
           "category": {
             "type": "string"
           },
@@ -15637,6 +15643,17 @@
             "type": "string"
           },
           "total": {
+            "type": "integer"
+          }
+        }
+      },
+      "BenefitItem": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "value": {
             "type": "integer"
           }
         }
@@ -17086,6 +17103,9 @@
           "config_value": {
             "type": "object",
             "additionalProperties": true
+          },
+          "display_order": {
+            "type": "integer"
           },
           "end_date": {
             "type": "string",
@@ -23682,6 +23702,9 @@
           "config_value": {
             "type": "object",
             "additionalProperties": true
+          },
+          "display_order": {
+            "type": "integer"
           },
           "is_enabled": {
             "type": "boolean"

@@ -5534,29 +5534,34 @@ func (m *AuthMutation) ResetEdge(name string) error {
 // BenefitLedgerMutation represents an operation that mutates the BenefitLedger nodes in the graph.
 type BenefitLedgerMutation struct {
 	config
-	op              Op
-	typ             string
-	id              *string
-	tenant_id       *string
-	status          *string
-	created_at      *time.Time
-	updated_at      *time.Time
-	created_by      *string
-	updated_by      *string
-	environment_id  *string
-	event_id        *string
-	subscription_id *string
-	customer_id     *string
-	product         *string
-	category        *string
-	feature_id      *string
-	value           *int
-	addvalue        *int
-	event_timestamp *time.Time
-	clearedFields   map[string]struct{}
-	done            bool
-	oldValue        func(context.Context) (*BenefitLedger, error)
-	predicates      []predicate.BenefitLedger
+	op                Op
+	typ               string
+	id                *string
+	tenant_id         *string
+	status            *string
+	created_at        *time.Time
+	updated_at        *time.Time
+	created_by        *string
+	updated_by        *string
+	environment_id    *string
+	event_id          *string
+	subscription_id   *string
+	customer_id       *string
+	product           *string
+	category          *string
+	feature_id        *string
+	value             *int
+	addvalue          *int
+	event_timestamp   *time.Time
+	benefit_type      *string
+	entry_type        *string
+	original_event_id *string
+	reversed_value    *int
+	addreversed_value *int
+	clearedFields     map[string]struct{}
+	done              bool
+	oldValue          func(context.Context) (*BenefitLedger, error)
+	predicates        []predicate.BenefitLedger
 }
 
 var _ ent.Mutation = (*BenefitLedgerMutation)(nil)
@@ -6275,6 +6280,209 @@ func (m *BenefitLedgerMutation) ResetEventTimestamp() {
 	m.event_timestamp = nil
 }
 
+// SetBenefitType sets the "benefit_type" field.
+func (m *BenefitLedgerMutation) SetBenefitType(s string) {
+	m.benefit_type = &s
+}
+
+// BenefitType returns the value of the "benefit_type" field in the mutation.
+func (m *BenefitLedgerMutation) BenefitType() (r string, exists bool) {
+	v := m.benefit_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldBenefitType returns the old "benefit_type" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldBenefitType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldBenefitType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldBenefitType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldBenefitType: %w", err)
+	}
+	return oldValue.BenefitType, nil
+}
+
+// ClearBenefitType clears the value of the "benefit_type" field.
+func (m *BenefitLedgerMutation) ClearBenefitType() {
+	m.benefit_type = nil
+	m.clearedFields[benefitledger.FieldBenefitType] = struct{}{}
+}
+
+// BenefitTypeCleared returns if the "benefit_type" field was cleared in this mutation.
+func (m *BenefitLedgerMutation) BenefitTypeCleared() bool {
+	_, ok := m.clearedFields[benefitledger.FieldBenefitType]
+	return ok
+}
+
+// ResetBenefitType resets all changes to the "benefit_type" field.
+func (m *BenefitLedgerMutation) ResetBenefitType() {
+	m.benefit_type = nil
+	delete(m.clearedFields, benefitledger.FieldBenefitType)
+}
+
+// SetEntryType sets the "entry_type" field.
+func (m *BenefitLedgerMutation) SetEntryType(s string) {
+	m.entry_type = &s
+}
+
+// EntryType returns the value of the "entry_type" field in the mutation.
+func (m *BenefitLedgerMutation) EntryType() (r string, exists bool) {
+	v := m.entry_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldEntryType returns the old "entry_type" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldEntryType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldEntryType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldEntryType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldEntryType: %w", err)
+	}
+	return oldValue.EntryType, nil
+}
+
+// ClearEntryType clears the value of the "entry_type" field.
+func (m *BenefitLedgerMutation) ClearEntryType() {
+	m.entry_type = nil
+	m.clearedFields[benefitledger.FieldEntryType] = struct{}{}
+}
+
+// EntryTypeCleared returns if the "entry_type" field was cleared in this mutation.
+func (m *BenefitLedgerMutation) EntryTypeCleared() bool {
+	_, ok := m.clearedFields[benefitledger.FieldEntryType]
+	return ok
+}
+
+// ResetEntryType resets all changes to the "entry_type" field.
+func (m *BenefitLedgerMutation) ResetEntryType() {
+	m.entry_type = nil
+	delete(m.clearedFields, benefitledger.FieldEntryType)
+}
+
+// SetOriginalEventID sets the "original_event_id" field.
+func (m *BenefitLedgerMutation) SetOriginalEventID(s string) {
+	m.original_event_id = &s
+}
+
+// OriginalEventID returns the value of the "original_event_id" field in the mutation.
+func (m *BenefitLedgerMutation) OriginalEventID() (r string, exists bool) {
+	v := m.original_event_id
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOriginalEventID returns the old "original_event_id" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldOriginalEventID(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOriginalEventID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOriginalEventID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOriginalEventID: %w", err)
+	}
+	return oldValue.OriginalEventID, nil
+}
+
+// ClearOriginalEventID clears the value of the "original_event_id" field.
+func (m *BenefitLedgerMutation) ClearOriginalEventID() {
+	m.original_event_id = nil
+	m.clearedFields[benefitledger.FieldOriginalEventID] = struct{}{}
+}
+
+// OriginalEventIDCleared returns if the "original_event_id" field was cleared in this mutation.
+func (m *BenefitLedgerMutation) OriginalEventIDCleared() bool {
+	_, ok := m.clearedFields[benefitledger.FieldOriginalEventID]
+	return ok
+}
+
+// ResetOriginalEventID resets all changes to the "original_event_id" field.
+func (m *BenefitLedgerMutation) ResetOriginalEventID() {
+	m.original_event_id = nil
+	delete(m.clearedFields, benefitledger.FieldOriginalEventID)
+}
+
+// SetReversedValue sets the "reversed_value" field.
+func (m *BenefitLedgerMutation) SetReversedValue(i int) {
+	m.reversed_value = &i
+	m.addreversed_value = nil
+}
+
+// ReversedValue returns the value of the "reversed_value" field in the mutation.
+func (m *BenefitLedgerMutation) ReversedValue() (r int, exists bool) {
+	v := m.reversed_value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldReversedValue returns the old "reversed_value" field's value of the BenefitLedger entity.
+// If the BenefitLedger object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BenefitLedgerMutation) OldReversedValue(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldReversedValue is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldReversedValue requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldReversedValue: %w", err)
+	}
+	return oldValue.ReversedValue, nil
+}
+
+// AddReversedValue adds i to the "reversed_value" field.
+func (m *BenefitLedgerMutation) AddReversedValue(i int) {
+	if m.addreversed_value != nil {
+		*m.addreversed_value += i
+	} else {
+		m.addreversed_value = &i
+	}
+}
+
+// AddedReversedValue returns the value that was added to the "reversed_value" field in this mutation.
+func (m *BenefitLedgerMutation) AddedReversedValue() (r int, exists bool) {
+	v := m.addreversed_value
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetReversedValue resets all changes to the "reversed_value" field.
+func (m *BenefitLedgerMutation) ResetReversedValue() {
+	m.reversed_value = nil
+	m.addreversed_value = nil
+}
+
 // Where appends a list predicates to the BenefitLedgerMutation builder.
 func (m *BenefitLedgerMutation) Where(ps ...predicate.BenefitLedger) {
 	m.predicates = append(m.predicates, ps...)
@@ -6309,7 +6517,7 @@ func (m *BenefitLedgerMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *BenefitLedgerMutation) Fields() []string {
-	fields := make([]string, 0, 15)
+	fields := make([]string, 0, 19)
 	if m.tenant_id != nil {
 		fields = append(fields, benefitledger.FieldTenantID)
 	}
@@ -6355,6 +6563,18 @@ func (m *BenefitLedgerMutation) Fields() []string {
 	if m.event_timestamp != nil {
 		fields = append(fields, benefitledger.FieldEventTimestamp)
 	}
+	if m.benefit_type != nil {
+		fields = append(fields, benefitledger.FieldBenefitType)
+	}
+	if m.entry_type != nil {
+		fields = append(fields, benefitledger.FieldEntryType)
+	}
+	if m.original_event_id != nil {
+		fields = append(fields, benefitledger.FieldOriginalEventID)
+	}
+	if m.reversed_value != nil {
+		fields = append(fields, benefitledger.FieldReversedValue)
+	}
 	return fields
 }
 
@@ -6393,6 +6613,14 @@ func (m *BenefitLedgerMutation) Field(name string) (ent.Value, bool) {
 		return m.Value()
 	case benefitledger.FieldEventTimestamp:
 		return m.EventTimestamp()
+	case benefitledger.FieldBenefitType:
+		return m.BenefitType()
+	case benefitledger.FieldEntryType:
+		return m.EntryType()
+	case benefitledger.FieldOriginalEventID:
+		return m.OriginalEventID()
+	case benefitledger.FieldReversedValue:
+		return m.ReversedValue()
 	}
 	return nil, false
 }
@@ -6432,6 +6660,14 @@ func (m *BenefitLedgerMutation) OldField(ctx context.Context, name string) (ent.
 		return m.OldValue(ctx)
 	case benefitledger.FieldEventTimestamp:
 		return m.OldEventTimestamp(ctx)
+	case benefitledger.FieldBenefitType:
+		return m.OldBenefitType(ctx)
+	case benefitledger.FieldEntryType:
+		return m.OldEntryType(ctx)
+	case benefitledger.FieldOriginalEventID:
+		return m.OldOriginalEventID(ctx)
+	case benefitledger.FieldReversedValue:
+		return m.OldReversedValue(ctx)
 	}
 	return nil, fmt.Errorf("unknown BenefitLedger field %s", name)
 }
@@ -6546,6 +6782,34 @@ func (m *BenefitLedgerMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetEventTimestamp(v)
 		return nil
+	case benefitledger.FieldBenefitType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetBenefitType(v)
+		return nil
+	case benefitledger.FieldEntryType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetEntryType(v)
+		return nil
+	case benefitledger.FieldOriginalEventID:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOriginalEventID(v)
+		return nil
+	case benefitledger.FieldReversedValue:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetReversedValue(v)
+		return nil
 	}
 	return fmt.Errorf("unknown BenefitLedger field %s", name)
 }
@@ -6557,6 +6821,9 @@ func (m *BenefitLedgerMutation) AddedFields() []string {
 	if m.addvalue != nil {
 		fields = append(fields, benefitledger.FieldValue)
 	}
+	if m.addreversed_value != nil {
+		fields = append(fields, benefitledger.FieldReversedValue)
+	}
 	return fields
 }
 
@@ -6567,6 +6834,8 @@ func (m *BenefitLedgerMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case benefitledger.FieldValue:
 		return m.AddedValue()
+	case benefitledger.FieldReversedValue:
+		return m.AddedReversedValue()
 	}
 	return nil, false
 }
@@ -6582,6 +6851,13 @@ func (m *BenefitLedgerMutation) AddField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.AddValue(v)
+		return nil
+	case benefitledger.FieldReversedValue:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddReversedValue(v)
 		return nil
 	}
 	return fmt.Errorf("unknown BenefitLedger numeric field %s", name)
@@ -6602,6 +6878,15 @@ func (m *BenefitLedgerMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(benefitledger.FieldFeatureID) {
 		fields = append(fields, benefitledger.FieldFeatureID)
+	}
+	if m.FieldCleared(benefitledger.FieldBenefitType) {
+		fields = append(fields, benefitledger.FieldBenefitType)
+	}
+	if m.FieldCleared(benefitledger.FieldEntryType) {
+		fields = append(fields, benefitledger.FieldEntryType)
+	}
+	if m.FieldCleared(benefitledger.FieldOriginalEventID) {
+		fields = append(fields, benefitledger.FieldOriginalEventID)
 	}
 	return fields
 }
@@ -6628,6 +6913,15 @@ func (m *BenefitLedgerMutation) ClearField(name string) error {
 		return nil
 	case benefitledger.FieldFeatureID:
 		m.ClearFeatureID()
+		return nil
+	case benefitledger.FieldBenefitType:
+		m.ClearBenefitType()
+		return nil
+	case benefitledger.FieldEntryType:
+		m.ClearEntryType()
+		return nil
+	case benefitledger.FieldOriginalEventID:
+		m.ClearOriginalEventID()
 		return nil
 	}
 	return fmt.Errorf("unknown BenefitLedger nullable field %s", name)
@@ -6681,6 +6975,18 @@ func (m *BenefitLedgerMutation) ResetField(name string) error {
 		return nil
 	case benefitledger.FieldEventTimestamp:
 		m.ResetEventTimestamp()
+		return nil
+	case benefitledger.FieldBenefitType:
+		m.ResetBenefitType()
+		return nil
+	case benefitledger.FieldEntryType:
+		m.ResetEntryType()
+		return nil
+	case benefitledger.FieldOriginalEventID:
+		m.ResetOriginalEventID()
+		return nil
+	case benefitledger.FieldReversedValue:
+		m.ResetReversedValue()
 		return nil
 	}
 	return fmt.Errorf("unknown BenefitLedger field %s", name)

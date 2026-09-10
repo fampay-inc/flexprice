@@ -669,11 +669,22 @@ definitions:
     type: object
   BenefitAggregateResponse:
     properties:
+      benefits:
+        items:
+          $ref: '#/definitions/BenefitItem'
+        type: array
       category:
         type: string
       feature_id:
         type: string
       total:
+        type: integer
+    type: object
+  BenefitItem:
+    properties:
+      type:
+        type: string
+      value:
         type: integer
     type: object
   BillingCycleInfo:
@@ -1805,6 +1816,8 @@ definitions:
       config_value:
         additionalProperties: true
         type: object
+      display_order:
+        type: integer
       end_date:
         type: string
       entity_id:
@@ -6917,6 +6930,8 @@ definitions:
       config_value:
         additionalProperties: true
         type: object
+      display_order:
+        type: integer
       is_enabled:
         type: boolean
       is_soft_limit:
@@ -11819,7 +11834,10 @@ paths:
   /benefits:
     get:
       description: Returns lifetime benefits granted to a customer for a product,
-        aggregated by category from the benefit ledger.
+        aggregated from the benefit ledger. When group_by=category, returns one row
+        per (category, benefit_type) pair so multi-currency rewards are preserved;
+        each row includes category, benefit_type, and total (net after reversals).
+        Omit group_by to get totals per feature_id instead.
       operationId: getBenefits
       parameters:
       - description: External customer ID
@@ -11832,8 +11850,8 @@ paths:
         name: product
         required: true
         type: string
-      - description: Aggregation grouping. Omit to group by feature_id (default);
-          pass 'category' to group by category instead
+      - description: Aggregation grouping. Pass 'category' to group by (category,
+          benefit_type); omit to group by feature_id
         in: query
         name: group_by
         type: string
