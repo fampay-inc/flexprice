@@ -225,6 +225,10 @@ var (
 		{Name: "feature_id", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "uuid"}},
 		{Name: "value", Type: field.TypeInt},
 		{Name: "event_timestamp", Type: field.TypeTime},
+		{Name: "benefit_type", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "varchar(50)"}},
+		{Name: "entry_type", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "varchar(20)"}},
+		{Name: "original_event_id", Type: field.TypeString, Nullable: true, SchemaType: map[string]string{"postgres": "varchar(255)"}},
+		{Name: "reversed_value", Type: field.TypeInt, Default: 0},
 	}
 	// BenefitLedgersTable holds the schema information for the "benefit_ledgers" table.
 	BenefitLedgersTable = &schema.Table{
@@ -241,6 +245,14 @@ var (
 				Name:    "idx_benefit_ledger_customer",
 				Unique:  false,
 				Columns: []*schema.Column{BenefitLedgersColumns[1], BenefitLedgersColumns[7], BenefitLedgersColumns[10]},
+			},
+			{
+				Name:    "idx_benefit_ledger_original_event",
+				Unique:  false,
+				Columns: []*schema.Column{BenefitLedgersColumns[11], BenefitLedgersColumns[18]},
+				Annotation: &entsql.IndexAnnotation{
+					Where: "original_event_id IS NOT NULL",
+				},
 			},
 		},
 	}

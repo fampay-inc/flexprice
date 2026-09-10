@@ -5,7 +5,7 @@ import (
 	"errors"
 	"strings"
 	"time"
-	
+
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/ThreeDotsLabs/watermill/message/router/middleware"
 	"github.com/flexprice/flexprice/internal/config"
@@ -60,7 +60,7 @@ func NewBenefitConsumptionService(
 		sentryService:       sentryService,
 		subscriptionService: NewSubscriptionService(params),
 	}
-	
+
 	ps, err := kafka.NewPubSubFromConfig(
 		params.Config,
 		params.Logger,
@@ -79,9 +79,9 @@ func (s *benefitConsumptionService) RegisterHandler(router *pubsubRouter.Router,
 		s.Logger.Infow("benefit consumption handler disabled by configuration")
 		return
 	}
-	
+
 	throttle := middleware.NewThrottle(cfg.BenefitEvents.RateLimit, time.Second)
-	
+
 	router.AddNoPublishHandler(
 		"benefit_consumption_handler",
 		cfg.BenefitEvents.Topic,
@@ -90,7 +90,7 @@ func (s *benefitConsumptionService) RegisterHandler(router *pubsubRouter.Router,
 		s.processMessage,
 		throttle.Middleware,
 	)
-	
+
 	s.Logger.Infow("registered benefit consumption handler",
 		"topic", cfg.BenefitEvents.Topic,
 		"rate_limit", cfg.BenefitEvents.RateLimit,
@@ -107,99 +107,203 @@ func (s *benefitConsumptionService) processMessage(ctx context.Context, msg *mes
 		s.sentryService.CaptureException(ctx, err)
 		return nil
 	}
-	
-	if err := validateProtoFields(&ev); err != nil {
-		s.Logger.Warnw("dropping invalid benefit event",
-			"reason", err.Error(),
-			"event_id", ev.GetEventId(),
-			"username", ev.GetUsername(),
-		)
-		return nil
+
+	entryType := ev.GetEntryType()
+	if entryType == benefitsv1.EntryType_ENTRY_TYPE_UNSPECIFIED {
+		entryType = benefitsv1.EntryType_GRANT
 	}
-	
-	s.Logger.Infow("benefit event with this username is being processed",
-		"event_id", ev.GetEventId(),
-		"username", ev.GetUsername(),
-	)
-	
+
 	tenantID := s.Config.Billing.TenantID
 	if tenantID == "" {
 		s.Logger.Errorw("billing.tenant_id is not configured; cannot process benefit events",
 			"event_id", ev.GetEventId(),
-			"username", ev.GetUsername(),
 		)
 		return nil
 	}
-	
+
 	ctx = context.WithValue(ctx, types.CtxTenantID, tenantID)
 	if environmentID := s.Config.Billing.EnvironmentID; environmentID != "" {
 		ctx = context.WithValue(ctx, types.CtxEnvironmentID, environmentID)
 	}
-	
-	validated, err := s.validateEvent(ctx, &ev)
+
+	switch entryType {
+	case benefitsv1.EntryType_GRANT:
+		return s.processGrantEvent(ctx, &ev, tenantID)
+	case benefitsv1.EntryType_REVERSAL:
+		return s.processReversalEvent(ctx, &ev, tenantID)
+	default:
+		s.Logger.Warnw("unknown entry_type, dropping",
+			"entry_type", entryType,
+			"event_id", ev.GetEventId(),
+		)
+		return nil
+	}
+}
+
+func (s *benefitConsumptionService) processGrantEvent(ctx context.Context, event *benefitsv1.BenefitEvent, tenantID string) error {
+	if err := validateGrantFields(event); err != nil {
+		s.Logger.Warnw("dropping invalid benefit grant event",
+			"reason", err.Error(),
+			"event_id", event.GetEventId(),
+			"username", event.GetUsername(),
+		)
+		return nil
+	}
+
+	s.Logger.Infow("processing benefit grant event",
+		"event_id", event.GetEventId(),
+		"username", event.GetUsername(),
+	)
+
+	validated, err := s.validateEvent(ctx, event)
 	if err != nil {
 		if isDropEvent(err) {
-			s.Logger.Warnw("dropping invalid benefit event",
+			s.Logger.Warnw("dropping invalid benefit grant event",
 				"reason", err.Error(),
-				"event_id", ev.GetEventId(),
-				"username", ev.GetUsername(),
-				"subscription_id", ev.GetSubscriptionId(),
+				"event_id", event.GetEventId(),
+				"username", event.GetUsername(),
+				"subscription_id", event.GetSubscriptionId(),
 			)
 			return nil
 		}
-		s.Logger.Errorw("benefit event validation errored, will retry",
+		s.Logger.Errorw("benefit grant event validation errored, will retry",
 			"error", err,
-			"event_id", ev.GetEventId(),
-			"username", ev.GetUsername(),
+			"event_id", event.GetEventId(),
+			"username", event.GetUsername(),
 		)
 		return ierr.WithError(err).
-			WithHint("Failed to validate benefit event").
+			WithHint("Failed to validate benefit grant event").
 			Mark(ierr.ErrSystem)
 	}
-	
-	row := toLedgerRow(&ev, validated, tenantID, s.Config.Billing.EnvironmentID)
-	
+
+	row := toLedgerRow(event, validated, event.GetBenefitType(), tenantID, s.Config.Billing.EnvironmentID)
+
 	if err := s.BenefitLedgerRepo.Create(ctx, row); err != nil {
 		if ierr.IsAlreadyExists(err) {
-			s.Logger.Info(ctx, "duplicate benefit event ignored",
-				"event_id", ev.GetEventId(),
-				"username", ev.GetUsername(),
+			s.Logger.Info(ctx, "duplicate benefit grant event ignored",
+				"event_id", event.GetEventId(),
+				"username", event.GetUsername(),
 			)
 			metrics.BenefitLedgerDuplicatesTotal.Inc()
 			return nil
 		}
-		
-		s.Logger.Errorw("failed to store benefit event",
+
+		s.Logger.Errorw("failed to store benefit grant event",
 			"error", err,
-			"event_id", ev.GetEventId(),
-			"username", ev.GetUsername(),
+			"event_id", event.GetEventId(),
+			"username", event.GetUsername(),
 		)
-		
+
 		if !s.shouldRetryError(err) {
 			return nil
 		}
 		return ierr.WithError(err).
-			WithHint("Failed to store benefit event").
+			WithHint("Failed to store benefit grant event").
 			Mark(ierr.ErrSystem)
 	}
-	
-	s.Logger.Debugw("stored benefit event",
+
+	s.Logger.Debugw("stored benefit grant event",
 		"event_id", row.EventID,
-		"username", ev.GetUsername(),
+		"username", event.GetUsername(),
 	)
-	
+
 	return nil
 }
 
-func validateProtoFields(ev *benefitsv1.BenefitEvent) error {
+func (s *benefitConsumptionService) processReversalEvent(ctx context.Context, event *benefitsv1.BenefitEvent, tenantID string) error {
+	if err := validateReversalFields(event); err != nil {
+		s.Logger.Warnw("dropping invalid benefit reversal event",
+			"reason", err.Error(),
+			"event_id", event.GetEventId(),
+		)
+		return nil
+	}
+
+	originalEventID := event.GetOriginalEventId()
+
+	s.Logger.Infow("processing benefit reversal event",
+		"event_id", event.GetEventId(),
+		"original_event_id", originalEventID,
+	)
+
+	grant, err := s.BenefitLedgerRepo.GetGrantByEventID(ctx, originalEventID)
+	if err != nil {
+		if ierr.IsNotFound(err) {
+			s.Logger.Warnw("dropping reversal: original grant not found",
+				"event_id", event.GetEventId(),
+				"original_event_id", originalEventID,
+			)
+			return nil
+		}
+		s.Logger.Errorw("failed to look up original grant for reversal, will retry",
+			"error", err,
+			"event_id", event.GetEventId(),
+			"original_event_id", originalEventID,
+		)
+		return ierr.WithError(err).
+			WithHint("Failed to fetch original grant for reversal").
+			Mark(ierr.ErrSystem)
+	}
+
+	incomingValue := int(event.GetValue())
+	if incomingValue != grant.Value {
+		s.Logger.Errorw("dropping reversal: value mismatch, only full reversal supported",
+			"event_id", event.GetEventId(),
+			"original_event_id", originalEventID,
+			"incoming_value", incomingValue,
+			"grant_value", grant.Value,
+		)
+		return nil
+	}
+
+	reversalRow := toReversalLedgerRow(event, grant, tenantID, s.Config.Billing.EnvironmentID)
+
+	if err := s.DB.WithTx(ctx, func(txCtx context.Context) error {
+		if err := s.BenefitLedgerRepo.Create(txCtx, reversalRow); err != nil {
+			return err
+		}
+		return s.BenefitLedgerRepo.UpdateReversedValue(txCtx, grant.Product, originalEventID, incomingValue)
+	}); err != nil {
+		if ierr.IsAlreadyExists(err) {
+			s.Logger.Info(ctx, "duplicate benefit reversal event ignored",
+				"event_id", event.GetEventId(),
+				"original_event_id", originalEventID,
+			)
+			metrics.BenefitLedgerDuplicatesTotal.Inc()
+			return nil
+		}
+
+		s.Logger.Errorw("failed to store benefit reversal event",
+			"error", err,
+			"event_id", event.GetEventId(),
+			"original_event_id", originalEventID,
+		)
+
+		if !s.shouldRetryError(err) {
+			return nil
+		}
+		return ierr.WithError(err).
+			WithHint("Failed to store benefit reversal event").
+			Mark(ierr.ErrSystem)
+	}
+
+	s.Logger.Debugw("stored benefit reversal event",
+		"event_id", reversalRow.EventID,
+		"original_event_id", originalEventID,
+	)
+
+	return nil
+}
+
+func validateGrantFields(ev *benefitsv1.BenefitEvent) error {
 	if ev.GetEventId() == "" || ev.GetSubscriptionId() == "" || ev.GetUsername() == "" || ev.GetFeatureId() == "" {
 		return drop("missing required fields or fields empty")
 	}
-	
+
 	if ev.GetValue() <= 0 {
 		return drop("value must be greater than 0")
 	}
-	
+
 	for name, val := range map[string]string{
 		"subscription_id": ev.GetSubscriptionId(),
 		"feature_id":      ev.GetFeatureId(),
@@ -207,6 +311,16 @@ func validateProtoFields(ev *benefitsv1.BenefitEvent) error {
 		if _, err := uuid.Parse(val); err != nil {
 			return drop(name + " is not a valid UUID")
 		}
+	}
+	return nil
+}
+
+func validateReversalFields(ev *benefitsv1.BenefitEvent) error {
+	if ev.GetEventId() == "" || ev.GetOriginalEventId() == "" {
+		return drop("reversal missing event_id or original_event_id")
+	}
+	if ev.GetValue() <= 0 {
+		return drop("reversal value must be greater than 0")
 	}
 	return nil
 }
@@ -219,7 +333,7 @@ func (s *benefitConsumptionService) validateEvent(ctx context.Context, ev *benef
 		}
 		return nil, ierr.WithError(err).WithHint("customer lookup failed").Mark(ierr.ErrDatabase)
 	}
-	
+
 	sub, err := s.SubRepo.Get(ctx, ev.GetSubscriptionId())
 	if err != nil {
 		if ierr.IsNotFound(err) {
@@ -227,15 +341,15 @@ func (s *benefitConsumptionService) validateEvent(ctx context.Context, ev *benef
 		}
 		return nil, ierr.WithError(err).WithHint("subscription lookup failed").Mark(ierr.ErrDatabase)
 	}
-	
+
 	if sub.CustomerID != cust.ID {
 		return nil, drop("subscription does not belong to customer")
 	}
-	
+
 	if err := s.validateFeatureEntitlement(ctx, sub.ID, ev.GetFeatureId()); err != nil {
 		return nil, err
 	}
-	
+
 	return &eventValidation{Product: sub.Product, CustomerID: sub.CustomerID}, nil
 }
 
@@ -258,6 +372,7 @@ func (s *benefitConsumptionService) validateFeatureEntitlement(ctx context.Conte
 func toLedgerRow(
 	ev *benefitsv1.BenefitEvent,
 	v *eventValidation,
+	benefitType string,
 	tenantID string,
 	environmentID string,
 ) *domainBenefit.BenefitLedger {
@@ -273,6 +388,8 @@ func toLedgerRow(
 		Value:          int(ev.GetValue()),
 		EventTimestamp: time.Unix(ev.GetTimestamp(), 0).UTC(),
 		EnvironmentID:  environmentID,
+		BenefitType:    benefitType,
+		EntryType:      domainBenefit.EntryTypeGrant,
 	}
 	row.TenantID = tenantID
 	row.Status = types.StatusPublished
@@ -281,21 +398,33 @@ func toLedgerRow(
 	return row
 }
 
-func (s *benefitConsumptionService) validateFeatureId(
-	ctx context.Context,
-	planID string,
-	featureID string,
-) (dropReason string, err error) {
-	planEnts, err := s.EntitlementRepo.ListByPlanIDs(ctx, []string{planID})
-	if err != nil {
-		return "", ierr.WithError(err).WithHint("plan entitlement lookup failed").Mark(ierr.ErrDatabase)
+func toReversalLedgerRow(
+	ev *benefitsv1.BenefitEvent,
+	grant *domainBenefit.BenefitLedger,
+	tenantID string,
+	environmentID string,
+) *domainBenefit.BenefitLedger {
+	now := time.Now().UTC()
+	row := &domainBenefit.BenefitLedger{
+		ID:              types.GenerateUUID(),
+		EventID:         ev.GetEventId(),
+		OriginalEventID: grant.EventID,
+		SubscriptionID:  grant.SubscriptionID,
+		CustomerID:      grant.CustomerID,
+		Product:         grant.Product,
+		Category:        grant.Category,
+		FeatureID:       grant.FeatureID,
+		BenefitType:     grant.BenefitType,
+		Value:           grant.Value,
+		EventTimestamp:  time.Unix(ev.GetTimestamp(), 0).UTC(),
+		EnvironmentID:   environmentID,
+		EntryType:       domainBenefit.EntryTypeReversal,
 	}
-	for _, e := range planEnts {
-		if e != nil && e.FeatureID == featureID && e.IsEnabled {
-			return "", nil
-		}
-	}
-	return "plan does not grant this feature", nil
+	row.TenantID = tenantID
+	row.Status = types.StatusPublished
+	row.CreatedAt = now
+	row.UpdatedAt = now
+	return row
 }
 
 func (s *benefitConsumptionService) shouldRetryError(err error) bool {

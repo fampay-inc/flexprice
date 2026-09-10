@@ -43,6 +43,14 @@ const (
 	FieldValue = "value"
 	// FieldEventTimestamp holds the string denoting the event_timestamp field in the database.
 	FieldEventTimestamp = "event_timestamp"
+	// FieldBenefitType holds the string denoting the benefit_type field in the database.
+	FieldBenefitType = "benefit_type"
+	// FieldEntryType holds the string denoting the entry_type field in the database.
+	FieldEntryType = "entry_type"
+	// FieldOriginalEventID holds the string denoting the original_event_id field in the database.
+	FieldOriginalEventID = "original_event_id"
+	// FieldReversedValue holds the string denoting the reversed_value field in the database.
+	FieldReversedValue = "reversed_value"
 	// Table holds the table name of the benefitledger in the database.
 	Table = "benefit_ledgers"
 )
@@ -65,6 +73,10 @@ var Columns = []string{
 	FieldFeatureID,
 	FieldValue,
 	FieldEventTimestamp,
+	FieldBenefitType,
+	FieldEntryType,
+	FieldOriginalEventID,
+	FieldReversedValue,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -98,6 +110,8 @@ var (
 	CustomerIDValidator func(string) error
 	// ProductValidator is a validator for the "product" field. It is called by the builders before save.
 	ProductValidator func(string) error
+	// DefaultReversedValue holds the default value on creation for the "reversed_value" field.
+	DefaultReversedValue int
 )
 
 // OrderOption defines the ordering options for the BenefitLedger queries.
@@ -181,4 +195,24 @@ func ByValue(opts ...sql.OrderTermOption) OrderOption {
 // ByEventTimestamp orders the results by the event_timestamp field.
 func ByEventTimestamp(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEventTimestamp, opts...).ToFunc()
+}
+
+// ByBenefitType orders the results by the benefit_type field.
+func ByBenefitType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldBenefitType, opts...).ToFunc()
+}
+
+// ByEntryType orders the results by the entry_type field.
+func ByEntryType(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEntryType, opts...).ToFunc()
+}
+
+// ByOriginalEventID orders the results by the original_event_id field.
+func ByOriginalEventID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOriginalEventID, opts...).ToFunc()
+}
+
+// ByReversedValue orders the results by the reversed_value field.
+func ByReversedValue(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldReversedValue, opts...).ToFunc()
 }

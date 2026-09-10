@@ -68,6 +68,86 @@ func (blu *BenefitLedgerUpdate) ClearUpdatedBy() *BenefitLedgerUpdate {
 	return blu
 }
 
+// SetBenefitType sets the "benefit_type" field.
+func (blu *BenefitLedgerUpdate) SetBenefitType(s string) *BenefitLedgerUpdate {
+	blu.mutation.SetBenefitType(s)
+	return blu
+}
+
+// SetNillableBenefitType sets the "benefit_type" field if the given value is not nil.
+func (blu *BenefitLedgerUpdate) SetNillableBenefitType(s *string) *BenefitLedgerUpdate {
+	if s != nil {
+		blu.SetBenefitType(*s)
+	}
+	return blu
+}
+
+// ClearBenefitType clears the value of the "benefit_type" field.
+func (blu *BenefitLedgerUpdate) ClearBenefitType() *BenefitLedgerUpdate {
+	blu.mutation.ClearBenefitType()
+	return blu
+}
+
+// SetEntryType sets the "entry_type" field.
+func (blu *BenefitLedgerUpdate) SetEntryType(s string) *BenefitLedgerUpdate {
+	blu.mutation.SetEntryType(s)
+	return blu
+}
+
+// SetNillableEntryType sets the "entry_type" field if the given value is not nil.
+func (blu *BenefitLedgerUpdate) SetNillableEntryType(s *string) *BenefitLedgerUpdate {
+	if s != nil {
+		blu.SetEntryType(*s)
+	}
+	return blu
+}
+
+// ClearEntryType clears the value of the "entry_type" field.
+func (blu *BenefitLedgerUpdate) ClearEntryType() *BenefitLedgerUpdate {
+	blu.mutation.ClearEntryType()
+	return blu
+}
+
+// SetOriginalEventID sets the "original_event_id" field.
+func (blu *BenefitLedgerUpdate) SetOriginalEventID(s string) *BenefitLedgerUpdate {
+	blu.mutation.SetOriginalEventID(s)
+	return blu
+}
+
+// SetNillableOriginalEventID sets the "original_event_id" field if the given value is not nil.
+func (blu *BenefitLedgerUpdate) SetNillableOriginalEventID(s *string) *BenefitLedgerUpdate {
+	if s != nil {
+		blu.SetOriginalEventID(*s)
+	}
+	return blu
+}
+
+// ClearOriginalEventID clears the value of the "original_event_id" field.
+func (blu *BenefitLedgerUpdate) ClearOriginalEventID() *BenefitLedgerUpdate {
+	blu.mutation.ClearOriginalEventID()
+	return blu
+}
+
+// SetReversedValue sets the "reversed_value" field.
+func (blu *BenefitLedgerUpdate) SetReversedValue(i int) *BenefitLedgerUpdate {
+	blu.mutation.SetReversedValue(i)
+	return blu
+}
+
+// SetNillableReversedValue sets the "reversed_value" field if the given value is not nil.
+func (blu *BenefitLedgerUpdate) SetNillableReversedValue(i *int) *BenefitLedgerUpdate {
+	if i != nil {
+		blu.SetReversedValue(*i)
+	}
+	return blu
+}
+
+// AddReversedValue adds i to the "reversed_value" field.
+func (blu *BenefitLedgerUpdate) AddReversedValue(i int) *BenefitLedgerUpdate {
+	blu.mutation.AddReversedValue(i)
+	return blu
+}
+
 // Mutation returns the BenefitLedgerMutation object of the builder.
 func (blu *BenefitLedgerUpdate) Mutation() *BenefitLedgerMutation {
 	return blu.mutation
@@ -139,6 +219,30 @@ func (blu *BenefitLedgerUpdate) sqlSave(ctx context.Context) (n int, err error) 
 	if blu.mutation.FeatureIDCleared() {
 		_spec.ClearField(benefitledger.FieldFeatureID, field.TypeString)
 	}
+	if blu.mutation.BenefitTypeCleared() {
+		_spec.ClearField(benefitledger.FieldBenefitType, field.TypeString)
+	}
+	if value, ok := blu.mutation.BenefitType(); ok {
+		_spec.SetField(benefitledger.FieldBenefitType, field.TypeString, value)
+	}
+	if blu.mutation.EntryTypeCleared() {
+		_spec.ClearField(benefitledger.FieldEntryType, field.TypeString)
+	}
+	if value, ok := blu.mutation.EntryType(); ok {
+		_spec.SetField(benefitledger.FieldEntryType, field.TypeString, value)
+	}
+	if blu.mutation.OriginalEventIDCleared() {
+		_spec.ClearField(benefitledger.FieldOriginalEventID, field.TypeString)
+	}
+	if value, ok := blu.mutation.OriginalEventID(); ok {
+		_spec.SetField(benefitledger.FieldOriginalEventID, field.TypeString, value)
+	}
+	if value, ok := blu.mutation.ReversedValue(); ok {
+		_spec.SetField(benefitledger.FieldReversedValue, field.TypeInt, value)
+	}
+	if value, ok := blu.mutation.AddedReversedValue(); ok {
+		_spec.AddField(benefitledger.FieldReversedValue, field.TypeInt, value)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, blu.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{benefitledger.Label}
@@ -196,6 +300,86 @@ func (bluo *BenefitLedgerUpdateOne) SetNillableUpdatedBy(s *string) *BenefitLedg
 // ClearUpdatedBy clears the value of the "updated_by" field.
 func (bluo *BenefitLedgerUpdateOne) ClearUpdatedBy() *BenefitLedgerUpdateOne {
 	bluo.mutation.ClearUpdatedBy()
+	return bluo
+}
+
+// SetBenefitType sets the "benefit_type" field.
+func (bluo *BenefitLedgerUpdateOne) SetBenefitType(s string) *BenefitLedgerUpdateOne {
+	bluo.mutation.SetBenefitType(s)
+	return bluo
+}
+
+// SetNillableBenefitType sets the "benefit_type" field if the given value is not nil.
+func (bluo *BenefitLedgerUpdateOne) SetNillableBenefitType(s *string) *BenefitLedgerUpdateOne {
+	if s != nil {
+		bluo.SetBenefitType(*s)
+	}
+	return bluo
+}
+
+// ClearBenefitType clears the value of the "benefit_type" field.
+func (bluo *BenefitLedgerUpdateOne) ClearBenefitType() *BenefitLedgerUpdateOne {
+	bluo.mutation.ClearBenefitType()
+	return bluo
+}
+
+// SetEntryType sets the "entry_type" field.
+func (bluo *BenefitLedgerUpdateOne) SetEntryType(s string) *BenefitLedgerUpdateOne {
+	bluo.mutation.SetEntryType(s)
+	return bluo
+}
+
+// SetNillableEntryType sets the "entry_type" field if the given value is not nil.
+func (bluo *BenefitLedgerUpdateOne) SetNillableEntryType(s *string) *BenefitLedgerUpdateOne {
+	if s != nil {
+		bluo.SetEntryType(*s)
+	}
+	return bluo
+}
+
+// ClearEntryType clears the value of the "entry_type" field.
+func (bluo *BenefitLedgerUpdateOne) ClearEntryType() *BenefitLedgerUpdateOne {
+	bluo.mutation.ClearEntryType()
+	return bluo
+}
+
+// SetOriginalEventID sets the "original_event_id" field.
+func (bluo *BenefitLedgerUpdateOne) SetOriginalEventID(s string) *BenefitLedgerUpdateOne {
+	bluo.mutation.SetOriginalEventID(s)
+	return bluo
+}
+
+// SetNillableOriginalEventID sets the "original_event_id" field if the given value is not nil.
+func (bluo *BenefitLedgerUpdateOne) SetNillableOriginalEventID(s *string) *BenefitLedgerUpdateOne {
+	if s != nil {
+		bluo.SetOriginalEventID(*s)
+	}
+	return bluo
+}
+
+// ClearOriginalEventID clears the value of the "original_event_id" field.
+func (bluo *BenefitLedgerUpdateOne) ClearOriginalEventID() *BenefitLedgerUpdateOne {
+	bluo.mutation.ClearOriginalEventID()
+	return bluo
+}
+
+// SetReversedValue sets the "reversed_value" field.
+func (bluo *BenefitLedgerUpdateOne) SetReversedValue(i int) *BenefitLedgerUpdateOne {
+	bluo.mutation.SetReversedValue(i)
+	return bluo
+}
+
+// SetNillableReversedValue sets the "reversed_value" field if the given value is not nil.
+func (bluo *BenefitLedgerUpdateOne) SetNillableReversedValue(i *int) *BenefitLedgerUpdateOne {
+	if i != nil {
+		bluo.SetReversedValue(*i)
+	}
+	return bluo
+}
+
+// AddReversedValue adds i to the "reversed_value" field.
+func (bluo *BenefitLedgerUpdateOne) AddReversedValue(i int) *BenefitLedgerUpdateOne {
+	bluo.mutation.AddReversedValue(i)
 	return bluo
 }
 
@@ -299,6 +483,30 @@ func (bluo *BenefitLedgerUpdateOne) sqlSave(ctx context.Context) (_node *Benefit
 	}
 	if bluo.mutation.FeatureIDCleared() {
 		_spec.ClearField(benefitledger.FieldFeatureID, field.TypeString)
+	}
+	if bluo.mutation.BenefitTypeCleared() {
+		_spec.ClearField(benefitledger.FieldBenefitType, field.TypeString)
+	}
+	if value, ok := bluo.mutation.BenefitType(); ok {
+		_spec.SetField(benefitledger.FieldBenefitType, field.TypeString, value)
+	}
+	if bluo.mutation.EntryTypeCleared() {
+		_spec.ClearField(benefitledger.FieldEntryType, field.TypeString)
+	}
+	if value, ok := bluo.mutation.EntryType(); ok {
+		_spec.SetField(benefitledger.FieldEntryType, field.TypeString, value)
+	}
+	if bluo.mutation.OriginalEventIDCleared() {
+		_spec.ClearField(benefitledger.FieldOriginalEventID, field.TypeString)
+	}
+	if value, ok := bluo.mutation.OriginalEventID(); ok {
+		_spec.SetField(benefitledger.FieldOriginalEventID, field.TypeString, value)
+	}
+	if value, ok := bluo.mutation.ReversedValue(); ok {
+		_spec.SetField(benefitledger.FieldReversedValue, field.TypeInt, value)
+	}
+	if value, ok := bluo.mutation.AddedReversedValue(); ok {
+		_spec.AddField(benefitledger.FieldReversedValue, field.TypeInt, value)
 	}
 	_node = &BenefitLedger{config: bluo.config}
 	_spec.Assign = _node.assignValues

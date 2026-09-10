@@ -47,7 +47,15 @@ type BenefitLedger struct {
 	Value int `json:"value,omitempty"`
 	// EventTimestamp holds the value of the "event_timestamp" field.
 	EventTimestamp time.Time `json:"event_timestamp,omitempty"`
-	selectValues   sql.SelectValues
+	// BenefitType holds the value of the "benefit_type" field.
+	BenefitType string `json:"benefit_type,omitempty"`
+	// EntryType holds the value of the "entry_type" field.
+	EntryType string `json:"entry_type,omitempty"`
+	// OriginalEventID holds the value of the "original_event_id" field.
+	OriginalEventID string `json:"original_event_id,omitempty"`
+	// ReversedValue holds the value of the "reversed_value" field.
+	ReversedValue int `json:"reversed_value,omitempty"`
+	selectValues  sql.SelectValues
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -55,9 +63,9 @@ func (*BenefitLedger) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case benefitledger.FieldValue:
+		case benefitledger.FieldValue, benefitledger.FieldReversedValue:
 			values[i] = new(sql.NullInt64)
-		case benefitledger.FieldID, benefitledger.FieldTenantID, benefitledger.FieldStatus, benefitledger.FieldCreatedBy, benefitledger.FieldUpdatedBy, benefitledger.FieldEnvironmentID, benefitledger.FieldEventID, benefitledger.FieldSubscriptionID, benefitledger.FieldCustomerID, benefitledger.FieldProduct, benefitledger.FieldCategory, benefitledger.FieldFeatureID:
+		case benefitledger.FieldID, benefitledger.FieldTenantID, benefitledger.FieldStatus, benefitledger.FieldCreatedBy, benefitledger.FieldUpdatedBy, benefitledger.FieldEnvironmentID, benefitledger.FieldEventID, benefitledger.FieldSubscriptionID, benefitledger.FieldCustomerID, benefitledger.FieldProduct, benefitledger.FieldCategory, benefitledger.FieldFeatureID, benefitledger.FieldBenefitType, benefitledger.FieldEntryType, benefitledger.FieldOriginalEventID:
 			values[i] = new(sql.NullString)
 		case benefitledger.FieldCreatedAt, benefitledger.FieldUpdatedAt, benefitledger.FieldEventTimestamp:
 			values[i] = new(sql.NullTime)
@@ -172,6 +180,30 @@ func (bl *BenefitLedger) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				bl.EventTimestamp = value.Time
 			}
+		case benefitledger.FieldBenefitType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field benefit_type", values[i])
+			} else if value.Valid {
+				bl.BenefitType = value.String
+			}
+		case benefitledger.FieldEntryType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field entry_type", values[i])
+			} else if value.Valid {
+				bl.EntryType = value.String
+			}
+		case benefitledger.FieldOriginalEventID:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field original_event_id", values[i])
+			} else if value.Valid {
+				bl.OriginalEventID = value.String
+			}
+		case benefitledger.FieldReversedValue:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field reversed_value", values[i])
+			} else if value.Valid {
+				bl.ReversedValue = int(value.Int64)
+			}
 		default:
 			bl.selectValues.Set(columns[i], values[i])
 		}
@@ -252,6 +284,18 @@ func (bl *BenefitLedger) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("event_timestamp=")
 	builder.WriteString(bl.EventTimestamp.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("benefit_type=")
+	builder.WriteString(bl.BenefitType)
+	builder.WriteString(", ")
+	builder.WriteString("entry_type=")
+	builder.WriteString(bl.EntryType)
+	builder.WriteString(", ")
+	builder.WriteString("original_event_id=")
+	builder.WriteString(bl.OriginalEventID)
+	builder.WriteString(", ")
+	builder.WriteString("reversed_value=")
+	builder.WriteString(fmt.Sprintf("%v", bl.ReversedValue))
 	builder.WriteByte(')')
 	return builder.String()
 }

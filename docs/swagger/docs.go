@@ -762,7 +762,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Returns lifetime benefits granted to a customer for a product, aggregated by category from the benefit ledger.",
+                "description": "Returns lifetime benefits granted to a customer for a product, aggregated from the benefit ledger. When group_by=category, returns one row per (category, benefit_type) pair so multi-currency rewards are preserved; each row includes category, benefit_type, and total (net after reversals). Omit group_by to get totals per feature_id instead.",
                 "produces": [
                     "application/json"
                 ],
@@ -788,7 +788,7 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "description": "Aggregation grouping. Omit to group by feature_id (default); pass 'category' to group by category instead",
+                        "description": "Aggregation grouping. Pass 'category' to group by (category, benefit_type); omit to group by feature_id",
                         "name": "group_by",
                         "in": "query"
                     }
@@ -13409,6 +13409,12 @@ const docTemplate = `{
         "BenefitAggregateResponse": {
             "type": "object",
             "properties": {
+                "benefits": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/BenefitItem"
+                    }
+                },
                 "category": {
                     "type": "string"
                 },
@@ -13416,6 +13422,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "BenefitItem": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string"
+                },
+                "value": {
                     "type": "integer"
                 }
             }
@@ -15004,6 +15021,9 @@ const docTemplate = `{
                 "config_value": {
                     "type": "object",
                     "additionalProperties": true
+                },
+                "display_order": {
+                    "type": "integer"
                 },
                 "end_date": {
                     "type": "string"
@@ -21878,6 +21898,9 @@ const docTemplate = `{
                 "config_value": {
                     "type": "object",
                     "additionalProperties": true
+                },
+                "display_order": {
+                    "type": "integer"
                 },
                 "is_enabled": {
                     "type": "boolean"
