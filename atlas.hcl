@@ -9,5 +9,12 @@ env "local" {
     dir = "file://migrations/atlas"
   }
 
+  diff {
+    concurrent_index {
+      create = true
+      drop   = true
+    }
+  }
+
   exclude = ["benefit_ledgers"]
 }

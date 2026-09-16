@@ -264,5 +264,10 @@ func (Subscription) Indexes() []ent.Index {
 		index.Fields("tenant_id", "environment_id", "customer_id", "product").
 			Unique().
 			Annotations(entsql.IndexWhere("subscription_status = 'active' AND status = 'published' AND product IS NOT NULL")),
+
+		index.Fields("tenant_id", "environment_id", "customer_id", "product").
+			Unique().
+			StorageKey("idx_subscriptions_unique_product_live").
+			Annotations(entsql.IndexWhere("(subscription_status)::text = ANY ((ARRAY['active'::character varying, 'trialing'::character varying, 'paused'::character varying])::text[]) AND (status)::text = 'published'::text AND product IS NOT NULL")),
 	}
 }
