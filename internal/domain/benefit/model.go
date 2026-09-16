@@ -32,7 +32,8 @@ type BenefitLedger struct {
 }
 
 type BenefitTypeAggregate struct {
-	Category    string      `db:"category"     json:"category"`
+	Category    string `db:"category"     json:"category"`
 	BenefitType string `db:"benefit_type" json:"benefit_type"`
-	Net         int64       `db:"net"          json:"net"`
+	Net         int64  `db:"net"          json:"net"`
+	Frequency   int64  `db:"frequency"    json:"frequency"`
 }

@@ -195,7 +195,8 @@ func (r *benefitLedgerRepository) GetBenefitTypeAggregates(ctx context.Context, 
 		SELECT
 			COALESCE(category, '') AS category,
 			COALESCE(benefit_type, '') AS benefit_type,
-			SUM(value - reversed_value) AS net
+			SUM(value - reversed_value) AS net,
+			COUNT(CASE WHEN (value - reversed_value) > 0 THEN 1 END) AS frequency
 		FROM benefit_ledgers
 		WHERE
 			tenant_id = $1
@@ -218,7 +219,7 @@ func (r *benefitLedgerRepository) GetBenefitTypeAggregates(ctx context.Context, 
 	results := make([]*domainBenefit.BenefitTypeAggregate, 0)
 	for dbRows.Next() {
 		agg := &domainBenefit.BenefitTypeAggregate{}
-		if err := dbRows.Scan(&agg.Category, &agg.BenefitType, &agg.Net); err != nil {
+		if err := dbRows.Scan(&agg.Category, &agg.BenefitType, &agg.Net, &agg.Frequency); err != nil {
 			SetSpanError(span, err)
 			return nil, ierr.WithError(err).
 				WithHint("Failed to scan benefit type aggregate row").

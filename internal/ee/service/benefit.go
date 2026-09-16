@@ -43,10 +43,10 @@ func (s *benefitService) GetBenefits(ctx context.Context, externalCustomerID, pr
 			index[agg.Category] = i
 		}
 		response[i].Benefits = append(response[i].Benefits, dto.BenefitItem{
-			Type:  benefitType,
-			Value: agg.Net,
+			Type:      benefitType,
+			Value:     agg.Net,
+			Frequency: agg.Frequency,
 		})
-		response[i].Total += agg.Net
 	}
 	return response, nil
 }
