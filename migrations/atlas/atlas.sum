@@ -1,5 +1,6 @@
-h1:lEnEXlJmGhz2CtOrn/++oE532/LlEdTh5JBX6DbwcoE=
+h1:hJtbgKvqHV3+RocUYQewNxcKHaCIH0WHHq/UdIv6Jqg=
 20260716144433_baseline.sql h1:kGffeGKw6e6dxiOxfRMl6wo2Z9961ZVx2gWM+8JMzYU=
 20260727084139.sql h1:eRPYqaSHmzB+BMLJIj2GazI3QhlrJbsESGR5WWQ63sc=
 20260916144122_fix_checkout_session_mig.sql h1:HJzxp2l7/aWMSV4+BZMCM9r0xn2+cisifWhg3XPOZTg=
 20260916144347_add_idx_subscriptions_unique_product_live.sql h1:69Fh2LMkyWV4NuE44WmGyJoX9qJ9t/H0wZR6k86hE/4=
+20260916183129_drop_old_narrow_subscription_idx.sql h1:wg1N6ohvkgnx8XgonDkT+TGrX1Es3o7VDqxvxCqwR9k=
