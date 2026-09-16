@@ -260,11 +260,6 @@ func (Subscription) Indexes() []ent.Index {
 			Annotations(entsql.IndexWhere(
 				"(((status)::text = 'published'::text) AND ((subscription_type)::text = ANY (ARRAY[('standalone'::character varying)::text, ('delegated_invoicing'::character varying)::text, ('parent'::character varying)::text, ('grouped_invoicing'::character varying)::text])))")),
 
-		// Enforce at most one active subscription per customer per product
-		index.Fields("tenant_id", "environment_id", "customer_id", "product").
-			Unique().
-			Annotations(entsql.IndexWhere("subscription_status = 'active' AND status = 'published' AND product IS NOT NULL")),
-
 		index.Fields("tenant_id", "environment_id", "customer_id", "product").
 			Unique().
 			StorageKey("idx_subscriptions_unique_product_live").
