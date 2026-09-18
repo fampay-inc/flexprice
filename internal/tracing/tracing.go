@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/flexprice/flexprice/internal/config"
+	ierr "github.com/flexprice/flexprice/internal/errors"
 	"github.com/flexprice/flexprice/internal/logger"
 	"github.com/flexprice/flexprice/internal/spanerr"
 	"github.com/getsentry/sentry-go"
@@ -100,11 +101,24 @@ func (s *Service) initSentry() error {
 	// EnableTracing must be true so the sentryotel SpanProcessor (attached below
 	// when the OTel TracerProvider is built) can turn OTel spans into Sentry
 	// transactions/spans. Without this, sentryotel silently drops spans.
+	//
+	// BeforeSend drops known-noisy expected errors (see internal/errors.
+	// IsCaptureBlacklisted) before they reach Sentry. Runs against the raw error
+	// via hint.OriginalException so it honours errors.Is / wrapping. Covers both
+	// explicit CaptureException calls and the logger's auto-capture path;
+	// span-only errors (RecordException / SetStatusError) do not create Sentry
+	// issues in this setup because the sentry-go OtelIntegration is not installed.
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn:              s.cfg.Sentry.DSN,
 		Environment:      s.cfg.Sentry.Environment,
 		EnableTracing:    true,
 		TracesSampleRate: s.cfg.Sentry.SampleRate,
+		BeforeSend: func(event *sentry.Event, hint *sentry.EventHint) *sentry.Event {
+			if hint != nil && ierr.IsCaptureBlacklisted(hint.OriginalException) {
+				return nil
+			}
+			return event
+		},
 	})
 	if err != nil {
 		s.logger.Error(context.Background(), "Failed to initialize Sentry", "error", err)

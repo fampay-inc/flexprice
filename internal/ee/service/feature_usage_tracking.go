@@ -4372,7 +4372,7 @@ func (s *featureUsageTrackingService) resolveEffectiveCustomersForUsageAnalytics
 				WithReportableDetails(map[string]interface{}{
 					"external_customer_id": extID,
 				}).
-				Mark(ierr.ErrNotFound)
+				Mark(ierr.ErrCustomerNotFound)
 		}
 		customers = append(customers, cust)
 	}

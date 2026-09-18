@@ -822,7 +822,7 @@ func (s *subscriptionChangeService) createNewSubscription(
 							"customer_id":           ch.CustomerID,
 							"child_subscription_id": ch.ID,
 						}).
-						Mark(ierr.ErrNotFound)
+						Mark(ierr.ErrCustomerNotFound)
 				}
 				childExternalIDs = append(childExternalIDs, c.ExternalID)
 			}
