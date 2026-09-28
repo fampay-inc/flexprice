@@ -239,9 +239,11 @@ func (h *handler) processMessage(ctx context.Context, msg *message.Message) erro
 	ctx = context.WithValue(ctx, types.CtxEnvironmentID, event.EnvironmentID)
 	ctx = context.WithValue(ctx, types.CtxUserID, event.UserID)
 
-	h.logger.Debug(ctx, "consumed webhook from topic and delivering",
+	h.logger.Info(ctx, "consumed webhook from topic and delivering",
 		"topic", h.config.Topic,
 		"message_uuid", msg.UUID,
+		"event_id", event.ID,
+		"entity_id", event.EntityID,
 		"event_name", event.EventName,
 		"tenant_id", event.TenantID,
 	)
@@ -350,9 +352,10 @@ func (h *handler) deliverNative(
 		return err
 	}
 
-	h.logger.Debug(ctx, "building webhook payload",
+	h.logger.Info(ctx, "building webhook payload",
+		"event_id", event.ID,
+		"entity_id", event.EntityID,
 		"event_name", event.EventName,
-		"builder", builder,
 	)
 
 	webHookPayload, err := builder.BuildPayload(ctx, event.EventName, event.Payload)
@@ -360,7 +363,9 @@ func (h *handler) deliverNative(
 		return err
 	}
 
-	h.logger.Debug(ctx, "built webhook payload",
+	h.logger.Info(ctx, "built webhook payload",
+		"event_id", event.ID,
+		"entity_id", event.EntityID,
 		"event_name", event.EventName,
 		"payload", string(webHookPayload),
 	)

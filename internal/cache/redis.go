@@ -117,13 +117,14 @@ func (c *redisCacheImpl) Get(ctx context.Context, key string) (_ interface{}, fo
 	value, err := c.client.Get(ctx, redisKey).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
-			// Key does not exist
+			c.log.Info(ctx, "Redis GET miss", "key", redisKey)
 			return nil, false
 		}
 		c.log.Error(ctx, "Redis GET error", "key", redisKey, "error", err)
 		return nil, false
 	}
 
+	c.log.Info(ctx, "Redis GET hit", "key", redisKey, "value", value)
 	return value, true
 }
 
@@ -155,6 +156,7 @@ func (c *redisCacheImpl) Set(ctx context.Context, key string, value interface{},
 		strValue = string(jsonBytes)
 	}
 
+	c.log.Info(ctx, "Redis SET", "key", redisKey, "ttl", expiration, "value", strValue)
 	if err := c.client.Set(ctx, redisKey, strValue, expiration).Err(); err != nil {
 		c.log.Error(ctx, "Redis SET error", "key", redisKey, "error", err)
 	}
@@ -166,6 +168,7 @@ func (c *redisCacheImpl) Delete(ctx context.Context, key string) {
 		return
 	}
 	redisKey := c.GetRedisKey(key)
+	c.log.Info(ctx, "Redis DELETE", "key", redisKey)
 	err := c.delete(ctx, redisKey)
 	if err != nil {
 		c.log.Info(ctx, "Redis DELETE failed, retrying...", "key", redisKey, "error", err)
