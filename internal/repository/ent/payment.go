@@ -762,39 +762,42 @@ func (o PaymentQueryOptions) applyEntityQueryOptions(_ context.Context, f *types
 }
 
 func (r *paymentRepository) SetCache(ctx context.Context, payment *domainPayment.Payment) {
-	span, ctx := cache.StartRedisCacheSpan(ctx, "payment", "set", map[string]interface{}{
-		"payment_id": payment.ID,
-	})
-	defer cache.FinishSpan(span)
-
-	cacheKey := cache.GenerateKey(ctx, cache.PrefixPayment, payment.ID)
-	r.redisCache.Set(ctx, cacheKey, payment, cache.ExpiryDefaultRedis)
+	return
+	// span, ctx := cache.StartRedisCacheSpan(ctx, "payment", "set", map[string]interface{}{
+	// 	"payment_id": payment.ID,
+	// })
+	// defer cache.FinishSpan(span)
+	//
+	// cacheKey := cache.GenerateKey(ctx, cache.PrefixPayment, payment.ID)
+	// r.redisCache.Set(ctx, cacheKey, payment, cache.ExpiryDefaultRedis)
 }
 
 func (r *paymentRepository) GetCache(ctx context.Context, id string) *domainPayment.Payment {
-	span, ctx := cache.StartRedisCacheSpan(ctx, "payment", "get", map[string]interface{}{
-		"payment_id": id,
-	})
-	defer cache.FinishSpan(span)
-
-	cacheKey := cache.GenerateKey(ctx, cache.PrefixPayment, id)
-	value, found := r.redisCache.Get(ctx, cacheKey)
-	if !found {
-		return nil
-	}
-	p, ok := cache.UnmarshalCacheValue[domainPayment.Payment](value)
-	if !ok {
-		return nil
-	}
-	return p
+	return nil
+	// span, ctx := cache.StartRedisCacheSpan(ctx, "payment", "get", map[string]interface{}{
+	// 	"payment_id": id,
+	// })
+	// defer cache.FinishSpan(span)
+	//
+	// cacheKey := cache.GenerateKey(ctx, cache.PrefixPayment, id)
+	// value, found := r.redisCache.Get(ctx, cacheKey)
+	// if !found {
+	// 	return nil
+	// }
+	// p, ok := cache.UnmarshalCacheValue[domainPayment.Payment](value)
+	// if !ok {
+	// 	return nil
+	// }
+	// return p
 }
 
 func (r *paymentRepository) DeleteCache(ctx context.Context, paymentID string) {
-	span, ctx := cache.StartRedisCacheSpan(ctx, "payment", "delete", map[string]interface{}{
-		"payment_id": paymentID,
-	})
-	defer cache.FinishSpan(span)
-
-	cacheKey := cache.GenerateKey(ctx, cache.PrefixPayment, paymentID)
-	r.redisCache.Delete(ctx, cacheKey)
+	return
+	// span, ctx := cache.StartRedisCacheSpan(ctx, "payment", "delete", map[string]interface{}{
+	// 	"payment_id": paymentID,
+	// })
+	// defer cache.FinishSpan(span)
+	//
+	// cacheKey := cache.GenerateKey(ctx, cache.PrefixPayment, paymentID)
+	// r.redisCache.Delete(ctx, cacheKey)
 }
