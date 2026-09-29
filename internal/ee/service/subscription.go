@@ -2248,10 +2248,17 @@ func (s *subscriptionService) ListSubscriptions(ctx context.Context, filter *typ
 		return nil, err
 	}
 
-	count, err := s.SubRepo.Count(ctx, filter)
-	if err != nil {
-		s.Logger.Error(ctx, "failed to count subscriptions from repository", "error", err, "filter", filter)
-		return nil, err
+	var count int
+	if filter.IsUnlimited() {
+		count = len(subscriptions)
+	} else if len(subscriptions) < filter.GetLimit() {
+		count = filter.GetOffset() + len(subscriptions)
+	} else {
+		count, err = s.SubRepo.Count(ctx, filter)
+		if err != nil {
+			s.Logger.Error(ctx, "failed to count subscriptions from repository", "error", err, "filter", filter)
+			return nil, err
+		}
 	}
 
 	response := &dto.ListSubscriptionsResponse{

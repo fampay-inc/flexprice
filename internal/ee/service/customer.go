@@ -146,10 +146,16 @@ func (s *customerService) GetCustomers(ctx context.Context, filter *types.Custom
 		return nil, err
 	}
 
-	total, err := s.CustomerRepo.Count(ctx, filter)
-	if err != nil {
-		// No need to wrap the error as the repository already returns properly formatted errors
-		return nil, err
+	var total int
+	if filter.IsUnlimited() {
+		total = len(customers)
+	} else if len(customers) < filter.GetLimit() {
+		total = filter.GetOffset() + len(customers)
+	} else {
+		total, err = s.CustomerRepo.Count(ctx, filter)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	response := make([]*dto.CustomerResponse, 0, len(customers))
