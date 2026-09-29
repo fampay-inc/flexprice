@@ -115,10 +115,16 @@ func (s *planService) GetPlans(ctx context.Context, filter *types.PlanFilter) (*
 			Mark(ierr.ErrDatabase)
 	}
 
-	// Get count
-	count, err := s.PlanRepo.Count(ctx, filter)
-	if err != nil {
-		return nil, err
+	var count int
+	if filter.IsUnlimited() {
+		count = len(plans)
+	} else if len(plans) < filter.GetLimit() {
+		count = filter.GetOffset() + len(plans)
+	} else {
+		count, err = s.PlanRepo.Count(ctx, filter)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Build response
