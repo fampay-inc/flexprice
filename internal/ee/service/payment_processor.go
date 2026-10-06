@@ -389,14 +389,14 @@ func (p *paymentProcessor) handleRazorpayPaymentLinkCreation(ctx context.Context
 
 	// Convert to Razorpay payment link request
 	paymentLinkReq := &razorpay.CreatePaymentLinkRequest{
-		InvoiceID:     paymentObj.DestinationID,
-		CustomerID:    invoice.CustomerID,
-		Amount:        paymentObj.Amount,
-		Currency:      paymentObj.Currency,
-		SuccessURL:    successURL,
-		CancelURL:     cancelURL,
-		Metadata:  linkMetadata,
-		PaymentID: paymentObj.ID,
+		InvoiceID:  paymentObj.DestinationID,
+		CustomerID: invoice.CustomerID,
+		Amount:     paymentObj.Amount,
+		Currency:   paymentObj.Currency,
+		SuccessURL: successURL,
+		CancelURL:  cancelURL,
+		Metadata:   linkMetadata,
+		PaymentID:  paymentObj.ID,
 	}
 
 	// Get Razorpay integration for creating payment link
@@ -481,14 +481,14 @@ func (p *paymentProcessor) handleNomodPaymentLinkCreation(ctx context.Context, p
 
 	// Convert to Nomod payment link request
 	paymentLinkReq := nomod.CreatePaymentLinkReq{
-		InvoiceID:     paymentObj.DestinationID,
-		CustomerID:    invoice.CustomerID,
-		Amount:        paymentObj.Amount,
-		Currency:      paymentObj.Currency,
-		SuccessURL:    successURL,
-		FailureURL:    cancelURL,
-		Metadata:  linkMetadata,
-		PaymentID: paymentObj.ID,
+		InvoiceID:  paymentObj.DestinationID,
+		CustomerID: invoice.CustomerID,
+		Amount:     paymentObj.Amount,
+		Currency:   paymentObj.Currency,
+		SuccessURL: successURL,
+		FailureURL: cancelURL,
+		Metadata:   linkMetadata,
+		PaymentID:  paymentObj.ID,
 	}
 
 	// Get Nomod integration for creating payment link
@@ -737,9 +737,9 @@ func (p *paymentProcessor) handleInvoicePostProcessing(ctx context.Context, paym
 			"error", err)
 	}
 
-	// Invoice is fully paid — dispatch Whop mark-paid directly if a mapping exists.
+	// Invoice is fully paid — dispatch Whop mark-paid if Whop is connected.
 	if invoice.PaymentStatus == types.PaymentStatusSucceeded {
-		p.dispatchWhopMarkPaid(ctx, invoice.ID)
+		p.DispatchMarkPaid(ctx, invoice.ID)
 	}
 
 	return nil
@@ -789,6 +789,22 @@ func (p *paymentProcessor) dispatchWhopMarkPaid(ctx context.Context, invoiceID s
 	if _, err := temporalSvc.ExecuteWorkflow(ctx, types.TemporalWhopInvoiceMarkPaidWorkflow, input); err != nil {
 		p.Logger.Error(ctx, "failed to start Whop mark-paid workflow", "error", err, "invoice_id", invoiceID)
 	}
+}
+
+func (p *paymentProcessor) DispatchMarkPaid(ctx context.Context, invoiceID string) {
+	if p.ConnectionRepo == nil {
+		return
+	}
+
+	if _, err := p.ConnectionRepo.GetByProvider(ctx, types.SecretProviderWhop); err != nil {
+		if !ierr.IsNotFound(err) {
+			p.Logger.Error(ctx, "failed to look up Whop connection, skipping mark-paid dispatch",
+				"error", err, "invoice_id", invoiceID)
+		}
+		return
+	}
+
+	p.dispatchWhopMarkPaid(ctx, invoiceID)
 }
 
 func (p *paymentProcessor) publishSystemEvent(ctx context.Context, eventName types.WebhookEventName, paymentID string) {
