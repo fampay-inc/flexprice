@@ -969,7 +969,7 @@ func (s *eventPostProcessingService) GetDetailedUsageAnalytics(ctx context.Conte
 			WithReportableDetails(map[string]interface{}{
 				"external_customer_id": req.ExternalCustomerID,
 			}).
-			Mark(ierr.ErrNotFound)
+			Mark(ierr.ErrCustomerNotFound)
 	}
 
 	// Step 2: Get active subscriptions for the customer

@@ -1121,7 +1121,7 @@ func (s *subscriptionModificationService) resolveExternalCustomersForInheritance
 			return nil, ierr.NewError("customer not found").
 				WithHint("No customer exists for the given external id in this environment").
 				WithReportableDetails(map[string]interface{}{"external_id": extID}).
-				Mark(ierr.ErrNotFound)
+				Mark(ierr.ErrCustomerNotFound)
 		}
 		if cust.ID == parentCustomerID {
 			return nil, ierr.NewError("cannot inherit onto itself").
@@ -1292,7 +1292,7 @@ func (s *subscriptionModificationService) resolveCustomersByExternalIDs(ctx cont
 			return nil, ierr.NewError("customer not found").
 				WithHint("No customer exists for the given external ID").
 				WithReportableDetails(map[string]interface{}{"external_id": extID}).
-				Mark(ierr.ErrNotFound)
+				Mark(ierr.ErrCustomerNotFound)
 		}
 		result = append(result, c.ID)
 	}

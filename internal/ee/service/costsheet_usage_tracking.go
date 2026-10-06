@@ -981,7 +981,7 @@ func (s *costsheetUsageTrackingService) GetCostSheetUsageAnalytics(ctx context.C
 				WithReportableDetails(map[string]interface{}{
 					"external_customer_id": req.ExternalCustomerID,
 				}).
-				Mark(ierr.ErrNotFound)
+				Mark(ierr.ErrCustomerNotFound)
 		}
 	}
 
@@ -1469,7 +1469,7 @@ func (s *costsheetUsageTrackingService) GetCostAnalyticsFromMeterUsage(
 				WithReportableDetails(map[string]interface{}{
 					"external_customer_id": req.ExternalCustomerID,
 				}).
-				Mark(ierr.ErrNotFound)
+				Mark(ierr.ErrCustomerNotFound)
 		}
 	}
 

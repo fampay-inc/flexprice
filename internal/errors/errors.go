@@ -182,6 +182,34 @@ func IsNotImplemented(err error) bool {
 	return errors.Is(err, ErrNotImplemented)
 }
 
+// captureBlacklist enumerates sentinel errors that observability capture sinks
+// (Sentry, OTel exception events) should NOT record. Blacklisted errors still
+// flow through the normal return path and are still logged at whichever level
+// the caller chose; they are just suppressed from the exceptions sink because
+// they represent expected, high-volume conditions — e.g. an event referencing
+// an unknown customer while onboarding races the event ingest.
+//
+// Match is via errors.Is, so any error wrapping (or being) one of these
+// sentinels is suppressed.
+var captureBlacklist = []error{
+	ErrCustomerNotFound,
+}
+
+// IsCaptureBlacklisted reports whether err should be dropped by observability
+// capture sinks. Used by internal/tracing.CaptureException and the logger's
+// auto-capture path to filter known-noisy expected errors.
+func IsCaptureBlacklisted(err error) bool {
+	if err == nil {
+		return false
+	}
+	for _, sentinel := range captureBlacklist {
+		if errors.Is(err, sentinel) {
+			return true
+		}
+	}
+	return false
+}
+
 // ResolveError returns both the HTTP status code and machine-readable error
 // code for the given error in a single pass over errMappings.
 func ResolveError(err error) (httpStatus int, code ErrorCode) {
