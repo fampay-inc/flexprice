@@ -466,6 +466,12 @@ type InvoiceFilter struct {
 	// period_end_lte filters invoices with period_end <= value
 	PeriodEndLTE *time.Time `json:"period_end_lte,omitempty" form:"period_end_lte" validate:"omitempty,time_rfc3339"`
 
+	// due_date_lt filters invoices with due_date < value. Rows where due_date IS NULL are
+	// implicitly excluded (NULL < timestamp evaluates to NULL in SQL). Used by the
+	// auto-cancellation activity to avoid pulling invoices that haven't passed their grace
+	// period yet.
+	DueDateLT *time.Time `json:"due_date_lt,omitempty" form:"due_date_lt" validate:"omitempty,time_rfc3339"`
+
 	// SkipLineItems if true, will not include line items in the response
 	SkipLineItems bool `json:"skip_line_items,omitempty" form:"skip_line_items"`
 }
