@@ -27,12 +27,17 @@ AUTH_LABEL = "security"
 ALB_GROUP_ANNOTATION = "alb.ingress.kubernetes.io/group.name"
 ALB_GROUP = "eks-internal-lb-group"
 
+# The provisioner always emits tags, and sprig's `default` swallows an empty
+# params.tags, so "no tags" is unreachable from the score file. params.annotations
+# can only set the key to "", not remove it. Hence the strip here.
+ALB_TAGS_ANNOTATION = "alb.ingress.kubernetes.io/tags"
+
 
 def main(path, expect_hagrid):
     with open(path) as fh:
         docs = [d for d in yaml.safe_load_all(fh) if d]
 
-    kept, dropped, unlabelled, regrouped = [], [], 0, 0
+    kept, dropped, unlabelled, regrouped, untagged = [], [], 0, 0, 0
 
     for doc in docs:
         kind = doc.get("kind", "")
@@ -45,6 +50,8 @@ def main(path, expect_hagrid):
             if ann.get(ALB_GROUP_ANNOTATION) != ALB_GROUP:
                 ann[ALB_GROUP_ANNOTATION] = ALB_GROUP
                 regrouped += 1
+            if ann.pop(ALB_TAGS_ANNOTATION, None) is not None:
+                untagged += 1
 
         # SecurityPolicy attaches via spec.targetSelectors.matchLabels, so the
         # label is what makes a route authenticated.
@@ -79,6 +86,7 @@ def main(path, expect_hagrid):
         print(f"  dropped  {d}")
     print(f"  unlabelled {unlabelled} HTTPRoute(s)")
     print(f"  regrouped  {regrouped} Ingress to {ALB_GROUP}")
+    print(f"  untagged   {untagged} Ingress")
     print(f"  {len(kept)} of {len(docs)} documents kept")
 
 
