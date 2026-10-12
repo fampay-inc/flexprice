@@ -1102,6 +1102,9 @@ func (o InvoiceQueryOptions) applyEntityQueryOptions(_ context.Context, f *types
 	if f.AmountRemainingGt != nil {
 		query = query.Where(invoice.AmountRemainingGT(*f.AmountRemainingGt))
 	}
+	if f.DueDateLT != nil {
+		query = query.Where(invoice.DueDateLT(*f.DueDateLT))
+	}
 
 	// Apply time range filters
 	if f.TimeRangeFilter != nil {

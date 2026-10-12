@@ -5593,6 +5593,7 @@ func (s *subscriptionService) ProcessAutoCancellationSubscriptions(ctx context.C
 			InvoiceStatus:     []types.InvoiceStatus{types.InvoiceStatusFinalized},
 			PaymentStatus:     []types.PaymentStatus{types.PaymentStatusFailed, types.PaymentStatusPending},
 			AmountRemainingGt: lo.ToPtr(decimal.NewFromInt(0)),
+			DueDateLT:         lo.ToPtr(time.Now().UTC()),
 			SkipLineItems:     true,
 			QueryFilter:       types.NewNoLimitQueryFilter(),
 		}
