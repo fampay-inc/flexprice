@@ -5594,6 +5594,7 @@ func (s *subscriptionService) ProcessAutoCancellationSubscriptions(ctx context.C
 			PaymentStatus:     []types.PaymentStatus{types.PaymentStatusFailed, types.PaymentStatusPending},
 			AmountRemainingGt: lo.ToPtr(decimal.NewFromInt(0)),
 			DueDateLT:         lo.ToPtr(time.Now().UTC()),
+			CreatedAtGTE:      lo.ToPtr(time.Now().UTC().AddDate(0, 0, -30)),
 			SkipLineItems:     true,
 			QueryFilter:       types.NewNoLimitQueryFilter(),
 		}

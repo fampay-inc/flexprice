@@ -470,7 +470,8 @@ type InvoiceFilter struct {
 	// implicitly excluded (NULL < timestamp evaluates to NULL in SQL). Used by the
 	// auto-cancellation activity to avoid pulling invoices that haven't passed their grace
 	// period yet.
-	DueDateLT *time.Time `json:"due_date_lt,omitempty" form:"due_date_lt" validate:"omitempty,time_rfc3339"`
+	DueDateLT    *time.Time `json:"due_date_lt,omitempty" form:"due_date_lt" validate:"omitempty,time_rfc3339"`
+	CreatedAtGTE *time.Time `json:"created_at_gte,omitempty" form:"created_at_gte"`
 
 	// SkipLineItems if true, will not include line items in the response
 	SkipLineItems bool `json:"skip_line_items,omitempty" form:"skip_line_items"`
