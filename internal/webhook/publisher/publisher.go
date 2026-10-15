@@ -152,46 +152,53 @@ func (p *webhookPublisher) PublishWebhook(ctx context.Context, event *types.Webh
 		}
 	}
 
-	produceSpan, produceCtx := p.tracing.StartKafkaProducerSpan(ctx, p.config.Topic, map[string]interface{}{
-		"event.id":       event.ID,
-		"event.name":     string(event.EventName),
-		"tenant.id":      event.TenantID,
-		"environment.id": event.EnvironmentID,
-		"message.id":     messageID,
-		"payload.bytes":  len(payload),
-		"transport":      transport,
-	})
+	go func() {
+		pubCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), p.config.AsyncPublishTimeout)
+		defer cancel()
 
-	if p.producer != nil {
-		err = p.producer.Publish(p.config.Topic, msg)
-	} else {
-		err = p.pubSub.Publish(produceCtx, p.config.Topic, msg)
-	}
+		produceSpan, produceCtx := p.tracing.StartKafkaProducerSpan(pubCtx, p.config.Topic, map[string]interface{}{
+			"event.id":       event.ID,
+			"event.name":     string(event.EventName),
+			"tenant.id":      event.TenantID,
+			"environment.id": event.EnvironmentID,
+			"message.id":     messageID,
+			"payload.bytes":  len(payload),
+			"transport":      transport,
+			"async":          true,
+		})
 
-	if produceSpan != nil {
-		if err != nil {
-			produceSpan.SetStatusError(err)
+		var pubErr error
+		if p.producer != nil {
+			pubErr = p.producer.Publish(p.config.Topic, msg)
 		} else {
-			produceSpan.SetStatusOK()
+			pubErr = p.pubSub.Publish(produceCtx, p.config.Topic, msg)
 		}
-		produceSpan.Finish()
-	}
 
-	if err != nil {
-		p.logger.Error(ctx, "failed to publish webhook event",
-			"error", err,
+		if produceSpan != nil {
+			if pubErr != nil {
+				produceSpan.SetStatusError(pubErr)
+			} else {
+				produceSpan.SetStatusOK()
+			}
+			produceSpan.Finish()
+		}
+
+		if pubErr != nil {
+			p.logger.Error(pubCtx, "async webhook publish failed; stale-retry reaper will republish",
+				"error", pubErr,
+				"event_id", event.ID,
+				"event_name", event.EventName,
+				"tenant_id", event.TenantID,
+			)
+			return
+		}
+
+		p.logger.Debug(pubCtx, "successfully published webhook event",
 			"event_id", event.ID,
 			"event_name", event.EventName,
 			"tenant_id", event.TenantID,
 		)
-		return err
-	}
-
-	p.logger.Debug(ctx, "successfully published webhook event",
-		"event_id", event.ID,
-		"event_name", event.EventName,
-		"tenant_id", event.TenantID,
-	)
+	}()
 
 	return nil
 }
