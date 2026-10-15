@@ -1106,6 +1106,10 @@ func (o InvoiceQueryOptions) applyEntityQueryOptions(_ context.Context, f *types
 		query = query.Where(invoice.DueDateLT(*f.DueDateLT))
 	}
 
+	if f.CreatedAtGTE != nil {
+		query = query.Where(invoice.CreatedAtGTE(*f.CreatedAtGTE))
+	}
+
 	// Apply time range filters
 	if f.TimeRangeFilter != nil {
 		if f.TimeRangeFilter.StartTime != nil {
