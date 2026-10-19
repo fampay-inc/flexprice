@@ -581,6 +581,9 @@ type UpdateSubscriptionRequest struct {
 	// ParentSubscriptionID sets or clears the parent subscription. Omit to leave unchanged; send "" to clear.
 	ParentSubscriptionID *string `json:"parent_subscription_id,omitempty"`
 
+	// BillingAnchor overrides the subscription's billing anchor. Omit to leave unchanged.
+	BillingAnchor *time.Time `json:"billing_anchor,omitempty"`
+
 	Metadata map[string]string `json:"metadata,omitempty"`
 }
 

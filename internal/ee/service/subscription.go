@@ -1907,6 +1907,10 @@ func (s *subscriptionService) UpdateSubscription(ctx context.Context, subscripti
 		subscription.CancelAtPeriodEnd = lo.FromPtr(req.CancelAtPeriodEnd)
 	}
 
+	if req.BillingAnchor != nil && subscription.BillingCycle == types.BillingCycleAnniversary {
+		subscription.BillingAnchor = *req.BillingAnchor
+	}
+
 	if req.Metadata != nil {
 		subscription.Metadata = req.Metadata
 	}
