@@ -2221,9 +2221,6 @@ func (s *subscriptionService) ListSubscriptions(ctx context.Context, filter *typ
 
 		customer, err := s.CustomerRepo.GetByLookupKey(ctx, filter.ExternalCustomerID)
 		if err != nil {
-			s.Logger.Error(ctx, "failed to resolve external customer ID",
-				"error", err,
-				"external_customer_id", filter.ExternalCustomerID)
 			return nil, ierr.NewError("customer not found").
 				WithHintf("Customer with external ID '%s' not found", filter.ExternalCustomerID).
 				WithReportableDetails(map[string]interface{}{

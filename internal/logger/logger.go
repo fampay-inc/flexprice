@@ -162,7 +162,7 @@ func NewLogger(cfg *config.Configuration) (*Logger, error) {
 	// accepts all severities, so Debug would still flow to OTLP when the main core
 	// is gated to Info. Wrap the otel core with the same LevelEnabler as the
 	// preset logger so OTLP respects logging.level.
-	finalLogger := zapLogger
+	var inner zapcore.Core = zapLogger.Core()
 	if otelLogProvider != nil {
 		scopeName := cfg.Logging.ServiceName
 		if scopeName == "" {
@@ -173,8 +173,9 @@ func NewLogger(cfg *config.Configuration) (*Logger, error) {
 		if incrErr != nil {
 			return nil, incrErr
 		}
-		finalLogger = zap.New(zapcore.NewTee(zapLogger.Core(), otelTeeCore), zap.WithCaller(true))
+		inner = zapcore.NewTee(inner, otelTeeCore)
 	}
+	finalLogger := zap.New(&stripVerboseCore{Core: inner}, zap.WithCaller(true))
 
 	sugar := finalLogger.Sugar()
 	if cfg.Logging.ServiceName != "" {
@@ -538,6 +539,87 @@ func Err(err error) []any {
 		return []any{"error", "<nil>", "error_type", "<nil>"}
 	}
 	return []any{"error", err.Error(), "error_type", fmt.Sprintf("%T", err)}
+}
+
+// stripVerboseCore rewrites ErrorType fields to StringType to suppress zap's
+// `errorVerbose` stack dump for cockroachdb/errors values.
+type stripVerboseCore struct {
+	zapcore.Core
+}
+
+func (c *stripVerboseCore) With(fields []zapcore.Field) zapcore.Core {
+	return &stripVerboseCore{Core: c.Core.With(stringifyErrorFields(fields))}
+}
+
+// Check adds this wrapper to the CheckedEntry rather than delegating, so our
+// Write runs before the inner core writes to its sinks.
+func (c *stripVerboseCore) Check(entry zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.CheckedEntry {
+	if c.Core.Enabled(entry.Level) {
+		return ce.AddCore(entry, c)
+	}
+	return ce
+}
+
+func (c *stripVerboseCore) Write(entry zapcore.Entry, fields []zapcore.Field) error {
+	return c.Core.Write(entry, stringifyErrorFields(fields))
+}
+
+func stringifyErrorFields(fields []zapcore.Field) []zapcore.Field {
+	if !hasErrorField(fields) {
+		return fields
+	}
+
+	needErrorType := !hasFieldKey(fields, "error_type")
+	out := make([]zapcore.Field, 0, len(fields)+2)
+	for _, f := range fields {
+		if f.Type != zapcore.ErrorType {
+			out = append(out, f)
+			continue
+		}
+		err, _ := f.Interface.(error)
+		msg, ok := safeErrString(err)
+		if !ok {
+			// Fall back to zap's encodeError (recovers from typed-nil .Error() panics).
+			out = append(out, f)
+			continue
+		}
+		out = append(out, zap.String(f.Key, msg))
+		if f.Key == "error" && needErrorType {
+			out = append(out, zap.String("error_type", fmt.Sprintf("%T", err)))
+			needErrorType = false
+		}
+	}
+	return out
+}
+
+func hasErrorField(fields []zapcore.Field) bool {
+	for _, f := range fields {
+		if f.Type == zapcore.ErrorType {
+			return true
+		}
+	}
+	return false
+}
+
+func hasFieldKey(fields []zapcore.Field, key string) bool {
+	for _, f := range fields {
+		if f.Key == key {
+			return true
+		}
+	}
+	return false
+}
+
+func safeErrString(err error) (s string, ok bool) {
+	if err == nil {
+		return "", false
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			s, ok = "", false
+		}
+	}()
+	return err.Error(), true
 }
 
 // Op produces a structured "operation" field. Value should be "<entity>.<verb_past>".

@@ -164,7 +164,6 @@ func (h *SubscriptionHandler) GetSubscriptionV2(c *gin.Context) {
 func (h *SubscriptionHandler) ListSubscriptions(c *gin.Context) {
 	var filter types.SubscriptionFilter
 	if err := c.ShouldBindQuery(&filter); err != nil {
-		h.log.Error(c.Request.Context(), "Failed to bind query", "error", err)
 		c.Error(ierr.WithError(err).
 			WithHint("Invalid filter parameters").
 			Mark(ierr.ErrValidation))
@@ -173,7 +172,9 @@ func (h *SubscriptionHandler) ListSubscriptions(c *gin.Context) {
 
 	resp, err := h.service.ListSubscriptions(c.Request.Context(), &filter)
 	if err != nil {
-		h.log.Error(c.Request.Context(), "Failed to list subscriptions", "error", err)
+		if status, _ := ierr.ResolveError(err); status >= http.StatusInternalServerError {
+			h.log.Error(c.Request.Context(), "Failed to list subscriptions", "error", err)
+		}
 		c.Error(err)
 		return
 	}
