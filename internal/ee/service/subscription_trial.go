@@ -60,8 +60,9 @@ func setCreateSubscriptionTrialWindow(req *dto.CreateSubscriptionRequest, sub *s
 // ProcessTrialEndDue picks up trialing subs past trial end, moves them to the first real period, and creates
 // the trial-end invoice. Safe to run repeatedly for the same subscription.
 func (s *subscriptionService) ProcessTrialEndDue(ctx context.Context) (*dto.SubscriptionUpdatePeriodResponse, error) {
-	// Re-query with offset 0 each time: processSubscriptionTrialEnd flips trialing → incomplete, so
-	// offset pagination would skip rows that slide into the first page after earlier rows are updated.
+	// Keyset over id: processSubscriptionTrialEnd flips trialing → incomplete, so offset pagination
+	// would skip rows, and failed subs stay trialing, so re-querying from the start would loop on them.
+	// The cursor visits each row at most once per run; failures are retried on the next run.
 	const batchSize = 100
 	now := time.Now().UTC()
 	listCtx := ctx
@@ -76,16 +77,17 @@ func (s *subscriptionService) ProcessTrialEndDue(ctx context.Context) (*dto.Subs
 	}
 
 	invoiceService := NewInvoiceService(s.ServiceParams)
+	cursor := types.NewCursor(types.CursorOrderID, types.OrderAsc)
 
 	for {
 		filter := &types.SubscriptionFilter{
 			QueryFilter: &types.QueryFilter{
 				Limit:  lo.ToPtr(batchSize),
-				Offset: lo.ToPtr(0),
 				Status: lo.ToPtr(types.StatusPublished),
 			},
 			SubscriptionStatus: []types.SubscriptionStatus{types.SubscriptionStatusTrialing},
 			TrialEndDueLTE:     &now,
+			Cursor:             cursor,
 		}
 
 		subs, err := s.SubRepo.GetSubscriptionsForBillingPeriodUpdate(listCtx, filter)
@@ -97,7 +99,9 @@ func (s *subscriptionService) ProcessTrialEndDue(ctx context.Context) (*dto.Subs
 			break
 		}
 
-		s.Logger.Info(listCtx, "processing trial end batch", "batch_size", len(subs))
+		s.Logger.Info(listCtx, "processing trial end batch",
+			"batch_size", len(subs),
+			"last_seen_id", cursor.LastSeenID)
 
 		// Derive per-sub context from listCtx (no WithValue chain growth); rows can span envs/tenants.
 		for _, trialingSubscription := range subs {
@@ -122,6 +126,9 @@ func (s *subscriptionService) ProcessTrialEndDue(ctx context.Context) (*dto.Subs
 			}
 			response.Items = append(response.Items, responseItem)
 		}
+
+		last := subs[len(subs)-1]
+		cursor.Advance(last.ID, last.CreatedAt)
 
 		if len(subs) < batchSize {
 			break

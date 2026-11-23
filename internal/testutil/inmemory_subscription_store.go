@@ -2,6 +2,7 @@ package testutil
 
 import (
 	"context"
+	"sort"
 	"time"
 
 	"github.com/flexprice/flexprice/internal/domain/subscription"
@@ -340,7 +341,36 @@ func (s *InMemorySubscriptionStore) ListAll(ctx context.Context, filter *types.S
 
 // GetSubscriptionsForBillingPeriodUpdate returns subscriptions across all tenants for billing-period jobs.
 func (s *InMemorySubscriptionStore) GetSubscriptionsForBillingPeriodUpdate(ctx context.Context, filter *types.SubscriptionFilter) ([]*subscription.Subscription, error) {
-	return s.ListAll(ctx, filter)
+	if err := filter.Validate(); err != nil {
+		return nil, err
+	}
+
+	subs, err := s.ListAll(ctx, filter)
+	if err != nil || filter.Cursor == nil {
+		return subs, err
+	}
+
+	// Mirror the DB keyset path: order by id, keep rows past the cursor, then apply the limit.
+	// Only CursorOrderID is accepted by SubscriptionFilter validation.
+	cursor := filter.Cursor
+	sort.Slice(subs, func(i, j int) bool {
+		if cursor.IsDesc() {
+			return subs[i].ID > subs[j].ID
+		}
+		return subs[i].ID < subs[j].ID
+	})
+	if !cursor.IsFirstPage() {
+		subs = lo.Filter(subs, func(sub *subscription.Subscription, _ int) bool {
+			if cursor.IsDesc() {
+				return sub.ID < cursor.LastSeenID
+			}
+			return sub.ID > cursor.LastSeenID
+		})
+	}
+	if !filter.IsUnlimited() && filter.GetLimit() > 0 && len(subs) > filter.GetLimit() {
+		subs = subs[:filter.GetLimit()]
+	}
+	return subs, nil
 }
 
 // CreateWithLineItems creates a subscription with its line items

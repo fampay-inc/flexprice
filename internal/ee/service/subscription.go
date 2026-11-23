@@ -2832,16 +2832,19 @@ func (s *subscriptionService) UpdateBillingPeriods(ctx context.Context) (*dto.Su
 		StartAt:      now,
 	}
 
-	offset := 0
+	// Keyset over id: failed subs still match the filter, so the cursor (not the filter) must
+	// guarantee each row is visited at most once per run. Failures are retried on the next run.
+	cursor := types.NewCursor(types.CursorOrderID, types.OrderAsc)
+
 	for {
 		filter := &types.SubscriptionFilter{
 			QueryFilter: &types.QueryFilter{
 				Limit:  lo.ToPtr(batchSize),
-				Offset: lo.ToPtr(offset),
 				Status: lo.ToPtr(types.StatusPublished),
 			},
 			SubscriptionStatus:     []types.SubscriptionStatus{types.SubscriptionStatusActive},
 			EffectiveDateForUpdate: &now,
+			Cursor:                 cursor,
 		}
 
 		subs, err := s.SubRepo.GetSubscriptionsForBillingPeriodUpdate(ctx, filter)
@@ -2849,29 +2852,26 @@ func (s *subscriptionService) UpdateBillingPeriods(ctx context.Context) (*dto.Su
 			return response, err
 		}
 
-		s.Logger.Info(ctx, "processing subscription batch",
-			"batch_size", len(subs),
-			"offset", offset)
-
 		if len(subs) == 0 {
 			break // No more subscriptions to process
 		}
 
+		s.Logger.Info(ctx, "processing subscription batch",
+			"batch_size", len(subs),
+			"last_seen_id", cursor.LastSeenID)
+
 		// Process each subscription in the batch
 		for _, sub := range subs {
-			// update context to include the tenant id
-			ctx = context.WithValue(ctx, types.CtxTenantID, sub.TenantID)
-			ctx = context.WithValue(ctx, types.CtxEnvironmentID, sub.EnvironmentID)
-			ctx = context.WithValue(ctx, types.CtxUserID, sub.CreatedBy)
+			subCtx := derivePerSubscriptionCtx(ctx, sub)
 
 			item := &dto.SubscriptionUpdatePeriodResponseItem{
 				SubscriptionID: sub.ID,
 				PeriodStart:    sub.CurrentPeriodStart,
 				PeriodEnd:      sub.CurrentPeriodEnd,
 			}
-			err = s.processSubscriptionPeriod(ctx, sub, now)
+			err = s.processSubscriptionPeriod(subCtx, sub, now)
 			if err != nil {
-				s.Logger.Error(ctx, "failed to process subscription period",
+				s.Logger.Error(subCtx, "failed to process subscription period",
 					"subscription_id", sub.ID,
 					"error", err)
 
@@ -2885,7 +2885,9 @@ func (s *subscriptionService) UpdateBillingPeriods(ctx context.Context) (*dto.Su
 			response.Items = append(response.Items, item)
 		}
 
-		offset += len(subs)
+		last := subs[len(subs)-1]
+		cursor.Advance(last.ID, last.CreatedAt)
+
 		if len(subs) < batchSize {
 			break // No more subscriptions to fetch
 		}
@@ -5704,6 +5706,7 @@ func (s *subscriptionService) ProcessAutoCancellationSubscriptions(ctx context.C
 			// Cancel the subscription
 			if _, err := s.CancelSubscription(tenantCtx, sub.ID, &dto.CancelSubscriptionRequest{
 				CancellationType: types.CancellationTypeImmediate,
+				Reason: "grace_period_expired",
 			}); err != nil {
 				s.Logger.Error(ctx, "failed to auto-cancel subscription",
 					"subscription_id", sub.ID,
