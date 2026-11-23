@@ -349,6 +349,10 @@ type SubscriptionFilter struct {
 
 	// WithLineItems includes line items in the response
 	WithLineItems bool `json:"with_line_items,omitempty" form:"with_line_items"`
+
+	// Cursor switches the query to keyset pagination. Internal batch scans only; not exposed on the API.
+	// When set, the cursor's order replaces any sort and offset.
+	Cursor *Cursor `json:"-" form:"-"`
 }
 
 // NewSubscriptionFilter creates a new SubscriptionFilter with default values
@@ -407,7 +411,36 @@ func (f SubscriptionFilter) Validate() error {
 		}
 	}
 
+	if f.Cursor != nil {
+		if err := f.validateCursor(); err != nil {
+			return err
+		}
+	}
+
 	return nil
+}
+
+// validateCursor rejects sort and offset alongside a cursor, since the cursor fixes both.
+func (f SubscriptionFilter) validateCursor() error {
+	if len(f.Sort) > 0 {
+		return ierr.NewError("sort cannot be combined with a cursor").
+			Mark(ierr.ErrValidation)
+	}
+
+	if f.QueryFilter != nil {
+		if f.QueryFilter.Sort != nil || f.QueryFilter.Order != nil {
+			return ierr.NewError("sort and order cannot be combined with a cursor").
+				WithHint("The cursor's order and direction decide the sort").
+				Mark(ierr.ErrValidation)
+		}
+		if f.QueryFilter.GetOffset() > 0 {
+			return ierr.NewError("offset cannot be combined with a cursor").
+				Mark(ierr.ErrValidation)
+		}
+	}
+
+	// Only id is index-backed for cross-tenant scans on subscriptions (primary key).
+	return f.Cursor.Validate(CursorOrderID)
 }
 
 // GetLimit implements BaseFilter interface

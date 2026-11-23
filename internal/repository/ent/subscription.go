@@ -454,8 +454,18 @@ func (r *subscriptionRepository) GetSubscriptionsForBillingPeriodUpdate(ctx cont
 	}
 
 	// Apply all query options except tenant filter
-	query = ApplySorting(query, filter, r.queryOpts)
-	query = ApplyPagination(query, filter, r.queryOpts)
+	if filter.Cursor != nil {
+		// The cursor owns ordering; offset and sort are rejected by filter validation.
+		query = query.
+			Where(predicate.Subscription(CursorWhere(filter.Cursor))).
+			Order(subscription.OrderOption(CursorOrderBy(filter.Cursor)))
+		if !filter.IsUnlimited() && filter.GetLimit() > 0 {
+			query = query.Limit(filter.GetLimit())
+		}
+	} else {
+		query = ApplySorting(query, filter, r.queryOpts)
+		query = ApplyPagination(query, filter, r.queryOpts)
+	}
 	query = r.queryOpts.ApplyStatusFilter(query, filter.GetStatus())
 
 	subs, err := query.All(ctx)
