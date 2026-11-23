@@ -120,9 +120,10 @@ func As(err error, target any) bool {
 	return errors.As(err, target)
 }
 
-// IsNotFound checks if an error is a not found error
+// IsNotFound checks if an error is a not found error, including entity-specific
+// not-found errors such as ErrCustomerNotFound
 func IsNotFound(err error) bool {
-	return errors.Is(err, ErrNotFound)
+	return errors.Is(err, ErrNotFound) || errors.Is(err, ErrCustomerNotFound)
 }
 
 func IsDatabase(err error) bool {

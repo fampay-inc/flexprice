@@ -146,7 +146,7 @@ func (r *customerRepository) Get(ctx context.Context, id string) (*domainCustome
 				WithReportableDetails(map[string]any{
 					"customer_id": id,
 				}).
-				Mark(ierr.ErrNotFound)
+				Mark(ierr.ErrCustomerNotFound)
 		}
 		return nil, ierr.WithError(err).
 			WithHint("Failed to get customer").
@@ -192,7 +192,7 @@ func (r *customerRepository) GetByLookupKey(ctx context.Context, lookupKey strin
 				WithReportableDetails(map[string]any{
 					"lookup_key": lookupKey,
 				}).
-				Mark(ierr.ErrNotFound)
+				Mark(ierr.ErrCustomerNotFound)
 		}
 		return nil, ierr.WithError(err).
 			WithHint("Failed to get customer by lookup key").
@@ -359,7 +359,7 @@ func (r *customerRepository) Update(ctx context.Context, c *domainCustomer.Custo
 				WithReportableDetails(map[string]any{
 					"customer_id": c.ID,
 				}).
-				Mark(ierr.ErrNotFound)
+				Mark(ierr.ErrCustomerNotFound)
 		}
 		if ent.IsConstraintError(err) {
 			return ierr.WithError(err).
@@ -415,7 +415,7 @@ func (r *customerRepository) Delete(ctx context.Context, domainCustomer *domainC
 				WithReportableDetails(map[string]any{
 					"customer_id": domainCustomer.ID,
 				}).
-				Mark(ierr.ErrNotFound)
+				Mark(ierr.ErrCustomerNotFound)
 		}
 		return ierr.WithError(err).
 			WithHint("Failed to delete customer").

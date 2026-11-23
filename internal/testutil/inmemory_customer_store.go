@@ -94,7 +94,7 @@ func (s *InMemoryCustomerStore) GetByLookupKey(ctx context.Context, lookupKey st
 			WithReportableDetails(map[string]any{
 				"lookup_key": lookupKey,
 			}).
-			Mark(ierr.ErrNotFound)
+			Mark(ierr.ErrCustomerNotFound)
 	}
 
 	return copyCustomer(customers[0]), nil
